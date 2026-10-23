@@ -1,6 +1,7 @@
 export const colors = {
   primary: '#FF7622',
-  accent: '#FFE1CE',
+  inactive: '#FFE1CE',
+  iconBackground: "#FF7622",
   background: '#F3F3F3',
   surface: '#F6F7F5',
   text: '#ffff',

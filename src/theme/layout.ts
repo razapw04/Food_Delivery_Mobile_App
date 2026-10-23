@@ -2,9 +2,10 @@ import {spacing} from './spacing';
 
 export const layout = {
   screenHorizontalPadding: spacing.lg,
-  contentMaxWidth: 560,
+  contentMaxWidth: "100%",
   minTouchTarget: 44,
-  buttonHeight: 52,
+  buttonHeight: 62,
+  buttonWidth:"90%",
   inputHeight: 48,
   iconSize: {
     sm: 16,

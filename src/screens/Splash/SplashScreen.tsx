@@ -8,7 +8,7 @@ import {
 
 import styles from './Splash.styles';
 import { useNavigation } from '@react-navigation/native';
-import type {RootStackParamList} from '../../../App'
+import type {RootStackParamList} from '../../types/navigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 type SplashNavigationProp = NativeStackNavigationProp< 
 RootStackParamList,
@@ -53,11 +53,11 @@ const SplashScreen = () => {
         }),
       ]),
     ]).start(() => {
-  setTimeout(() => {
-    Navigation.replace('OnboardingOne');
-  }, 1000);
-});
-  }, [topAnim, bottomAnim, fadeAnim]);
+      setTimeout(() => {
+        Navigation.replace('Login');
+      }, 1000);
+    });
+  }, [Navigation, topAnim, bottomAnim, fadeAnim]);
 
   return (
     <View style={styles.container}>
