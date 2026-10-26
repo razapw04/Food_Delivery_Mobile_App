@@ -22,6 +22,7 @@ const LoginScreen = () => {
     error,
     setEmail,
     setPassword,
+    isSubmitting,
     handleLogin,
     goToSignup,
   } = useController();
@@ -32,10 +33,12 @@ const LoginScreen = () => {
 
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}>
         <ScrollView
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}>
           <Image
             source={require('../../assets/images/Logo.png')}
@@ -77,7 +80,10 @@ const LoginScreen = () => {
           </Pressable>
 
           <View style={styles.buttonWrap}>
-            <Button title="Log In" onPress={handleLogin} />
+            <Button
+              title={isSubmitting ? 'Logging in...' : 'Log In'}
+              onPress={handleLogin}
+            />
           </View>
 
           <View style={styles.footer}>

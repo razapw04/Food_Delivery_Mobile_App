@@ -1,69 +1,68 @@
 import React, {useEffect, useRef} from 'react';
-import {
-  View,
-  Image,
-  Animated,
-  StatusBar,
-} from 'react-native';
+import {View, Image, Animated, StatusBar} from 'react-native';
 
 import styles from './Splash.styles';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import type {RootStackParamList} from '../../types/navigation';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-type SplashNavigationProp = NativeStackNavigationProp< 
-RootStackParamList,
- 'Splash' 
- >;
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useAuth} from '../../context/AuthContext';
+
+type SplashNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'Splash'
+>;
+
 const SplashScreen = () => {
-  const Navigation = useNavigation<SplashNavigationProp>();
-  // Top image starts outside the screen on the left
+  const navigation = useNavigation<SplashNavigationProp>();
+  const {user, isLoading} = useAuth();
   const topAnim = useRef(new Animated.Value(-300)).current;
-
-  // Bottom image starts outside the screen on the right
   const bottomAnim = useRef(new Animated.Value(300)).current;
-
-  // Images start invisible
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const hasNavigated = useRef(false);
 
   useEffect(() => {
     Animated.sequence([
-      // Logo is visible first
       Animated.delay(500),
-
       Animated.parallel([
-        // Top image: LEFT → CENTER
         Animated.timing(topAnim, {
           toValue: 0,
           duration: 800,
           useNativeDriver: true,
         }),
-
-        // Bottom image: RIGHT → CENTER
         Animated.timing(bottomAnim, {
           toValue: 0,
           duration: 800,
           useNativeDriver: true,
         }),
-
-        // Fade images in
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 800,
           useNativeDriver: true,
         }),
       ]),
-    ]).start(() => {
-      setTimeout(() => {
-        Navigation.replace('Login');
-      }, 1000);
-    });
-  }, [Navigation, topAnim, bottomAnim, fadeAnim]);
+    ]).start();
+  }, [topAnim, bottomAnim, fadeAnim]);
+
+  useEffect(() => {
+    if (isLoading || hasNavigated.current) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      if (hasNavigated.current) {
+        return;
+      }
+      hasNavigated.current = true;
+      navigation.replace(user ? 'MainTabs' : 'Login');
+    }, 1800);
+
+    return () => clearTimeout(timer);
+  }, [isLoading, user, navigation]);
 
   return (
     <View style={styles.container}>
       <StatusBar hidden />
 
-      {/* Top Image */}
       <Animated.Image
         source={require('../../assets/images/SplashTop.png')}
         style={[
@@ -76,7 +75,6 @@ const SplashScreen = () => {
         resizeMode="contain"
       />
 
-      {/* Center Logo */}
       <View style={styles.logoContainer}>
         <Image
           source={require('../../assets/images/Logo.png')}
@@ -85,7 +83,6 @@ const SplashScreen = () => {
         />
       </View>
 
-      {/* Bottom Image */}
       <Animated.Image
         source={require('../../assets/images/SplashBottom.png')}
         style={[

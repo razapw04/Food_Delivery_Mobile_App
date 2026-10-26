@@ -51,16 +51,27 @@ export const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: spacing.md,
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
     color: '#202321',
     fontSize: typography.fontSize.sm,
     backgroundColor: colors.surface,
+  },
+
+  inputError: {
+    borderColor: colors.error,
+  },
+
+  fieldErrorText: {
+    color: colors.error,
+    fontSize: typography.fontSize.xs,
+    marginBottom: spacing.md,
   },
 
   errorText: {
     color: colors.error,
     fontSize: typography.fontSize.xs,
     marginBottom: spacing.md,
+    marginTop: spacing.xs,
   },
 
   buttonWrap: {

@@ -11,7 +11,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   scrollContent: {
-    paddingBottom: spacing.xl,
+    paddingBottom: 110,
   },
   header: {
     paddingHorizontal: spacing.lg,

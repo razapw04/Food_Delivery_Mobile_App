@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {spacing, typography} from '../../theme';
+import {colors, spacing, typography} from '../../theme';
 
 const ink = '#1A1A1A';
 const muted = '#6B7280';
@@ -29,50 +29,187 @@ export const styles = StyleSheet.create({
     backgroundColor: pale,
   },
 
-  headerTitle: {
+  locationBlock: {
     flex: 1,
-    textAlign: 'center',
-    color: ink,
-    fontSize: typography.fontSize.lg,
+    marginHorizontal: spacing.sm,
+    justifyContent: 'center',
+  },
+
+  locationLabel: {
+    color: colors.primary,
+    fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-    marginRight: 40,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
   },
 
-  listContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
+  locationAddress: {
+    color: '#9CA3AF',
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+    marginTop: 2,
   },
 
-  categoryCard: {
-    marginBottom: spacing.md,
-    borderRadius: 18,
+  searchButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: pale,
+  },
+
+  categoriesSection: {
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+
+  categoriesRow: {
+    paddingHorizontal: spacing.md,
+  },
+
+  categoryItem: {
+    width: 78,
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+
+  categoryImageWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     overflow: 'hidden',
     backgroundColor: pale,
-    height: 120,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    marginBottom: spacing.xs,
+  },
+
+  categoryImageWrapActive: {
+    borderColor: colors.primary,
   },
 
   categoryImage: {
-    ...StyleSheet.absoluteFill,
     width: '100%',
     height: '100%',
   },
 
-  categoryOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-    padding: spacing.md,
+  categoryName: {
+    color: muted,
+    fontSize: 11,
+    fontWeight: typography.fontWeight.semibold,
+    textAlign: 'center',
   },
 
-  categoryName: {
-    color: '#FFFFFF',
+  categoryNameActive: {
+    color: colors.primary,
+    fontWeight: typography.fontWeight.bold,
+  },
+
+  listContent: {
+    padding: spacing.lg,
+    paddingBottom: 110,
+  },
+
+  sectionHeader: {
+    height: 52,
+    justifyContent: 'center',
+  },
+
+  sectionTitle: {
+    color: colors.primary,
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.bold,
   },
 
-  categoryCount: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: typography.fontSize.xs,
-    marginTop: 2,
+  emptyText: {
+    color: muted,
+    fontSize: typography.fontSize.sm,
+    textAlign: 'center',
+    marginTop: spacing.xl,
+  },
+
+  itemCard: {
+    height: 104,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+
+  itemImageWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: pale,
+  },
+
+  itemImage: {
+    width: '100%',
+    height: '100%',
+  },
+
+  itemInfo: {
+    flex: 1,
+    marginLeft: spacing.md,
+  },
+
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  itemName: {
+    flex: 1,
+    color: ink,
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+    marginRight: spacing.sm,
+  },
+
+  favoriteButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: pale,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  itemDescription: {
+    color: muted,
+    fontSize: typography.fontSize.sm,
+    marginTop: 4,
+    lineHeight: 20,
+  },
+
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+
+  itemPrice: {
+    color: colors.primary,
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
+  },
+
+  addButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

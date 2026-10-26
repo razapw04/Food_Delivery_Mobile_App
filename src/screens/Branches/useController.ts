@@ -1,6 +1,7 @@
 import {useMemo, useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useOrder} from '../../context/OrderContext';
 import type {RootStackParamList} from '../../types/navigation';
 import {Branch, branches} from './model';
 
@@ -11,6 +12,7 @@ type BranchesNavigationProp = NativeStackNavigationProp<
 
 const useController = () => {
   const navigation = useNavigation<BranchesNavigationProp>();
+  const {selectedBranch: savedBranch, selectBranch} = useOrder();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [confirmVisible, setConfirmVisible] = useState(false);
@@ -43,8 +45,11 @@ const useController = () => {
   };
 
   const handleProceed = () => {
+    if (selectedBranch) {
+      selectBranch(selectedBranch);
+    }
     setConfirmVisible(false);
-    navigation.navigate('Home');
+    navigation.navigate('MainTabs', {screen: 'Home'});
   };
 
   return {
@@ -52,6 +57,7 @@ const useController = () => {
     setSearchQuery,
     filteredBranches,
     selectedBranch,
+    savedBranch,
     confirmVisible,
     handleBack,
     handleBranchPress,

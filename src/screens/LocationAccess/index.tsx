@@ -1,13 +1,19 @@
 import React from 'react';
 import {Image, StatusBar, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {styles} from './styles';
 import Button from '../../components/button/Button';
-import {handleAccessLocation} from './useController';
+import {useLocation} from '../../context/LocationContext';
+import type {RootStackParamList} from '../../types/navigation';
 
 const Pin = require('../../assets/icons/Pin.png');
 
-const LocationAcess = () => {
+type Props = NativeStackScreenProps<RootStackParamList, 'LocationAccess'>;
+
+const LocationAcess = ({navigation}: Props) => {
+  const {useCurrentLocation, isLocating} = useLocation();
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar hidden />
@@ -23,14 +29,15 @@ const LocationAcess = () => {
         </View>
 
         <Button
-          title="Access Location"
-          onPress={handleAccessLocation}
+          title={isLocating ? 'Detecting...' : 'Access Location'}
+          onPress={async () => {
+            await useCurrentLocation();
+            navigation.navigate('MainTabs', {screen: 'Home'});
+          }}
           icon={Pin}
         />
 
-        <Text style={styles.text}>
-          Food Will access your location
-        </Text>
+        <Text style={styles.text}>Food Will access your location</Text>
       </View>
     </SafeAreaView>
   );

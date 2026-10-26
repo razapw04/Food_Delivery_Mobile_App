@@ -7,33 +7,43 @@ import LoginScreen from './src/screens/Login';
 import SignupScreen from './src/screens/Signup';
 import OnboardingOneScreen from './src/screens/OnboardingOne/index';
 import LocationAcess from './src/screens/LocationAccess/index';
-import HomeScreen from './src/screens/Home';
-import SearchScreen from './src/screens/Search';
 import BranchesScreen from './src/screens/Branches';
-import MenuScreen from './src/screens/Menu';
+import ChooseLocationScreen from './src/screens/ChooseLocation';
+import AddAddressScreen from './src/screens/AddAddress';
+import MainTabs from './src/navigation/MainTabs';
+import {AuthProvider} from './src/context/AuthContext';
+import {LocationProvider} from './src/context/LocationContext';
+import {OrderProvider} from './src/context/OrderContext';
 import type {RootStackParamList} from './src/types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const App = () => {
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="Splash"
-        screenOptions={{
-          headerShown: false,
-        }}>
-        <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Signup" component={SignupScreen} />
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Search" component={SearchScreen} />
-        <Stack.Screen name="Branches" component={BranchesScreen} />
-        <Stack.Screen name="Menu" component={MenuScreen} />
-        <Stack.Screen name="OnboardingOne" component={OnboardingOneScreen} />
-        <Stack.Screen name="LocationAccess" component={LocationAcess} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <AuthProvider>
+      <LocationProvider>
+        <OrderProvider>
+          <NavigationContainer>
+            <Stack.Navigator
+              initialRouteName="Splash"
+              screenOptions={{
+                headerShown: false,
+                contentStyle: {backgroundColor: '#FFFFFF'},
+              }}>
+              <Stack.Screen name="Splash" component={SplashScreen} />
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Signup" component={SignupScreen} />
+              <Stack.Screen name="MainTabs" component={MainTabs} />
+              <Stack.Screen name="Branches" component={BranchesScreen} />
+              <Stack.Screen name="ChooseLocation" component={ChooseLocationScreen} />
+              <Stack.Screen name="AddAddress" component={AddAddressScreen} />
+              <Stack.Screen name="OnboardingOne" component={OnboardingOneScreen} />
+              <Stack.Screen name="LocationAccess" component={LocationAcess} />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </OrderProvider>
+      </LocationProvider>
+    </AuthProvider>
   );
 };
 

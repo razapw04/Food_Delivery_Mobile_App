@@ -16,7 +16,7 @@ export const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingBottom: spacing.xxl,
+    paddingBottom: 110,
   },
 
   header: {
@@ -413,12 +413,24 @@ export const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
 
+  modalScroll: {
+    flex: 1,
+  },
+
+  modalScrollContent: {
+    paddingBottom: spacing.md,
+  },
+
+  radioIcon: {
+    marginRight: spacing.md,
+  },
+
   modalHandle: {
     alignSelf: 'center',
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#D1D5DB',
+    backgroundColor: colors.primary,
     marginBottom: spacing.lg,
   },
 
@@ -427,6 +439,25 @@ export const styles = StyleSheet.create({
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.bold,
     marginBottom: spacing.lg,
+  },
+
+  selectLocationLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    marginBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+
+  selectLocationIcon: {
+    marginRight: spacing.sm,
+  },
+
+  selectLocationLinkText: {
+    color: colors.primary,
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
   },
 
   modalOption: {
@@ -463,5 +494,47 @@ export const styles = StyleSheet.create({
     color: muted,
     fontSize: typography.fontSize.xs,
     marginTop: 2,
+  },
+
+  addAddressLink: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+  },
+
+  addAddressLinkText: {
+    color: colors.primary,
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.primary,
+    paddingBottom: 2,
+  },
+
+  addressInput: {
+    marginTop: spacing.sm,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    color: ink,
+    fontSize: typography.fontSize.sm,
+    backgroundColor: '#FFFFFF',
+  },
+
+  saveAddressButton: {
+    marginTop: spacing.sm,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+
+  saveAddressButtonText: {
+    color: '#FFFFFF',
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
   },
 });

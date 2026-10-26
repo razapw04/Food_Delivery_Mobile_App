@@ -19,13 +19,17 @@ const SignupScreen = () => {
   const {
     name,
     email,
+    phone,
     password,
     confirmPassword,
-    error,
+    fieldErrors,
+    formError,
     setName,
     setEmail,
+    setPhone,
     setPassword,
     setConfirmPassword,
+    isSubmitting,
     handleSignup,
     goToLogin,
   } = useController();
@@ -36,10 +40,12 @@ const SignupScreen = () => {
 
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}>
         <ScrollView
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}>
           <Image
             source={require('../../assets/images/Logo.png')}
@@ -54,17 +60,20 @@ const SignupScreen = () => {
 
           <Text style={styles.label}>Full name</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, !!fieldErrors.name && styles.inputError]}
             value={name}
             onChangeText={setName}
             placeholder="Enter your name"
             placeholderTextColor="#9A9F9B"
             autoCapitalize="words"
           />
+          {!!fieldErrors.name && (
+            <Text style={styles.fieldErrorText}>{fieldErrors.name}</Text>
+          )}
 
           <Text style={styles.label}>Email</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, !!fieldErrors.email && styles.inputError]}
             value={email}
             onChangeText={setEmail}
             placeholder="Enter your email"
@@ -73,31 +82,61 @@ const SignupScreen = () => {
             autoCapitalize="none"
             autoCorrect={false}
           />
+          {!!fieldErrors.email && (
+            <Text style={styles.fieldErrorText}>{fieldErrors.email}</Text>
+          )}
+
+          <Text style={styles.label}>Mobile number</Text>
+          <TextInput
+            style={[styles.input, !!fieldErrors.phone && styles.inputError]}
+            value={phone}
+            onChangeText={setPhone}
+            placeholder="Enter your mobile number"
+            placeholderTextColor="#9A9F9B"
+            keyboardType="phone-pad"
+          />
+          {!!fieldErrors.phone && (
+            <Text style={styles.fieldErrorText}>{fieldErrors.phone}</Text>
+          )}
 
           <Text style={styles.label}>Password</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, !!fieldErrors.password && styles.inputError]}
             value={password}
             onChangeText={setPassword}
             placeholder="Create a password"
             placeholderTextColor="#9A9F9B"
             secureTextEntry
           />
+          {!!fieldErrors.password && (
+            <Text style={styles.fieldErrorText}>{fieldErrors.password}</Text>
+          )}
 
           <Text style={styles.label}>Confirm password</Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              !!fieldErrors.confirmPassword && styles.inputError,
+            ]}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholder="Confirm your password"
             placeholderTextColor="#9A9F9B"
             secureTextEntry
           />
+          {!!fieldErrors.confirmPassword && (
+            <Text style={styles.fieldErrorText}>
+              {fieldErrors.confirmPassword}
+            </Text>
+          )}
 
-          {!!error && <Text style={styles.errorText}>{error}</Text>}
+          {!!formError && <Text style={styles.errorText}>{formError}</Text>}
 
           <View style={styles.buttonWrap}>
-            <Button title="Sign Up" onPress={handleSignup} />
+            <Button
+              title={isSubmitting ? 'Creating account...' : 'Sign Up'}
+              onPress={handleSignup}
+            />
           </View>
 
           <View style={styles.footer}>

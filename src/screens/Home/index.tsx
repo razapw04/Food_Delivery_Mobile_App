@@ -13,10 +13,15 @@ import {
   Text,
   View,
 } from 'react-native';
+import type {CompositeScreenProps} from '@react-navigation/native';
+import type {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import type {RootStackParamList} from '../../types/navigation';
+import SideDrawer from '../../components/SideDrawer';
+import {useLocation} from '../../context/LocationContext';
+import {useOrder, type OrderMode} from '../../context/OrderContext';
+import type {MainTabParamList, RootStackParamList} from '../../types/navigation';
 import {
   bestsellers,
   BestsellerItem,
@@ -26,48 +31,59 @@ import {
 } from './model';
 import {styles} from './styles';
 
-type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
-type OrderMode = 'delivery' | 'pickup';
+type HomeScreenProps = CompositeScreenProps<
+  BottomTabScreenProps<MainTabParamList, 'Home'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
 
 let hasAutoOpenedAddressModal = false;
 
-const HomeHeader = () => (
+const HomeHeader = ({
+  label,
+  value,
+  onPress,
+  onOpenDrawer,
+}: {
+  label: string;
+  value: string;
+  onPress: () => void;
+  onOpenDrawer: () => void;
+}) => (
   <View style={styles.header}>
     <Pressable
       accessibilityLabel="Open menu"
       accessibilityRole="button"
-      onPress={() =>
-        Alert.alert('Menu', 'Side drawer will be available here.')
-      }
+      onPress={onOpenDrawer}
       style={styles.iconButton}>
       <Icon name="menu" size={24} color="#1A1A1A" />
     </Pressable>
 
     <View style={styles.locationBlock}>
       <View style={styles.locationLabelRow}>
-        <Icon name="map-marker" size={14} color="#FF7622" />
-        <Text style={styles.locationLabel}>Deliver to</Text>
+        <Icon
+          name={label === 'Pickup from' ? 'storefront' : 'map-marker'}
+          size={14}
+          color="#FF7622"
+        />
+        <Text style={styles.locationLabel}>{label}</Text>
       </View>
       <Pressable
         accessibilityRole="button"
-        onPress={() => Alert.alert('Delivery location', 'Halal Lab office')}
+        onPress={onPress}
         style={styles.locationButton}>
         <Text numberOfLines={1} style={styles.locationText}>
-          Halal Lab office
+          {value}
         </Text>
         <Icon name="chevron-down" size={18} color="#1A1A1A" />
       </Pressable>
     </View>
 
     <Pressable
-      accessibilityLabel="Shopping bag, 2 items"
+      accessibilityLabel="Shopping bag, empty"
       accessibilityRole="button"
-      onPress={() => Alert.alert('Your bag', 'You have 2 items in your bag.')}
+      onPress={() => Alert.alert('Your bag', 'Your bag is empty.')}
       style={styles.cartButton}>
       <Icon name="shopping-outline" size={22} color="#FFFFFF" />
-      <View style={styles.cartBadge}>
-        <Text style={styles.cartBadgeText}>2</Text>
-      </View>
     </Pressable>
   </View>
 );
@@ -141,59 +157,123 @@ const OrderModeToggle = ({
 const AddressModal = ({
   visible,
   onClose,
+  onSelectNewLocation,
+  onAddNewAddress,
 }: {
   visible: boolean;
   onClose: () => void;
-}) => (
-  <Modal
-    visible={visible}
-    transparent
-    animationType="slide"
-    onRequestClose={onClose}>
-    <Pressable style={styles.modalOverlay} onPress={onClose}>
-      <Pressable style={styles.modalSheet} onPress={event => event.stopPropagation()}>
-        <View style={styles.modalHandle} />
-        <Text style={styles.modalTitle}>Add or choose an address</Text>
+  onSelectNewLocation: () => void;
+  onAddNewAddress: () => void;
+}) => {
+  const {
+    deliveryAddress,
+    liveAddress,
+    selectedAddress,
+    savedAddresses,
+    selectAddress,
+  } = useLocation();
 
-        <Pressable
-          style={styles.modalOption}
-          onPress={() => {
-            onClose();
-            Alert.alert('Select location', 'Map location picker coming soon.');
-          }}>
-          <View style={styles.modalOptionIcon}>
-            <Icon name="map-marker-radius-outline" size={22} color="#FF7622" />
-          </View>
-          <View style={styles.modalOptionTextWrap}>
-            <Text style={styles.modalOptionTitle}>Select new location</Text>
-            <Text style={styles.modalOptionSubtitle}>
-              Choose a place on the map
-            </Text>
-          </View>
-          <Icon name="chevron-right" size={22} color="#6B7280" />
-        </Pressable>
+  const previousLocations = useMemo(() => {
+    const items = savedAddresses.map(item => ({
+      ...item,
+      label: 'Location',
+    }));
 
+    const extraAddress = selectedAddress || liveAddress;
+    if (
+      extraAddress &&
+      extraAddress !== 'Select delivery address' &&
+      !items.some(item => item.address === extraAddress)
+    ) {
+      items.unshift({
+        id: 'previous',
+        label: 'Location',
+        address: extraAddress,
+      });
+    }
+
+    return items;
+  }, [savedAddresses, selectedAddress, liveAddress]);
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}>
+      <Pressable style={styles.modalOverlay} onPress={onClose}>
         <Pressable
-          style={styles.modalOption}
-          onPress={() => {
-            onClose();
-            Alert.alert('Add address', 'Add new address coming soon.');
-          }}>
-          <View style={styles.modalOptionIcon}>
-            <Icon name="plus" size={22} color="#FF7622" />
-          </View>
-          <View style={styles.modalOptionTextWrap}>
-            <Text style={styles.modalOptionTitle}>Add new address</Text>
-            <Text style={styles.modalOptionSubtitle}>
-              Save a home, office, or other place
-            </Text>
-          </View>
-          <Icon name="chevron-right" size={22} color="#6B7280" />
+          style={styles.modalSheet}
+          onPress={event => event.stopPropagation()}>
+          <View style={styles.modalHandle} />
+          <Text style={styles.modalTitle}>Add or choose an address</Text>
+
+          <ScrollView
+            style={styles.modalScroll}
+            contentContainerStyle={styles.modalScrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled">
+            <Pressable
+              style={styles.selectLocationLink}
+              onPress={() => {
+                onClose();
+                onSelectNewLocation();
+              }}>
+              <Icon
+                name="map-marker-radius-outline"
+                size={22}
+                color="#FF7622"
+                style={styles.selectLocationIcon}
+              />
+              <Text style={styles.selectLocationLinkText}>
+                Select new location
+              </Text>
+            </Pressable>
+
+            {previousLocations.map(item => {
+              const isSelected = deliveryAddress === item.address;
+              return (
+                <Pressable
+                  key={item.id}
+                  style={styles.modalOption}
+                  onPress={() => {
+                    selectAddress(item.address);
+                    onClose();
+                  }}>
+                  <Icon
+                    name={isSelected ? 'radiobox-marked' : 'radiobox-blank'}
+                    size={22}
+                    color={isSelected ? '#FF7622' : '#9CA3AF'}
+                    style={styles.radioIcon}
+                  />
+                  <View style={styles.modalOptionTextWrap}>
+                    <Text style={styles.modalOptionTitle} numberOfLines={2}>
+                      {item.address}
+                    </Text>
+                    {isSelected ? (
+                      <Text style={styles.modalOptionSubtitle} numberOfLines={1}>
+                        Selected location
+                      </Text>
+                    ) : null}
+                  </View>
+                </Pressable>
+              );
+            })}
+
+            <Pressable
+              style={styles.addAddressLink}
+              onPress={() => {
+                onClose();
+                onAddNewAddress();
+              }}>
+              <Text style={styles.addAddressLinkText}>+ Add new address</Text>
+            </Pressable>
+          </ScrollView>
         </Pressable>
       </Pressable>
-    </Pressable>
-  </Modal>
-);
+    </Modal>
+  );
+};
 
 const PROMO_AUTO_SLIDE_MS = 3500;
 
@@ -483,15 +563,25 @@ const ExploreMenu = ({
 );
 
 const HomeScreen = ({navigation}: HomeScreenProps) => {
-  const [orderMode, setOrderMode] = useState<OrderMode>('delivery');
   const [addressModalVisible, setAddressModalVisible] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const {deliveryAddress, isLocating} = useLocation();
+  const {orderMode, setOrderMode, selectedBranch} = useOrder();
 
   useEffect(() => {
-    if (!hasAutoOpenedAddressModal) {
+    if (!hasAutoOpenedAddressModal && orderMode === 'delivery') {
       hasAutoOpenedAddressModal = true;
       setAddressModalVisible(true);
     }
-  }, []);
+  }, [orderMode]);
+
+  const isPickup = orderMode === 'pickup';
+  const headerLabel = isPickup ? 'Pickup from' : 'Deliver to';
+  const headerValue = isPickup
+    ? selectedBranch?.name ?? 'Select a branch'
+    : isLocating
+      ? 'Detecting location...'
+      : deliveryAddress;
 
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -501,14 +591,25 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
-        <HomeHeader />
+        <HomeHeader
+          label={headerLabel}
+          value={headerValue}
+          onOpenDrawer={() => setDrawerVisible(true)}
+          onPress={() => {
+            if (isPickup) {
+              navigation.navigate('Branches');
+            } else {
+              setAddressModalVisible(true);
+            }
+          }}
+        />
         <OrderModeToggle
           mode={orderMode}
           onChange={setOrderMode}
           onDeliveryPress={() => setAddressModalVisible(true)}
           onPickupPress={() => navigation.navigate('Branches')}
         />
-        
+
         <PromoCarousel />
         <ExploreMenu
           onViewAll={() => navigation.navigate('Menu')}
@@ -531,6 +632,13 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
       <AddressModal
         visible={addressModalVisible}
         onClose={() => setAddressModalVisible(false)}
+        onSelectNewLocation={() => navigation.navigate('ChooseLocation')}
+        onAddNewAddress={() => navigation.navigate('AddAddress')}
+      />
+
+      <SideDrawer
+        visible={drawerVisible}
+        onClose={() => setDrawerVisible(false)}
       />
     </SafeAreaView>
   );

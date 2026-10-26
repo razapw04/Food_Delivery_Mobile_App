@@ -9,42 +9,33 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import type {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import type {RootStackParamList} from '../../types/navigation';
+import type {MainTabParamList} from '../../types/navigation';
 import {restaurants} from '../Home/model';
 import type {Restaurant} from '../Home/model';
 import {styles} from './styles';
 
-type SearchScreenProps = NativeStackScreenProps<RootStackParamList, 'Search'>;
+type SearchScreenProps = BottomTabScreenProps<MainTabParamList, 'Search'>;
 
 const recentKeywords = ['Pizza', 'Burger', 'Chicken', 'Pasta', 'Rice'];
 
-const SearchHeader = ({onBack}: {onBack: () => void}) => (
+const SearchHeader = () => (
   <View style={styles.header}>
     <View style={styles.topRow}>
-      <Pressable
-        accessibilityLabel="Go back"
-        accessibilityRole="button"
-        onPress={onBack}
-        style={styles.circleButton}>
-        <Icon name="arrow-left" size={24} color="#202321" />
-      </Pressable>
+      <View style={styles.circleButton} />
 
       <View style={styles.titleBlock}>
         <Text style={styles.title}>Search</Text>
       </View>
 
       <Pressable
-        accessibilityLabel="Shopping bag, 2 items"
+        accessibilityLabel="Shopping bag, empty"
         accessibilityRole="button"
-        onPress={() => Alert.alert('Your bag', 'You have 2 items in your bag.')}
+        onPress={() => Alert.alert('Your bag', 'Your bag is empty.')}
         style={[styles.circleButton, styles.cartButton]}>
         <Icon name="shopping-outline" size={23} color="#FFFFFF" />
-        <View style={styles.cartBadge}>
-          <Text style={styles.cartBadgeText}>2</Text>
-        </View>
       </Pressable>
     </View>
   </View>
@@ -69,7 +60,7 @@ const RestaurantResult = ({restaurant}: {restaurant: Restaurant}) => (
   </View>
 );
 
-const SearchScreen = ({navigation}: SearchScreenProps) => {
+const SearchScreen = (_props: SearchScreenProps) => {
   const [query, setQuery] = useState('');
   const normalizedQuery = query.trim().toLowerCase();
   const visibleRestaurants = restaurants.filter(restaurant => {
@@ -81,7 +72,7 @@ const SearchScreen = ({navigation}: SearchScreenProps) => {
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
-      <SearchHeader onBack={() => navigation.goBack()} />
+      <SearchHeader />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
