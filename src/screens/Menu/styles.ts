@@ -8,14 +8,14 @@ const pale = '#F5F5F5';
 export const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
 
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
   },
@@ -97,8 +97,8 @@ export const styles = StyleSheet.create({
   },
 
   categoryName: {
-    color: muted,
-    fontSize: 11,
+    color: ink,
+    fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.semibold,
     textAlign: 'center',
   },
@@ -111,6 +111,10 @@ export const styles = StyleSheet.create({
   listContent: {
     padding: spacing.lg,
     paddingBottom: 110,
+  },
+
+  listContentWithCartFooter: {
+    paddingBottom: 150,
   },
 
   sectionHeader: {
@@ -132,15 +136,14 @@ export const styles = StyleSheet.create({
   },
 
   itemCard: {
-    height: 104,
+    minHeight: 112,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: spacing.sm,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
+    backgroundColor: colors.card,
+    paddingVertical: spacing.md,
+    marginBottom: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
   },
 
   itemImageWrap: {

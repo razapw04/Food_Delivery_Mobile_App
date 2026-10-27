@@ -1,0 +1,256 @@
+import {StyleSheet} from 'react-native';
+import {colors, spacing, typography} from '../../theme';
+
+const ink = '#202321';
+const muted = '#858B87';
+const pale = '#F2F3F1';
+
+export const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: pale,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locationBlock: {
+    flex: 1,
+    marginLeft: spacing.sm,
+    justifyContent: 'center',
+  },
+  locationLabel: {
+    color: colors.primary,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  locationAddress: {
+    color: '#9CA3AF',
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
+    marginTop: 2,
+  },
+  listContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: 140,
+  },
+  emptyScroll: {
+    flexGrow: 1,
+    backgroundColor: colors.background,
+    paddingBottom: spacing.xxl,
+  },
+  emptyHero: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.xl,
+    borderRadius: 16,
+    backgroundColor: colors.card,
+  },
+  emptyLogo: {
+    width: 88,
+    height: 88,
+  },
+  emptyText: {
+    marginTop: spacing.md,
+    color: '#000000',
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
+    textAlign: 'center',
+  },
+  suggestSection: {
+    marginTop: spacing.xl,
+    marginHorizontal: -spacing.lg,
+    backgroundColor: colors.background,
+  },
+  suggestTitle: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    color: ink,
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+  },
+  suggestList: {
+    paddingHorizontal: spacing.lg,
+  },
+  suggestCard: {
+    width: 260,
+    marginRight: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#ECEEEC',
+    padding: spacing.sm,
+    shadowColor: '#000000',
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  suggestImage: {
+    width: 88,
+    height: 88,
+    borderRadius: 10,
+    backgroundColor: pale,
+  },
+  suggestInfo: {
+    flex: 1,
+    marginLeft: spacing.md,
+  },
+  suggestName: {
+    color: ink,
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
+  },
+  suggestDescription: {
+    marginTop: 4,
+    color: muted,
+    fontSize: typography.fontSize.sm,
+  },
+  suggestPrice: {
+    marginTop: 6,
+    color: colors.primary,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+  },
+  emptyExploreWrap: {
+    marginHorizontal: spacing.lg,
+  },
+  exploreMenuWrap: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.xl,
+    borderRadius: 16,
+    borderTopWidth: 1,
+    borderColor: '#ECEEEC',
+    backgroundColor: colors.card,
+    shadowColor: '#000000',
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  filledExploreMenuWrap: {
+    marginHorizontal: 0,
+  },
+  exploreMenuRow: {
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.md,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.card,
+  },
+  exploreMenuCopy: {
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  exploreMenuText: {
+    color: ink,
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+  },
+  exploreMenuDescription: {
+    marginTop: 4,
+    color: muted,
+    fontSize: typography.fontSize.sm,
+  },
+  card: {
+    flexDirection: 'row',
+    backgroundColor: colors.card,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+    paddingVertical: spacing.md,
+  },
+  image: {
+    width: 72,
+    height: 72,
+    borderRadius: 12,
+    backgroundColor: pale,
+  },
+  details: {
+    flex: 1,
+    marginLeft: spacing.md,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  name: {
+    flex: 1,
+    marginRight: spacing.sm,
+    color: ink,
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+  },
+  editButton: {
+    paddingTop: 6,
+  },
+  editText: {
+    color: colors.primary,
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
+    textDecorationLine: 'underline',
+  },
+  variationText: {
+    marginTop: 8,
+    color: muted,
+    fontSize: typography.fontSize.sm,
+  },
+  toppingText: {
+    marginTop: 2,
+    color: muted,
+    fontSize: typography.fontSize.sm,
+  },
+  price: {
+    marginTop: spacing.sm,
+    color: colors.primary,
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
+  },
+  qtyRow: {
+    marginTop: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  qtyButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: pale,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  qtyValue: {
+    minWidth: 28,
+    textAlign: 'center',
+    color: ink,
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
+  },
+  removeButton: {
+    marginLeft: 'auto',
+    padding: spacing.xs,
+  },
+});

@@ -7,7 +7,7 @@ const pale = '#F5F5F5';
 export const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
 
   header: {

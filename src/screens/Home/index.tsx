@@ -18,6 +18,7 @@ import type {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import CartIconButton from '../../components/CartIconButton';
 import SideDrawer from '../../components/SideDrawer';
 import {useLocation} from '../../context/LocationContext';
 import {useOrder, type OrderMode} from '../../context/OrderContext';
@@ -43,11 +44,13 @@ const HomeHeader = ({
   value,
   onPress,
   onOpenDrawer,
+  onOpenCart,
 }: {
   label: string;
   value: string;
   onPress: () => void;
   onOpenDrawer: () => void;
+  onOpenCart: () => void;
 }) => (
   <View style={styles.header}>
     <Pressable
@@ -71,20 +74,14 @@ const HomeHeader = ({
         accessibilityRole="button"
         onPress={onPress}
         style={styles.locationButton}>
-        <Text numberOfLines={1} style={styles.locationText}>
+        <Text numberOfLines={2} style={styles.locationText}>
           {value}
         </Text>
         <Icon name="chevron-down" size={18} color="#1A1A1A" />
       </Pressable>
     </View>
 
-    <Pressable
-      accessibilityLabel="Shopping bag, empty"
-      accessibilityRole="button"
-      onPress={() => Alert.alert('Your bag', 'Your bag is empty.')}
-      style={styles.cartButton}>
-      <Icon name="shopping-outline" size={22} color="#FFFFFF" />
-    </Pressable>
+    <CartIconButton onPress={onOpenCart} />
   </View>
 );
 
@@ -536,7 +533,7 @@ const ExploreMenu = ({
   onSelectItem,
 }: {
   onViewAll: () => void;
-  onSelectItem: (name: string) => void;
+  onSelectItem: (itemId: string) => void;
 }) => (
   <View style={styles.section}>
     <View style={styles.sectionHeading}>
@@ -555,7 +552,7 @@ const ExploreMenu = ({
         <BestsellerCard
           key={item.id}
           item={item}
-          onPress={() => onSelectItem(item.name)}
+          onPress={() => onSelectItem(item.id)}
         />
       ))}
     </View>
@@ -595,6 +592,7 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
           label={headerLabel}
           value={headerValue}
           onOpenDrawer={() => setDrawerVisible(true)}
+          onOpenCart={() => navigation.navigate('Cart')}
           onPress={() => {
             if (isPickup) {
               navigation.navigate('Branches');
@@ -613,8 +611,8 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
         <PromoCarousel />
         <ExploreMenu
           onViewAll={() => navigation.navigate('Menu')}
-          onSelectItem={name =>
-            Alert.alert(name, `${name} details will open here.`)
+          onSelectItem={itemId =>
+            navigation.navigate('ProductDetail', {itemId})
           }
         />
         <RecentOrdersSection

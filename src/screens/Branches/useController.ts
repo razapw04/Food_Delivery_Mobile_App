@@ -31,7 +31,11 @@ const useController = () => {
   }, [searchQuery]);
 
   const handleBack = () => {
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    navigation.navigate('Home' as never);
   };
 
   const handleBranchPress = (branch: Branch) => {

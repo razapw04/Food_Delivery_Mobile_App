@@ -58,7 +58,7 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
       key: 'menu',
       label: 'Explore Menu',
       icon: 'food',
-      onPress: () => navigation.navigate('MainTabs', {screen: 'Menu'}),
+      onPress: () => navigation.navigate('Menu'),
     },
     {
       key: 'addresses',

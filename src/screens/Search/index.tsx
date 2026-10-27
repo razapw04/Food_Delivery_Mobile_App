@@ -1,6 +1,5 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -9,70 +8,88 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import type {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import type {MainTabParamList} from '../../types/navigation';
-import {restaurants} from '../Home/model';
-import type {Restaurant} from '../Home/model';
+import type {MenuItem} from '../Menu/model';
 import {styles} from './styles';
+import useController from './useController';
 
-type SearchScreenProps = BottomTabScreenProps<MainTabParamList, 'Search'>;
+const logoSource = require('../../assets/images/Logo.png');
 
-const recentKeywords = ['Pizza', 'Burger', 'Chicken', 'Pasta', 'Rice'];
-
-const SearchHeader = () => (
+const ExploreHeader = ({
+  label,
+  value,
+  onBack,
+}: {
+  label: string;
+  value: string;
+  onBack: () => void;
+}) => (
   <View style={styles.header}>
     <View style={styles.topRow}>
-      <View style={styles.circleButton} />
-
-      <View style={styles.titleBlock}>
-        <Text style={styles.title}>Search</Text>
-      </View>
-
       <Pressable
-        accessibilityLabel="Shopping bag, empty"
+        accessibilityLabel="Go back"
         accessibilityRole="button"
-        onPress={() => Alert.alert('Your bag', 'Your bag is empty.')}
-        style={[styles.circleButton, styles.cartButton]}>
-        <Icon name="shopping-outline" size={23} color="#FFFFFF" />
+        onPress={onBack}
+        style={styles.circleButton}>
+        <Icon name="arrow-left" size={24} color="#202321" />
       </Pressable>
+
+      <View style={styles.locationBlock}>
+        <Text style={styles.locationLabel}>{label}</Text>
+        <Text numberOfLines={2} style={styles.locationAddress}>
+          {value}
+        </Text>
+      </View>
     </View>
   </View>
 );
 
-const RestaurantResult = ({restaurant}: {restaurant: Restaurant}) => (
-  <View style={styles.restaurantCard}>
+const MenuItemResult = ({
+  item,
+  onPress,
+}: {
+  item: MenuItem;
+  onPress: () => void;
+}) => (
+  <Pressable style={styles.restaurantCard} onPress={onPress}>
     <Image
-      accessibilityLabel={`${restaurant.name} restaurant`}
-      source={{uri: restaurant.image}}
+      accessibilityLabel={item.name}
+      source={{uri: item.image}}
       style={styles.restaurantImage}
     />
     <View style={styles.restaurantDetails}>
       <Text numberOfLines={1} style={styles.restaurantName}>
-        {restaurant.name}
+        {item.name}
       </Text>
-      <View style={styles.ratingRow}>
-        <Icon name="star" size={16} color={styles.ratingIcon.color} />
-        <Text style={styles.ratingText}>{restaurant.rating}</Text>
-      </View>
+      <Text style={styles.ratingText}>{item.price}</Text>
     </View>
-  </View>
+  </Pressable>
 );
 
-const SearchScreen = (_props: SearchScreenProps) => {
-  const [query, setQuery] = useState('');
-  const normalizedQuery = query.trim().toLowerCase();
-  const visibleRestaurants = restaurants.filter(restaurant => {
-    const searchableText =
-      `${restaurant.name} ${restaurant.tags} ${restaurant.category}`.toLowerCase();
-    return searchableText.includes(normalizedQuery);
-  });
+const ExploreScreen = () => {
+  const {
+    query,
+    setQuery,
+    clearQuery,
+    headerLabel,
+    headerValue,
+    popularMenuItems,
+    visibleItems,
+    showEmptyState,
+    goHome,
+    goMenu,
+    openProduct,
+  } = useController();
 
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
-      <SearchHeader />
+      <ExploreHeader
+        label={headerLabel}
+        value={headerValue}
+        onBack={goHome}
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -82,61 +99,86 @@ const SearchScreen = (_props: SearchScreenProps) => {
           <View style={styles.searchBar}>
             <Icon name="magnify" size={24} color="#858B87" />
             <TextInput
-              accessibilityLabel="Search restaurants"
-              autoFocus
+              accessibilityLabel="Search your favourite items"
               onChangeText={setQuery}
-              placeholder="Search restaurants"
+              placeholder="Search your favourite items"
               placeholderTextColor="#9A9F9B"
               returnKeyType="search"
               style={styles.searchInput}
               value={query}
             />
-            <Pressable
-              accessibilityLabel="Clear search"
-              accessibilityRole="button"
-              hitSlop={8}
-              onPress={() => setQuery('')}
-              style={styles.clearButton}>
-              <Icon name="close-circle" size={20} color="#858B87" />
-            </Pressable>
+            {!!query && (
+              <Pressable
+                accessibilityLabel="Clear search"
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={clearQuery}
+                style={styles.clearButton}>
+                <Icon name="close-circle" size={20} color="#858B87" />
+              </Pressable>
+            )}
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Keywords</Text>
+          <Text style={styles.sectionTitle}>Popular searches</Text>
           <ScrollView
             contentContainerStyle={styles.keywordList}
             horizontal
             showsHorizontalScrollIndicator={false}>
-            {recentKeywords.map(keyword => (
+            {popularMenuItems.map(item => (
               <Pressable
                 accessibilityRole="button"
-                key={keyword}
-                onPress={() => setQuery(keyword)}
+                key={item.id}
+                onPress={() => openProduct(item.id)}
                 style={styles.keywordCard}>
-                <Text style={styles.keywordText}>{keyword}</Text>
+                <Text style={styles.keywordText}>{item.name}</Text>
               </Pressable>
             ))}
           </ScrollView>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Suggested Restaurants</Text>
-          {visibleRestaurants.length > 0 ? (
-            <View style={styles.restaurantList}>
-              {visibleRestaurants.map(restaurant => (
-                <RestaurantResult key={restaurant.id} restaurant={restaurant} />
-              ))}
+        <View style={styles.exploreMenuWrap}>
+          <Pressable
+            style={styles.exploreMenuRow}
+            accessibilityRole="button"
+            onPress={goMenu}>
+            <View style={styles.exploreMenuCopy}>
+              <Text style={styles.exploreMenuText}>Explore menu</Text>
+              <Text style={styles.exploreMenuDescription}>
+                Add more items in your cart
+              </Text>
             </View>
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>No restaurants found</Text>
-            </View>
-          )}
+            <Icon name="chevron-right" size={24} color="#1A1A1A" />
+          </Pressable>
         </View>
+
+        {showEmptyState ? (
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIconWrap}>
+              <Image
+                accessibilityLabel="App logo"
+                resizeMode="contain"
+                source={logoSource}
+                style={styles.emptyLogo}
+              />
+            </View>
+            <Text style={styles.emptyStateText}>No products found</Text>
+          </View>
+        ) : (
+          <View style={styles.restaurantList}>
+            {visibleItems.map(item => (
+              <MenuItemResult
+                key={item.id}
+                item={item}
+                onPress={() => openProduct(item.id)}
+              />
+            ))}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-export default SearchScreen;
+export default ExploreScreen;

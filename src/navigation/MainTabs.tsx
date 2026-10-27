@@ -2,7 +2,7 @@ import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/Home';
 import SearchScreen from '../screens/Search';
-import MenuScreen from '../screens/Menu';
+import BranchesScreen from '../screens/Branches';
 import OrderHistoryScreen from '../screens/OrderHistory';
 import type {MainTabParamList} from '../types/navigation';
 import LiquidGlassTabBar from './LiquidGlassTabBar';
@@ -23,14 +23,14 @@ const MainTabs = () => {
         options={{tabBarLabel: 'Home'}}
       />
       <Tab.Screen
-        name="Search"
+        name="Explore"
         component={SearchScreen}
-        options={{tabBarLabel: 'Search'}}
+        options={{tabBarLabel: 'Explore'}}
       />
       <Tab.Screen
-        name="Menu"
-        component={MenuScreen}
-        options={{tabBarLabel: 'Menu'}}
+        name="Branches"
+        component={BranchesScreen}
+        options={{tabBarLabel: 'Branches'}}
       />
       <Tab.Screen
         name="Orders"

@@ -110,43 +110,43 @@ export const recentOrders: RecentOrder[] = [
   },
 ];
 
-/** Popular dishes shown in Explore Menu grid. */
+/** Popular dishes shown in Explore Menu grid (ids match Menu model). */
 export const bestsellers: BestsellerItem[] = [
   {
-    id: 'smash-burger',
+    id: 'bur-1',
     name: 'Smash Burger',
     image:
       'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80',
   },
   {
-    id: 'pepperoni-pizza',
-    name: 'Pepperoni Pizza',
+    id: 'piz-2',
+    name: 'Pepperoni Feast',
     image:
       'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80',
   },
   {
-    id: 'crispy-wings',
-    name: 'Crispy Wings',
+    id: 'san-3',
+    name: 'Crispy Zinger',
     image:
-      'https://images.unsplash.com/photo-1608039755401-742074f0548d?auto=format&fit=crop&w=500&q=80',
+      'https://images.unsplash.com/photo-1481070414801-51fd732d7184?auto=format&fit=crop&w=500&q=80',
   },
   {
-    id: 'loaded-fries',
+    id: 'side-1',
     name: 'Loaded Fries',
     image:
       'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=500&q=80',
   },
   {
-    id: 'zinger-wrap',
-    name: 'Zinger Wrap',
+    id: 'deal-2',
+    name: 'Burger Combo',
     image:
-      'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=500&q=80',
+      'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80',
   },
   {
-    id: 'choc-shake',
-    name: 'Choco Shake',
+    id: 'spiz-1',
+    name: 'Tandoori Special',
     image:
-      'https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=500&q=80',
+      'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=500&q=80',
   },
 ];
 

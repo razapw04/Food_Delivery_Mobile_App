@@ -1,21 +1,15 @@
 import React from 'react';
-import {
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import {Pressable, StyleSheet, Text, View} from 'react-native';
 import type {BottomTabBarProps} from '@react-navigation/bottom-tabs';
-import {BlurView} from '@react-native-community/blur';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import LiquidGlassPanel from '../components/LiquidGlassPanel';
 import {colors} from '../theme';
 
 const TAB_ICONS: Record<string, {active: string; inactive: string}> = {
   Home: {active: 'home', inactive: 'home-outline'},
-  Search: {active: 'magnify', inactive: 'magnify'},
-  Menu: {active: 'food', inactive: 'food-outline'},
+  Explore: {active: 'magnify', inactive: 'magnify'},
+  Branches: {active: 'store', inactive: 'store-outline'},
   Orders: {active: 'package-variant', inactive: 'package-variant-closed'},
 };
 
@@ -25,24 +19,13 @@ const LiquidGlassTabBar = ({
   navigation,
 }: BottomTabBarProps) => {
   const insets = useSafeAreaInsets();
-  const bottomPad = Math.max(insets.bottom, 10);
+  const bottomPad = Math.max(insets.bottom, 6);
 
   return (
     <View
       pointerEvents="box-none"
       style={[styles.wrapper, {paddingBottom: bottomPad}]}>
-      <View style={styles.pill}>
-        {Platform.OS === 'ios' ? (
-          <BlurView
-            style={StyleSheet.absoluteFill}
-            blurType="light"
-            blurAmount={28}
-            reducedTransparencyFallbackColor="rgba(255,255,255,0.85)"
-          />
-        ) : (
-          <View style={[StyleSheet.absoluteFill, styles.androidGlass]} />
-        )}
-
+      <LiquidGlassPanel style={styles.pill} glassType="regular">
         <View style={styles.glassBorder} pointerEvents="none" />
 
         <View style={styles.row}>
@@ -98,7 +81,7 @@ const LiquidGlassTabBar = ({
             );
           })}
         </View>
-      </View>
+      </LiquidGlassPanel>
     </View>
   );
 };
@@ -117,10 +100,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     borderRadius: 28,
-    overflow: 'hidden',
-    minHeight: 64,
+    minHeight: 56,
     justifyContent: 'center',
-    // Soft floating glass shadow
     shadowColor: '#000',
     shadowOpacity: 0.12,
     shadowRadius: 20,
@@ -128,15 +109,11 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
 
-  androidGlass: {
-    backgroundColor: 'rgba(255,255,255,0.82)',
-  },
-
   glassBorder: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 28,
     borderWidth: StyleSheet.hairlineWidth * 2,
-    borderColor: 'rgba(255,255,255,0.65)',
+    borderColor: 'rgba(255,255,255,0.55)',
   },
 
   row: {
@@ -144,20 +121,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-around',
     paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
 
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
 
   iconWrap: {
     width: 70,
-    height: 42,
-    // borderRadius: 16,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },

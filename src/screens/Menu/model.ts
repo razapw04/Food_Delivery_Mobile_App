@@ -282,3 +282,20 @@ export const menuItems: MenuItem[] = [
       'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80',
   },
 ];
+
+/** Featured products shown under Popular searches on Explore */
+export const popularMenuItemIds = [
+  'piz-2',
+  'bur-1',
+  'deal-2',
+  'san-1',
+  'side-1',
+  'spiz-1',
+] as const;
+
+export const getMenuItemById = (id: string): MenuItem | undefined =>
+  menuItems.find(item => item.id === id);
+
+export const popularMenuItems: MenuItem[] = popularMenuItemIds
+  .map(id => getMenuItemById(id))
+  .filter((item): item is MenuItem => item != null);

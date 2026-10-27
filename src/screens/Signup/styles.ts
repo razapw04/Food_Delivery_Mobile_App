@@ -4,7 +4,7 @@ import {colors, spacing, typography} from '../../theme';
 export const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
 
   flex: {

@@ -15,7 +15,7 @@ export const styles = StyleSheet.create({
   panel: {
     width: '78%',
     maxWidth: 340,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     paddingTop: spacing.sm,
     paddingBottom: spacing.xl,
   },

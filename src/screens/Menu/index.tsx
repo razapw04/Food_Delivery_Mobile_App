@@ -1,6 +1,5 @@
 import React, {useCallback, useMemo, useRef, useState} from 'react';
 import {
-  Alert,
   FlatList,
   Image,
   NativeScrollEvent,
@@ -12,17 +11,22 @@ import {
   View,
   type ViewToken,
 } from 'react-native';
-import type {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
+import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {spacing} from '../../theme';
+import CartReviewFooter from '../../components/CartReviewFooter';
+import {useCart} from '../../context/CartContext';
 import {useLocation} from '../../context/LocationContext';
 import {useOrder} from '../../context/OrderContext';
-import type {MainTabParamList} from '../../types/navigation';
+import type {RootStackParamList} from '../../types/navigation';
 import {menuCategories, menuItems, type MenuItem} from './model';
 import {styles} from './styles';
 
-type MenuScreenProps = BottomTabScreenProps<MainTabParamList, 'Menu'>;
+type MenuScreenProps = NativeStackScreenProps<RootStackParamList, 'Menu'>;
+
+const formatPrice = (value: number) =>
+  `Rs. ${value.toLocaleString('en-PK')}`;
 
 type HeaderRow = {
   type: 'header';
@@ -41,20 +45,20 @@ type ItemRow = {
 type MenuRow = HeaderRow | ItemRow;
 
 const SECTION_HEADER_HEIGHT = 52;
-const ITEM_ROW_HEIGHT = 112;
+const ITEM_ROW_HEIGHT = 120;
 
 const MenuItemCard = ({
   item,
   isFavorite,
   onToggleFavorite,
+  onOpenProduct,
 }: {
   item: MenuItem;
   isFavorite: boolean;
   onToggleFavorite: () => void;
+  onOpenProduct: () => void;
 }) => (
-  <Pressable
-    style={styles.itemCard}
-    onPress={() => Alert.alert(item.name, `${item.description}\n${item.price}`)}>
+  <Pressable style={styles.itemCard} onPress={onOpenProduct}>
     <View style={styles.itemImageWrap}>
       <Image
         source={{uri: item.image}}
@@ -91,10 +95,10 @@ const MenuItemCard = ({
       <View style={styles.priceRow}>
         <Text style={styles.itemPrice}>{item.price}</Text>
         <Pressable
-          accessibilityLabel={`Add ${item.name}`}
+          accessibilityLabel={`Open ${item.name}`}
           accessibilityRole="button"
           style={styles.addButton}
-          onPress={() => Alert.alert('Added', `${item.name} added to bag.`)}>
+          onPress={onOpenProduct}>
           <Icon name="plus" size={16} color="#FFFFFF" />
         </Pressable>
       </View>
@@ -105,7 +109,9 @@ const MenuItemCard = ({
 const MenuScreen = ({navigation}: MenuScreenProps) => {
   const {deliveryAddress, isLocating} = useLocation();
   const {orderMode, selectedBranch} = useOrder();
+  const {itemCount, cartTotal} = useCart();
   const isPickup = orderMode === 'pickup';
+  const hasCartItems = itemCount > 0;
   const [selectedCategoryId, setSelectedCategoryId] = useState(
     menuCategories[0].id,
   );
@@ -236,11 +242,19 @@ const MenuScreen = ({navigation}: MenuScreenProps) => {
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.header}>
+        <Pressable
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+          style={styles.backButton}
+          onPress={() => navigation.navigate('MainTabs', {screen: 'Home'})}>
+          <Icon name="arrow-left" size={24} color="#1A1A1A" />
+        </Pressable>
+
         <View style={styles.locationBlock}>
           <Text style={styles.locationLabel}>
             {isPickup ? 'Pickup from' : 'Deliver to'}
           </Text>
-          <Text numberOfLines={1} style={styles.locationAddress}>
+          <Text numberOfLines={2} style={styles.locationAddress}>
             {isPickup
               ? selectedBranch?.name ?? 'Select a branch'
               : isLocating
@@ -253,7 +267,9 @@ const MenuScreen = ({navigation}: MenuScreenProps) => {
           accessibilityLabel="Search menu"
           accessibilityRole="button"
           style={styles.searchButton}
-          onPress={() => navigation.navigate('Search')}>
+          onPress={() =>
+            navigation.navigate('MainTabs', {screen: 'Explore'})
+          }>
           <Icon name="magnify" size={22} color="#1A1A1A" />
         </Pressable>
       </View>
@@ -306,7 +322,10 @@ const MenuScreen = ({navigation}: MenuScreenProps) => {
         ref={listRef}
         data={rows}
         keyExtractor={row => row.key}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          hasCartItems && styles.listContentWithCartFooter,
+        ]}
         showsVerticalScrollIndicator={false}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
@@ -348,10 +367,22 @@ const MenuScreen = ({navigation}: MenuScreenProps) => {
               item={row.item}
               isFavorite={favoriteIds.has(row.item.id)}
               onToggleFavorite={() => toggleFavorite(row.item.id)}
+              onOpenProduct={() =>
+                navigation.navigate('ProductDetail', {itemId: row.item.id})
+              }
             />
           );
         }}
       />
+
+      {hasCartItems ? (
+        <CartReviewFooter
+          itemCount={itemCount}
+          totalLabel={formatPrice(cartTotal)}
+          actionLabel="View Cart"
+          onPress={() => navigation.navigate('Cart')}
+        />
+      ) : null}
     </SafeAreaView>
   );
 };

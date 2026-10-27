@@ -12,7 +12,7 @@ export const PROMO_CARD_WIDTH = screenWidth - spacing.lg * 2;
 export const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
@@ -67,7 +67,7 @@ export const styles = StyleSheet.create({
     color: ink,
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-    maxWidth: 160,
+    maxWidth: 220,
   },
 
   cartButton: {
@@ -177,16 +177,16 @@ export const styles = StyleSheet.create({
     width: '31.5%',
     marginBottom: spacing.md,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.sm,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
   },
 
   menuCardImageWrap: {
@@ -300,17 +300,17 @@ export const styles = StyleSheet.create({
   recentOrderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
     marginBottom: spacing.sm,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 3},
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
   },
 
   recentOrderImage: {
@@ -405,7 +405,7 @@ export const styles = StyleSheet.create({
 
   modalSheet: {
     height: '50%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: spacing.lg,

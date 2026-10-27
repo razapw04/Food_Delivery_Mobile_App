@@ -8,21 +8,21 @@ const pale = '#F2F3F1';
 export const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingBottom: 110,
   },
   header: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
     marginBottom: spacing.md,
   },
   topRow: {
     minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
   circleButton: {
     width: 44,
@@ -32,37 +32,23 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  titleBlock: {
+  locationBlock: {
     flex: 1,
-    paddingHorizontal: spacing.sm,
-    alignItems: 'center',
-  },
-  title: {
-    color: ink,
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.semibold,
-  },
-  cartButton: {
-    backgroundColor: ink,
-  },
-  cartBadge: {
-    position: 'absolute',
-    top: -3,
-    right: -3,
-    minWidth: 20,
-    height: 20,
-    paddingHorizontal: 4,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    backgroundColor: colors.primary,
-    alignItems: 'center',
+    marginLeft: spacing.sm,
     justifyContent: 'center',
   },
-  cartBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
+  locationLabel: {
+    color: colors.primary,
+    fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  locationAddress: {
+    color: '#9CA3AF',
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
+    marginTop: 2,
   },
   searchWrap: {
     marginHorizontal: spacing.lg,
@@ -94,7 +80,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.sm,
     color: ink,
-    fontSize: 18,
+    fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.bold,
   },
   keywordList: {
@@ -102,8 +88,9 @@ export const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   keywordCard: {
-    width: 86,
+    minWidth: 86,
     height: 46,
+    paddingHorizontal: spacing.md,
     marginRight: spacing.sm,
     borderRadius: 14,
     borderWidth: 1,
@@ -114,8 +101,44 @@ export const styles = StyleSheet.create({
   },
   keywordText: {
     color: ink,
-    fontSize: typography.fontSize.xs,
+    fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.semibold,
+  },
+  exploreMenuWrap: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    borderRadius: 16,
+    borderTopWidth: 1,
+    borderColor: '#ECEEEC',
+    backgroundColor: colors.card,
+    shadowColor: '#000000',
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  exploreMenuRow: {
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.md,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.card,
+  },
+  exploreMenuCopy: {
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  exploreMenuText: {
+    color: ink,
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+  },
+  exploreMenuDescription: {
+    marginTop: 4,
+    color: muted,
+    fontSize: typography.fontSize.sm,
   },
   restaurantList: {
     paddingHorizontal: spacing.lg,
@@ -129,7 +152,7 @@ export const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: '#ECEEEC',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
   },
   restaurantImage: {
     width: 60,
@@ -162,11 +185,22 @@ export const styles = StyleSheet.create({
   },
   emptyState: {
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
+    paddingVertical: spacing.xxl,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyIconWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  emptyLogo: {
+    width: 72,
+    height: 72,
   },
   emptyStateText: {
     color: muted,
-    fontSize: typography.fontSize.sm,
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.semibold,
   },
 });

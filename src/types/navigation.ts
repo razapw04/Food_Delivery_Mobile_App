@@ -1,7 +1,7 @@
 export type MainTabParamList = {
   Home: undefined;
-  Search: undefined;
-  Menu: undefined;
+  Explore: undefined;
+  Branches: undefined;
   Orders: undefined;
 };
 
@@ -14,10 +14,12 @@ export type RootStackParamList = {
   MainTabs: undefined | {screen?: keyof MainTabParamList};
   /** Kept for deep links / older navigations — prefer MainTabs */
   Home: undefined;
-  Search: undefined;
+  Explore: undefined;
   Menu: undefined;
   OrderHistory: undefined;
   Branches: undefined;
   ChooseLocation: undefined;
   AddAddress: undefined;
+  ProductDetail: {itemId: string};
+  Cart: undefined;
 };

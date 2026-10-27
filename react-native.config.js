@@ -1,5 +1,5 @@
 module.exports = {
   // Icon fonts are linked via android/app/build.gradle (fonts.gradle).
-  // Do not also list them here — that duplicates assets and breaks the build.
-  assets: [],
+  // App text fonts (Inter) live under src/assets/fonts.
+  assets: ['./src/assets/fonts'],
 };

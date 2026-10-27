@@ -44,15 +44,49 @@ export const savedAddressesSeed: SavedAddress[] = [];
 const LocationContext = createContext<LocationContextValue | null>(null);
 
 const requestLocationPermission = async (): Promise<boolean> => {
-  if (Platform.OS !== 'android') {
+  if (Platform.OS === 'ios') {
+    const status = await Geolocation.requestAuthorization('whenInUse');
+    return status === 'granted';
+  }
+
+  const fine = await PermissionsAndroid.request(
+    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+  );
+  if (fine === PermissionsAndroid.RESULTS.GRANTED) {
     return true;
   }
 
-  const permission = await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+  const coarse = await PermissionsAndroid.request(
+    PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
   );
+  return coarse === PermissionsAndroid.RESULTS.GRANTED;
+};
 
-  return permission === PermissionsAndroid.RESULTS.GRANTED;
+const buildStreetLine = (parts: Record<string, string | undefined>) => {
+  const house =
+    parts.house_number ||
+    parts.house_name ||
+    parts.building ||
+    parts.amenity ||
+    '';
+  const street =
+    parts.road ||
+    parts.pedestrian ||
+    parts.footway ||
+    parts.path ||
+    parts.residential ||
+    '';
+
+  if (house && street) {
+    return `House ${house}, ${street}`;
+  }
+  if (street) {
+    return street;
+  }
+  if (house) {
+    return `House ${house}`;
+  }
+  return '';
 };
 
 const reverseGeocode = async (
@@ -61,7 +95,7 @@ const reverseGeocode = async (
 ): Promise<string> => {
   try {
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16&addressdetails=1`,
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
       {
         headers: {
           Accept: 'application/json',
@@ -75,22 +109,41 @@ const reverseGeocode = async (
     }
 
     const data = await response.json();
-    const parts = data?.address ?? {};
-    const short =
-      [
-        parts.road || parts.neighbourhood || parts.suburb,
-        parts.city || parts.town || parts.village || parts.state,
-      ]
-        .filter(Boolean)
-        .join(', ') || data?.display_name;
+    const parts = (data?.address ?? {}) as Record<string, string | undefined>;
+    const streetLine = buildStreetLine(parts);
+    const area =
+      parts.neighbourhood ||
+      parts.suburb ||
+      parts.quarter ||
+      parts.residential ||
+      parts.city_district ||
+      parts.county;
+    const city =
+      parts.city || parts.town || parts.village || parts.municipality || parts.state;
+    const postcode = parts.postcode;
 
-    return short || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+    const detailed = [streetLine, area, city, postcode]
+      .filter(Boolean)
+      .join(', ');
+
+    if (detailed) {
+      return detailed;
+    }
+
+    if (typeof data?.display_name === 'string' && data.display_name.trim()) {
+      return data.display_name;
+    }
+
+    return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
   } catch {
     return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
   }
 };
 
-const getDevicePosition = (): Promise<Coordinates> =>
+const readPosition = (
+  enableHighAccuracy: boolean,
+  timeout: number,
+): Promise<Coordinates> =>
   new Promise((resolve, reject) => {
     Geolocation.getCurrentPosition(
       position => {
@@ -101,12 +154,23 @@ const getDevicePosition = (): Promise<Coordinates> =>
       },
       error => reject(error),
       {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 10000,
+        enableHighAccuracy,
+        timeout,
+        maximumAge: enableHighAccuracy ? 5000 : 60000,
+        forceRequestLocation: true,
+        showLocationDialog: true,
       },
     );
   });
+
+const getDevicePosition = async (): Promise<Coordinates> => {
+  try {
+    return await readPosition(true, 20000);
+  } catch {
+    // Indoor / weak GPS: fall back to network location
+    return readPosition(false, 20000);
+  }
+};
 
 export const LocationProvider = ({children}: {children: React.ReactNode}) => {
   const [liveAddress, setLiveAddress] = useState<string | null>(null);
