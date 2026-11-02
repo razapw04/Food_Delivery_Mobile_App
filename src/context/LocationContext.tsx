@@ -8,12 +8,14 @@ import React, {
 } from 'react';
 import {PermissionsAndroid, Platform} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
+import {
+  getStoredAddresses,
+  saveStoredAddresses,
+  type SavedAddress,
+} from '../storage/addressesStorage';
+import {getStoredOrders} from '../storage/orderStorage';
 
-export type SavedAddress = {
-  id: string;
-  label: string;
-  address: string;
-};
+export type {SavedAddress};
 
 export type Coordinates = {
   latitude: number;
@@ -62,13 +64,30 @@ const requestLocationPermission = async (): Promise<boolean> => {
   return coarse === PermissionsAndroid.RESULTS.GRANTED;
 };
 
-const buildStreetLine = (parts: Record<string, string | undefined>) => {
-  const house =
-    parts.house_number ||
+const buildHouseLabel = (parts: Record<string, string | undefined>) => {
+  const houseNumber = parts.house_number || parts.housenumber;
+  const houseName =
     parts.house_name ||
     parts.building ||
     parts.amenity ||
+    parts.shop ||
+    parts.office ||
     '';
+
+  if (houseNumber && houseName) {
+    return `House ${houseNumber}, ${houseName}`;
+  }
+  if (houseNumber) {
+    return `House ${houseNumber}`;
+  }
+  if (houseName) {
+    return houseName;
+  }
+  return '';
+};
+
+const buildStreetLine = (parts: Record<string, string | undefined>) => {
+  const house = buildHouseLabel(parts);
   const street =
     parts.road ||
     parts.pedestrian ||
@@ -78,15 +97,100 @@ const buildStreetLine = (parts: Record<string, string | undefined>) => {
     '';
 
   if (house && street) {
-    return `House ${house}, ${street}`;
+    return `${house}, ${street}`;
   }
   if (street) {
     return street;
   }
   if (house) {
-    return `House ${house}`;
+    return house;
   }
   return '';
+};
+
+const isCoordinateLabel = (value: string) =>
+  /^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$/.test(value.trim());
+
+const reverseGeocodeNominatim = async (
+  latitude: number,
+  longitude: number,
+): Promise<string | null> => {
+  const response = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+    {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'FoodDeliveryApp/1.0',
+      },
+    },
+  );
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = await response.json();
+  const parts = (data?.address ?? {}) as Record<string, string | undefined>;
+  const streetLine = buildStreetLine(parts);
+  const area =
+    parts.neighbourhood ||
+    parts.suburb ||
+    parts.quarter ||
+    parts.residential ||
+    parts.city_district ||
+    parts.county;
+  const city =
+    parts.city || parts.town || parts.village || parts.municipality || parts.state;
+  const postcode = parts.postcode;
+
+  const detailed = [streetLine, area, city, postcode].filter(Boolean).join(', ');
+  if (detailed) {
+    return detailed;
+  }
+
+  if (typeof data?.display_name === 'string' && data.display_name.trim()) {
+    return data.display_name.trim();
+  }
+
+  return null;
+};
+
+const reverseGeocodeBigDataCloud = async (
+  latitude: number,
+  longitude: number,
+): Promise<string | null> => {
+  const response = await fetch(
+    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`,
+  );
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = await response.json();
+  const line1 =
+    data?.localityInfo?.informative?.[0]?.name ||
+    data?.locality ||
+    data?.city ||
+    '';
+  const line2 = [
+    data?.principalSubdivision,
+    data?.countryName,
+    data?.postcode,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+  const composed = [line1, line2].filter(Boolean).join(', ');
+  if (composed) {
+    return composed;
+  }
+
+  if (typeof data?.formatted === 'string' && data.formatted.trim()) {
+    return data.formatted.trim();
+  }
+
+  return null;
 };
 
 const reverseGeocode = async (
@@ -94,50 +198,24 @@ const reverseGeocode = async (
   longitude: number,
 ): Promise<string> => {
   try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
-      {
-        headers: {
-          Accept: 'application/json',
-          'User-Agent': 'FoodDeliveryApp/1.0',
-        },
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error('Reverse geocode failed');
+    const nominatim = await reverseGeocodeNominatim(latitude, longitude);
+    if (nominatim && !isCoordinateLabel(nominatim)) {
+      return nominatim;
     }
-
-    const data = await response.json();
-    const parts = (data?.address ?? {}) as Record<string, string | undefined>;
-    const streetLine = buildStreetLine(parts);
-    const area =
-      parts.neighbourhood ||
-      parts.suburb ||
-      parts.quarter ||
-      parts.residential ||
-      parts.city_district ||
-      parts.county;
-    const city =
-      parts.city || parts.town || parts.village || parts.municipality || parts.state;
-    const postcode = parts.postcode;
-
-    const detailed = [streetLine, area, city, postcode]
-      .filter(Boolean)
-      .join(', ');
-
-    if (detailed) {
-      return detailed;
-    }
-
-    if (typeof data?.display_name === 'string' && data.display_name.trim()) {
-      return data.display_name;
-    }
-
-    return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
   } catch {
-    return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+    // try fallback provider below
   }
+
+  try {
+    const bigData = await reverseGeocodeBigDataCloud(latitude, longitude);
+    if (bigData && !isCoordinateLabel(bigData)) {
+      return bigData;
+    }
+  } catch {
+    // final fallback below
+  }
+
+  return FALLBACK_ADDRESS;
 };
 
 const readPosition = (
@@ -179,6 +257,51 @@ export const LocationProvider = ({children}: {children: React.ReactNode}) => {
   const [isLocating, setIsLocating] = useState(false);
   const [savedAddresses, setSavedAddresses] =
     useState<SavedAddress[]>(savedAddressesSeed);
+  const [addressesReady, setAddressesReady] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const loadAddresses = async () => {
+      const stored = await getStoredAddresses();
+      const orders = await getStoredOrders();
+      const fromOrders: SavedAddress[] = [];
+
+      orders.forEach(order => {
+        if (order.orderMode !== 'delivery') {
+          return;
+        }
+        const address = order.deliveryAddress?.trim();
+        if (
+          !address ||
+          address === FALLBACK_ADDRESS ||
+          fromOrders.some(item => item.address === address) ||
+          stored.some(item => item.address === address)
+        ) {
+          return;
+        }
+        fromOrders.push({
+          id: `order-${order.id}`,
+          label: 'Location',
+          address,
+        });
+      });
+
+      if (!active) {
+        return;
+      }
+
+      const merged = [...fromOrders, ...stored];
+      setSavedAddresses(merged);
+      if (fromOrders.length > 0) {
+        await saveStoredAddresses(merged);
+      }
+      setAddressesReady(true);
+    };
+    loadAddresses();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const fetchLiveAddress = useCallback(async (): Promise<string | null> => {
     setIsLocating(true);
@@ -191,20 +314,39 @@ export const LocationProvider = ({children}: {children: React.ReactNode}) => {
       const coords = await getDevicePosition();
       setCoordinates(coords);
       const address = await reverseGeocode(coords.latitude, coords.longitude);
+      if (!address || address === FALLBACK_ADDRESS || isCoordinateLabel(address)) {
+        return null;
+      }
+
       setLiveAddress(address);
+      setSelectedAddress(prev =>
+        prev && isCoordinateLabel(prev) ? address : prev,
+      );
+      setSavedAddresses(prev => {
+        const next = prev.map(item =>
+          isCoordinateLabel(item.address) ? {...item, address} : item,
+        );
+        if (addressesReady) {
+          saveStoredAddresses(next);
+        }
+        return next;
+      });
       return address;
     } catch {
       return null;
     } finally {
       setIsLocating(false);
     }
-  }, []);
+  }, [addressesReady]);
 
   useEffect(() => {
     fetchLiveAddress();
   }, [fetchLiveAddress]);
 
   const selectAddress = useCallback((address: string) => {
+    if (!address || isCoordinateLabel(address)) {
+      return;
+    }
     setSelectedAddress(address);
   }, []);
 
@@ -216,7 +358,7 @@ export const LocationProvider = ({children}: {children: React.ReactNode}) => {
   }, [fetchLiveAddress]);
 
   const confirmCurrentLocation = useCallback(() => {
-    if (!liveAddress) {
+    if (!liveAddress || isCoordinateLabel(liveAddress)) {
       return;
     }
 
@@ -226,7 +368,7 @@ export const LocationProvider = ({children}: {children: React.ReactNode}) => {
         return prev;
       }
 
-      return [
+      const next = [
         {
           id: `loc-${Date.now()}`,
           label: 'Location',
@@ -234,29 +376,52 @@ export const LocationProvider = ({children}: {children: React.ReactNode}) => {
         },
         ...prev,
       ];
+      saveStoredAddresses(next);
+      return next;
     });
   }, [liveAddress]);
 
-  const addSavedAddress = useCallback((label: string, address: string) => {
-    setSavedAddresses(prev => [
-      ...prev,
-      {
-        id: `custom-${Date.now()}`,
-        label,
-        address,
-      },
-    ]);
-    setSelectedAddress(address);
-  }, []);
+  const addSavedAddress = useCallback(
+    (label: string, address: string) => {
+      if (!address || isCoordinateLabel(address) || address === FALLBACK_ADDRESS) {
+        return;
+      }
 
+      setSavedAddresses(prev => {
+        if (prev.some(item => item.address === address)) {
+          return prev;
+        }
+
+        const next = [
+          {
+            id: `custom-${Date.now()}`,
+            label,
+            address,
+          },
+          ...prev,
+        ];
+        saveStoredAddresses(next);
+        return next;
+      });
+      setSelectedAddress(address);
+    },
+    [],
+  );
+
+  const resolvedLive =
+    liveAddress && !isCoordinateLabel(liveAddress) ? liveAddress : null;
+  const resolvedSelected =
+    selectedAddress && !isCoordinateLabel(selectedAddress)
+      ? selectedAddress
+      : null;
   const deliveryAddress =
-    selectedAddress ?? liveAddress ?? FALLBACK_ADDRESS;
+    resolvedSelected ?? resolvedLive ?? FALLBACK_ADDRESS;
 
   const value = useMemo(
     () => ({
       deliveryAddress,
-      liveAddress,
-      selectedAddress,
+      liveAddress: resolvedLive,
+      selectedAddress: resolvedSelected,
       coordinates: coordinates ?? FALLBACK_COORDS,
       isLocating,
       savedAddresses,
@@ -267,8 +432,8 @@ export const LocationProvider = ({children}: {children: React.ReactNode}) => {
     }),
     [
       deliveryAddress,
-      liveAddress,
-      selectedAddress,
+      resolvedLive,
+      resolvedSelected,
       coordinates,
       isLocating,
       savedAddresses,

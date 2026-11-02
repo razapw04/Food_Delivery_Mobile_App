@@ -8,13 +8,28 @@ const pale = '#F5F5F5';
 export const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    flexDirection: 'row',
+  },
+
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.45)',
   },
 
+  panelWrap: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: colors.card,
+    shadowColor: '#000000',
+    shadowOffset: {width: 4, height: 0},
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+
   panel: {
-    width: '78%',
-    maxWidth: 340,
+    flex: 1,
     backgroundColor: colors.card,
     paddingTop: spacing.sm,
     paddingBottom: spacing.xl,
@@ -29,9 +44,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    paddingVertical: spacing.sm,
   },
 
   logo: {
@@ -48,13 +61,32 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
+  notificationBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    paddingHorizontal: 3,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  notificationBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: typography.fontWeight.bold,
+  },
+
   content: {
     paddingBottom: spacing.xl,
   },
 
   profileSection: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
+    paddingTop: spacing.sm,
     paddingBottom: spacing.md,
   },
 

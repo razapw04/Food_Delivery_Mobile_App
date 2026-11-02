@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   FlatList,
   Image,
@@ -8,18 +8,103 @@ import {
   View,
 } from 'react-native';
 import type {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
+import {useFocusEffect} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import type {MainTabParamList} from '../../types/navigation';
+import {
+  getStoredOrders,
+  type StoredOrder,
+} from '../../storage/orderStorage';
 import {orderHistory, type OrderHistoryItem, type OrderStatus} from './model';
 import {styles} from './styles';
 
 type Props = BottomTabScreenProps<MainTabParamList, 'Orders'>;
 
-const statusStyles: Record<
-  OrderStatus,
-  {badge: object; text: object}
-> = {
+const formatPrice = (value: number) => `Rs. ${value.toLocaleString('en-PK')}`;
+
+const formatOrderDate = (iso: string) => {
+  const date = new Date(iso);
+  const now = new Date();
+  const sameDay =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday =
+    date.getFullYear() === yesterday.getFullYear() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getDate() === yesterday.getDate();
+
+  if (sameDay) {
+    return 'Today';
+  }
+  if (isYesterday) {
+    return 'Yesterday';
+  }
+
+  return date.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+  });
+};
+
+const formatOrderTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
+const normalizeStatus = (status: string): OrderStatus => {
+  if (status === 'Placed' || status === 'Pending') {
+    return 'Pending';
+  }
+  if (
+    status === 'Delivered' ||
+    status === 'On the way' ||
+    status === 'Preparing' ||
+    status === 'Cancelled'
+  ) {
+    return status;
+  }
+  return 'Pending';
+};
+
+const mapStoredOrder = (order: StoredOrder): OrderHistoryItem => {
+  const first = order.items?.[0];
+  const items = order.items ?? [];
+  const extraCount = Math.max(items.length - 1, 0);
+  const title = first
+    ? extraCount > 0
+      ? `${first.name} +${extraCount}`
+      : first.name
+    : 'Order';
+  const details = items
+    .map(item => `${item.quantity}x ${item.name}`)
+    .join(', ');
+
+  return {
+    id: order.id,
+    orderId: order.orderId,
+    status: normalizeStatus(String(order.status ?? 'Pending')),
+    title,
+    details,
+    price: formatPrice(order.totalAmount),
+    date: formatOrderDate(order.createdAt),
+    time: formatOrderTime(order.createdAt),
+    image:
+      first?.image ||
+      'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80',
+  };
+};
+
+const statusStyles: Record<OrderStatus, {badge: object; text: object}> = {
+  Pending: {
+    badge: styles.statusBadgePending,
+    text: styles.statusTextPending,
+  },
   Delivered: {
     badge: styles.statusBadgeDelivered,
     text: styles.statusTextDelivered,
@@ -39,16 +124,15 @@ const statusStyles: Record<
 };
 
 const OrderCard = ({order}: {order: OrderHistoryItem}) => {
-  const statusStyle = statusStyles[order.status];
+  const status = normalizeStatus(order.status);
+  const statusStyle = statusStyles[status] ?? statusStyles.Pending;
 
   return (
     <View style={styles.orderCard}>
       <View style={styles.orderTopRow}>
         <Text style={styles.orderId}>{order.orderId}</Text>
         <View style={[styles.statusBadge, statusStyle.badge]}>
-          <Text style={[styles.statusText, statusStyle.text]}>
-            {order.status}
-          </Text>
+          <Text style={[styles.statusText, statusStyle.text]}>{status}</Text>
         </View>
       </View>
 
@@ -92,6 +176,24 @@ const EmptyOrders = () => (
 
 const OrderHistoryScreen = ({navigation}: Props) => {
   const showBack = navigation.canGoBack();
+  const [orders, setOrders] = useState<OrderHistoryItem[]>(orderHistory);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      const loadOrders = async () => {
+        const stored = await getStoredOrders();
+        if (!active) {
+          return;
+        }
+        setOrders([...stored.map(mapStoredOrder), ...orderHistory]);
+      };
+      loadOrders();
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -113,7 +215,7 @@ const OrderHistoryScreen = ({navigation}: Props) => {
       </View>
 
       <FlatList
-        data={orderHistory}
+        data={orders}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}

@@ -28,6 +28,7 @@ const CartScreen = () => {
     handleEditItem,
     openProduct,
     goToMenu,
+    goToPlaceOrder,
     updateQuantity,
     removeItem,
   } = useController();
@@ -208,7 +209,7 @@ const CartScreen = () => {
 
           <CartReviewFooter
             totalLabel={formatPrice(cartTotal)}
-            onPress={() => {}}
+            onPress={goToPlaceOrder}
           />
         </>
       )}

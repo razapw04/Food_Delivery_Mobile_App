@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   Alert,
   Animated,
@@ -14,20 +14,25 @@ import {
   View,
 } from 'react-native';
 import type {CompositeScreenProps} from '@react-navigation/native';
+import {useFocusEffect} from '@react-navigation/native';
 import type {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import CartIconButton from '../../components/CartIconButton';
 import SideDrawer from '../../components/SideDrawer';
+import {useCart} from '../../context/CartContext';
 import {useLocation} from '../../context/LocationContext';
 import {useOrder, type OrderMode} from '../../context/OrderContext';
+import {
+  getStoredOrders,
+  type StoredOrder,
+} from '../../storage/orderStorage';
 import type {MainTabParamList, RootStackParamList} from '../../types/navigation';
 import {
   bestsellers,
   BestsellerItem,
   promos,
-  recentOrders,
   RecentOrder,
 } from './model';
 import {styles} from './styles';
@@ -559,11 +564,82 @@ const ExploreMenu = ({
   </View>
 );
 
+const formatPrice = (value: number) => `Rs. ${value.toLocaleString('en-PK')}`;
+
+const formatOrderDay = (iso: string) => {
+  const date = new Date(iso);
+  const now = new Date();
+  const sameDay =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday =
+    date.getFullYear() === yesterday.getFullYear() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getDate() === yesterday.getDate();
+
+  if (sameDay) {
+    return 'Today';
+  }
+  if (isYesterday) {
+    return 'Yesterday';
+  }
+
+  return date.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+  });
+};
+
+const formatOrderTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
+const mapStoredToRecentOrder = (order: StoredOrder): RecentOrder => {
+  const items = order.items ?? [];
+  const first = items[0];
+  const extraCount = Math.max(items.length - 1, 0);
+
+  return {
+    id: order.id,
+    title: first
+      ? extraCount > 0
+        ? `${first.name} +${extraCount}`
+        : first.name
+      : 'Order',
+    price: formatPrice(order.totalAmount),
+    day: formatOrderDay(order.createdAt),
+    time: formatOrderTime(order.createdAt),
+    itemsSummary: items
+      .map(item => `${item.quantity}x ${item.name}`)
+      .join(', '),
+    image:
+      first?.image ||
+      'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80',
+    cartItems: items.map(item => ({
+      productId: item.productId,
+      name: item.name,
+      image: item.image,
+      variation: item.variation,
+      toppings: item.toppings,
+      unitPrice: item.unitPrice,
+      quantity: item.quantity,
+    })),
+  };
+};
+
 const HomeScreen = ({navigation}: HomeScreenProps) => {
   const [addressModalVisible, setAddressModalVisible] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [homeRecentOrders, setHomeRecentOrders] = useState<RecentOrder[]>([]);
   const {deliveryAddress, isLocating} = useLocation();
   const {orderMode, setOrderMode, selectedBranch} = useOrder();
+  const {addItem} = useCart();
 
   useEffect(() => {
     if (!hasAutoOpenedAddressModal && orderMode === 'delivery') {
@@ -571,6 +647,44 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
       setAddressModalVisible(true);
     }
   }, [orderMode]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      const loadRecent = async () => {
+        const stored = await getStoredOrders();
+        if (!active) {
+          return;
+        }
+        setHomeRecentOrders(stored.slice(0, 2).map(mapStoredToRecentOrder));
+      };
+      loadRecent();
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
+
+  const handleReorder = (order: RecentOrder) => {
+    if (!order.cartItems?.length) {
+      Alert.alert('Reorder', 'No items found for this order.');
+      return;
+    }
+
+    order.cartItems.forEach(item => {
+      addItem({
+        productId: item.productId,
+        name: item.name,
+        image: item.image,
+        variation: item.variation,
+        toppings: item.toppings,
+        unitPrice: item.unitPrice,
+        quantity: item.quantity,
+      });
+    });
+
+    navigation.navigate('Cart');
+  };
 
   const isPickup = orderMode === 'pickup';
   const headerLabel = isPickup ? 'Pickup from' : 'Deliver to';
@@ -616,13 +730,9 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
           }
         />
         <RecentOrdersSection
-          orders={recentOrders}
-          onViewAll={() =>
-            Alert.alert('Recent Orders', 'Full order history coming soon.')
-          }
-          onReorder={order =>
-            Alert.alert('Reorder', `${order.title} will be added to your bag.`)
-          }
+          orders={homeRecentOrders}
+          onViewAll={() => navigation.navigate('Orders')}
+          onReorder={handleReorder}
         />
         <ExploreMenuBanner onPress={() => navigation.navigate('Menu')} />
       </ScrollView>

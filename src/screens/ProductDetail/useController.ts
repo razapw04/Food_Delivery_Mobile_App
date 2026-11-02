@@ -5,6 +5,7 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import type {RouteProp} from '@react-navigation/native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useCart} from '../../context/CartContext';
+import {useFavorites} from '../../context/FavoritesContext';
 import {useLocation} from '../../context/LocationContext';
 import {useOrder} from '../../context/OrderContext';
 import type {RootStackParamList} from '../../types/navigation';
@@ -45,9 +46,11 @@ const useController = () => {
   const {deliveryAddress, isLocating} = useLocation();
   const {orderMode, selectedBranch} = useOrder();
   const {addItem} = useCart();
+  const {isFavorite: checkFavorite, toggleFavorite: toggleFavoriteId} =
+    useFavorites();
 
   const item = getMenuItemById(route.params.itemId);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const isFavorite = item ? checkFavorite(item.id) : false;
   const [quantity, setQuantity] = useState(1);
   const [selectedVariation, setSelectedVariation] =
     useState<VariationKey | null>(null);
@@ -106,7 +109,10 @@ const useController = () => {
   };
 
   const toggleFavorite = () => {
-    setIsFavorite(prev => !prev);
+    if (!item) {
+      return;
+    }
+    toggleFavoriteId(item.id);
   };
 
   const selectVariation = (key: VariationKey) => {

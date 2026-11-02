@@ -17,6 +17,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {spacing} from '../../theme';
 import CartReviewFooter from '../../components/CartReviewFooter';
 import {useCart} from '../../context/CartContext';
+import {useFavorites} from '../../context/FavoritesContext';
 import {useLocation} from '../../context/LocationContext';
 import {useOrder} from '../../context/OrderContext';
 import type {RootStackParamList} from '../../types/navigation';
@@ -110,12 +111,12 @@ const MenuScreen = ({navigation}: MenuScreenProps) => {
   const {deliveryAddress, isLocating} = useLocation();
   const {orderMode, selectedBranch} = useOrder();
   const {itemCount, cartTotal} = useCart();
+  const {isFavorite, toggleFavorite} = useFavorites();
   const isPickup = orderMode === 'pickup';
   const hasCartItems = itemCount > 0;
   const [selectedCategoryId, setSelectedCategoryId] = useState(
     menuCategories[0].id,
   );
-  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const isScrollingToCategory = useRef(false);
   const listRef = useRef<FlatList<MenuRow>>(null);
   const categoryScrollRef = useRef<ScrollView>(null);
@@ -156,18 +157,6 @@ const MenuScreen = ({navigation}: MenuScreenProps) => {
     });
     return map;
   }, [rows]);
-
-  const toggleFavorite = (itemId: string) => {
-    setFavoriteIds(prev => {
-      const next = new Set(prev);
-      if (next.has(itemId)) {
-        next.delete(itemId);
-      } else {
-        next.add(itemId);
-      }
-      return next;
-    });
-  };
 
   const scrollCategoryIntoView = useCallback((categoryId: string) => {
     const x = categoryOffsets.current[categoryId];
@@ -365,7 +354,7 @@ const MenuScreen = ({navigation}: MenuScreenProps) => {
           return (
             <MenuItemCard
               item={row.item}
-              isFavorite={favoriteIds.has(row.item.id)}
+              isFavorite={isFavorite(row.item.id)}
               onToggleFavorite={() => toggleFavorite(row.item.id)}
               onOpenProduct={() =>
                 navigation.navigate('ProductDetail', {itemId: row.item.id})

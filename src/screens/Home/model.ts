@@ -40,6 +40,16 @@ export type BestsellerItem = {
   image: string;
 };
 
+export type RecentOrderCartItem = {
+  productId: string;
+  name: string;
+  image: string;
+  variation: string;
+  toppings: string[];
+  unitPrice: number;
+  quantity: number;
+};
+
 export type RecentOrder = {
   id: string;
   title: string;
@@ -48,6 +58,7 @@ export type RecentOrder = {
   time: string;
   itemsSummary: string;
   image: string;
+  cartItems: RecentOrderCartItem[];
 };
 
 export const categories: Category[] = [
@@ -91,22 +102,56 @@ export const recentOrders: RecentOrder[] = [
   {
     id: 'ord-1001',
     title: 'Smash Burger Combo',
-    price: 'Rs. 1,299',
+    price: 'Rs. 1,498',
     day: 'Today',
     time: '2:45 PM',
     itemsSummary: '1x Smash Burger, 1x Loaded Fries',
     image:
       'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80',
+    cartItems: [
+      {
+        productId: 'bur-1',
+        name: 'Smash Burger',
+        image:
+          'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80',
+        variation: 'Regular',
+        toppings: [],
+        unitPrice: 999,
+        quantity: 1,
+      },
+      {
+        productId: 'side-1',
+        name: 'Loaded Fries',
+        image:
+          'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=400&q=80',
+        variation: 'Regular',
+        toppings: [],
+        unitPrice: 499,
+        quantity: 1,
+      },
+    ],
   },
   {
     id: 'ord-1000',
     title: 'Pepperoni Pizza',
-    price: 'Rs. 1,899',
+    price: 'Rs. 1,699',
     day: 'Yesterday',
     time: '8:10 PM',
-    itemsSummary: '1x Large Pepperoni, 1x Choco Shake',
+    itemsSummary: '1x Large Pepperoni',
     image:
       'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80',
+    cartItems: [
+      {
+        productId: 'piz-2',
+        name: 'Pepperoni Feast',
+        image:
+          'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80',
+        variation: 'Large',
+        toppings: [],
+        unitPrice: 1699,
+        quantity: 1,
+      },
+    ],
   },
 ];
 

@@ -42,6 +42,10 @@ const useController = () => {
     navigation.navigate('Menu');
   };
 
+  const goToPlaceOrder = () => {
+    navigation.navigate('PlaceOrder');
+  };
+
   return {
     items,
     itemCount,
@@ -54,6 +58,7 @@ const useController = () => {
     handleEditItem,
     openProduct,
     goToMenu,
+    goToPlaceOrder,
     updateQuantity,
     removeItem,
     clearCart,

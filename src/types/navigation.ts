@@ -22,4 +22,9 @@ export type RootStackParamList = {
   AddAddress: undefined;
   ProductDetail: {itemId: string};
   Cart: undefined;
+  PlaceOrder: undefined;
+  Voucher: undefined;
+  Favorites: undefined;
+  SavedAddresses: undefined;
+  Notifications: undefined;
 };

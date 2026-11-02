@@ -1,4 +1,5 @@
 export type OrderStatus =
+  | 'Pending'
   | 'Delivered'
   | 'On the way'
   | 'Preparing'

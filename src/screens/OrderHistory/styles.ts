@@ -72,6 +72,10 @@ export const styles = StyleSheet.create({
     borderRadius: 999,
   },
 
+  statusBadgePending: {
+    backgroundColor: '#FEF3C7',
+  },
+
   statusBadgeDelivered: {
     backgroundColor: '#DCFCE7',
   },
@@ -91,6 +95,10 @@ export const styles = StyleSheet.create({
   statusText: {
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.bold,
+  },
+
+  statusTextPending: {
+    color: '#CA8A04',
   },
 
   statusTextDelivered: {
