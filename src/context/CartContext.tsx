@@ -2,9 +2,12 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
+import {useAuth} from './AuthContext';
 
 export type CartItem = {
   id: string;
@@ -43,7 +46,19 @@ const buildCartItemId = (item: AddCartItemInput) =>
   `${item.productId}-${item.variation}-${[...item.toppings].sort().join('|')}`;
 
 export const CartProvider = ({children}: {children: React.ReactNode}) => {
+  const {user} = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
+  const lastUserEmailRef = useRef<string | null>(null);
+
+  // New / switched accounts always start with an empty cart.
+  useEffect(() => {
+    const email = user?.email?.toLowerCase() ?? null;
+    if (lastUserEmailRef.current === email) {
+      return;
+    }
+    lastUserEmailRef.current = email;
+    setItems([]);
+  }, [user?.email]);
 
   const addItem = useCallback((input: AddCartItemInput) => {
     const id = buildCartItemId(input);

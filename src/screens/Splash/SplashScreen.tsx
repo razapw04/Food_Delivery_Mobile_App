@@ -53,7 +53,13 @@ const SplashScreen = () => {
         return;
       }
       hasNavigated.current = true;
-      navigation.replace(user ? 'MainTabs' : 'Login');
+      if (!user) {
+        navigation.replace('Login');
+      } else if (user.role === 'admin' || user.role === 'superadmin') {
+        navigation.replace('AdminOrders');
+      } else {
+        navigation.replace('MainTabs');
+      }
     }, 1800);
 
     return () => clearTimeout(timer);

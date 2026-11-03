@@ -11,12 +11,13 @@ import type {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {useFocusEffect} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {useAuth} from '../../context/AuthContext';
 import type {MainTabParamList} from '../../types/navigation';
 import {
   getStoredOrders,
   type StoredOrder,
 } from '../../storage/orderStorage';
-import {orderHistory, type OrderHistoryItem, type OrderStatus} from './model';
+import {type OrderHistoryItem, type OrderStatus} from './model';
 import {styles} from './styles';
 
 type Props = BottomTabScreenProps<MainTabParamList, 'Orders'>;
@@ -62,6 +63,7 @@ const normalizeStatus = (status: string): OrderStatus => {
     return 'Pending';
   }
   if (
+    status === 'Confirmed' ||
     status === 'Delivered' ||
     status === 'On the way' ||
     status === 'Preparing' ||
@@ -104,6 +106,10 @@ const statusStyles: Record<OrderStatus, {badge: object; text: object}> = {
   Pending: {
     badge: styles.statusBadgePending,
     text: styles.statusTextPending,
+  },
+  Confirmed: {
+    badge: styles.statusBadgeConfirmed,
+    text: styles.statusTextConfirmed,
   },
   Delivered: {
     badge: styles.statusBadgeDelivered,
@@ -176,23 +182,24 @@ const EmptyOrders = () => (
 
 const OrderHistoryScreen = ({navigation}: Props) => {
   const showBack = navigation.canGoBack();
-  const [orders, setOrders] = useState<OrderHistoryItem[]>(orderHistory);
+  const {user} = useAuth();
+  const [orders, setOrders] = useState<OrderHistoryItem[]>([]);
 
   useFocusEffect(
     useCallback(() => {
       let active = true;
       const loadOrders = async () => {
-        const stored = await getStoredOrders();
+        const stored = await getStoredOrders(user?.email);
         if (!active) {
           return;
         }
-        setOrders([...stored.map(mapStoredOrder), ...orderHistory]);
+        setOrders(stored.map(mapStoredOrder));
       };
       loadOrders();
       return () => {
         active = false;
       };
-    }, []),
+    }, [user?.email]),
   );
 
   return (

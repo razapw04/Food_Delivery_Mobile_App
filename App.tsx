@@ -17,6 +17,7 @@ import VoucherScreen from './src/screens/Voucher';
 import FavoritesScreen from './src/screens/Favorites';
 import SavedAddressesScreen from './src/screens/SavedAddresses';
 import NotificationsScreen from './src/screens/Notifications';
+import AdminOrdersScreen from './src/screens/AdminOrders';
 import MenuScreen from './src/screens/Menu';
 import MainTabs from './src/navigation/MainTabs';
 import {AuthProvider} from './src/context/AuthContext';
@@ -62,6 +63,7 @@ const App = () => {
                     <Stack.Screen name="Favorites" component={FavoritesScreen} />
                     <Stack.Screen name="SavedAddresses" component={SavedAddressesScreen} />
                     <Stack.Screen name="Notifications" component={NotificationsScreen} />
+                    <Stack.Screen name="AdminOrders" component={AdminOrdersScreen} />
                     <Stack.Screen name="OnboardingOne" component={OnboardingOneScreen} />
                     <Stack.Screen name="LocationAccess" component={LocationAcess} />
                   </Stack.Navigator>

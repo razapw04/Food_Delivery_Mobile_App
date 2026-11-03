@@ -14,6 +14,7 @@ import {
   type SavedAddress,
 } from '../storage/addressesStorage';
 import {getStoredOrders} from '../storage/orderStorage';
+import {useAuth} from './AuthContext';
 
 export type {SavedAddress};
 
@@ -251,6 +252,7 @@ const getDevicePosition = async (): Promise<Coordinates> => {
 };
 
 export const LocationProvider = ({children}: {children: React.ReactNode}) => {
+  const {user} = useAuth();
   const [liveAddress, setLiveAddress] = useState<string | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
@@ -263,7 +265,7 @@ export const LocationProvider = ({children}: {children: React.ReactNode}) => {
     let active = true;
     const loadAddresses = async () => {
       const stored = await getStoredAddresses();
-      const orders = await getStoredOrders();
+      const orders = await getStoredOrders(user?.email);
       const fromOrders: SavedAddress[] = [];
 
       orders.forEach(order => {
@@ -301,7 +303,7 @@ export const LocationProvider = ({children}: {children: React.ReactNode}) => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [user?.email]);
 
   const fetchLiveAddress = useCallback(async (): Promise<string | null> => {
     setIsLocating(true);

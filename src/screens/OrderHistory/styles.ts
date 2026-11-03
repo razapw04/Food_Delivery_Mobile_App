@@ -76,6 +76,10 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FEF3C7',
   },
 
+  statusBadgeConfirmed: {
+    backgroundColor: '#E0E7FF',
+  },
+
   statusBadgeDelivered: {
     backgroundColor: '#DCFCE7',
   },
@@ -99,6 +103,10 @@ export const styles = StyleSheet.create({
 
   statusTextPending: {
     color: '#CA8A04',
+  },
+
+  statusTextConfirmed: {
+    color: '#4338CA',
   },
 
   statusTextDelivered: {

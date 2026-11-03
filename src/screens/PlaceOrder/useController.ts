@@ -3,6 +3,7 @@ import {Animated, Easing} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useAuth} from '../../context/AuthContext';
 import {useCart} from '../../context/CartContext';
 import {useLocation} from '../../context/LocationContext';
 import {useNotifications} from '../../context/NotificationsContext';
@@ -41,6 +42,7 @@ const CONFIRM_DURATION_MS = 5000;
 const useController = () => {
   const navigation = useNavigation<PlaceOrderNavigationProp>();
   const insets = useSafeAreaInsets();
+  const {user} = useAuth();
   const {deliveryAddress, isLocating, addSavedAddress} = useLocation();
   const {orderMode, selectedBranch} = useOrder();
   const {items, cartTotal, clearCart} = useCart();
@@ -163,23 +165,33 @@ const useController = () => {
       const now = new Date();
       const id = `ord-${now.getTime()}`;
       const orderId = `#FD-${String(now.getTime()).slice(-4)}`;
-      await saveStoredOrder({
-        id,
-        orderId,
-        createdAt: now.toISOString(),
-        items: snapshot.items,
-        productTotal: snapshot.cartTotal,
-        discount: DISCOUNT,
-        deliveryFee: snapshot.deliveryFee,
-        taxPercent: snapshot.taxPercent,
-        taxAmount: snapshot.taxAmount,
-        totalAmount: snapshot.totalAmount,
-        paymentMethod: snapshot.selectedPaymentMethod,
-        deliveryAddress: snapshot.fullAddress,
-        deliveryInstructions: snapshot.deliveryInstructions.trim(),
-        orderMode: snapshot.orderMode,
-        status: 'Pending',
-      });
+      if (!user?.email) {
+        throw new Error('You must be signed in to place an order.');
+      }
+
+      await saveStoredOrder(
+        {
+          id,
+          orderId,
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+          customerEmail: user.email,
+          customerName: user.name,
+          items: snapshot.items,
+          productTotal: snapshot.cartTotal,
+          discount: DISCOUNT,
+          deliveryFee: snapshot.deliveryFee,
+          taxPercent: snapshot.taxPercent,
+          taxAmount: snapshot.taxAmount,
+          totalAmount: snapshot.totalAmount,
+          paymentMethod: snapshot.selectedPaymentMethod,
+          deliveryAddress: snapshot.fullAddress,
+          deliveryInstructions: snapshot.deliveryInstructions.trim(),
+          orderMode: snapshot.orderMode,
+          status: 'Pending',
+        },
+        user.email,
+      );
 
       await addNotification({
         title: 'Order placed',
@@ -214,6 +226,7 @@ const useController = () => {
     navigation,
     addSavedAddress,
     addNotification,
+    user?.email,
   ]);
 
   const proceedOrderRef = useRef(proceedOrder);

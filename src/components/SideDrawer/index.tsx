@@ -38,7 +38,7 @@ type MenuItem = {
 const PANEL_WIDTH = Math.min(Dimensions.get('window').width * 0.78, 340);
 
 const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
-  const {user, logout} = useAuth();
+  const {user, logout, isAdmin, isSuperAdmin} = useAuth();
   const {unreadCount} = useNotifications();
   const navigation = useNavigation<DrawerNav>();
   const [mounted, setMounted] = React.useState(visible);
@@ -97,51 +97,67 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
     ? user.phone
     : 'No phone number added';
 
-  const menuItems: MenuItem[] = [
-    {
-      key: 'orders',
-      label: 'Order History',
-      icon: 'package-variant-closed',
-      onPress: () => navigation.navigate('MainTabs', {screen: 'Orders'}),
-    },
-    {
-      key: 'favorites',
-      label: 'My Favorites',
-      icon: 'heart-outline',
-      onPress: () => navigation.navigate('Favorites'),
-    },
-    {
-      key: 'menu',
-      label: 'Explore Menu',
-      icon: 'food',
-      onPress: () => navigation.navigate('Menu'),
-    },
-    {
-      key: 'addresses',
-      label: 'Saved Addresses',
-      icon: 'map-marker-outline',
-      onPress: () => navigation.navigate('SavedAddresses'),
-    },
-    {
-      key: 'feedback',
-      label: 'Ratings & Feedbacks',
-      icon: 'star-outline',
-      onPress: () => Alert.alert('Ratings & Feedbacks', 'Coming soon.'),
-    },
-    {
-      key: 'logout',
-      label: 'Logout',
-      icon: 'logout',
-      danger: true,
-      onPress: async () => {
-        await logout();
-        navigation.reset({
-          index: 0,
-          routes: [{name: 'Login'}],
-        });
-      },
-    },
-  ];
+  const menuItems: MenuItem[] = isAdmin
+    ? [
+        {
+          key: 'logout',
+          label: 'Logout',
+          icon: 'logout',
+          danger: true,
+          onPress: async () => {
+            await logout();
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'Login'}],
+            });
+          },
+        },
+      ]
+    : [
+        {
+          key: 'orders',
+          label: 'Order History',
+          icon: 'package-variant-closed',
+          onPress: () => navigation.navigate('MainTabs', {screen: 'Orders'}),
+        },
+        {
+          key: 'favorites',
+          label: 'My Favorites',
+          icon: 'heart-outline',
+          onPress: () => navigation.navigate('Favorites'),
+        },
+        {
+          key: 'menu',
+          label: 'Explore Menu',
+          icon: 'food',
+          onPress: () => navigation.navigate('Menu'),
+        },
+        {
+          key: 'addresses',
+          label: 'Saved Addresses',
+          icon: 'map-marker-outline',
+          onPress: () => navigation.navigate('SavedAddresses'),
+        },
+        {
+          key: 'feedback',
+          label: 'Ratings & Feedbacks',
+          icon: 'star-outline',
+          onPress: () => Alert.alert('Ratings & Feedbacks', 'Coming soon.'),
+        },
+        {
+          key: 'logout',
+          label: 'Logout',
+          icon: 'logout',
+          danger: true,
+          onPress: async () => {
+            await logout();
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'Login'}],
+            });
+          },
+        },
+      ];
 
   if (!mounted) {
     return null;
@@ -180,27 +196,31 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
                 style={styles.logo}
                 resizeMode="contain"
               />
-              <Pressable
-                accessibilityLabel="Notifications"
-                accessibilityRole="button"
-                style={styles.notificationButton}
-                onPress={() => {
-                  onClose();
-                  navigation.navigate('Notifications');
-                }}>
-                <Icon
-                  name={unreadCount > 0 ? 'bell' : 'bell-outline'}
-                  size={22}
-                  color="#1A1A1A"
-                />
-                {unreadCount > 0 ? (
-                  <View style={styles.notificationBadge}>
-                    <Text style={styles.notificationBadgeText}>
-                      {unreadCount > 9 ? '9+' : String(unreadCount)}
-                    </Text>
-                  </View>
-                ) : null}
-              </Pressable>
+              {!isAdmin ? (
+                <Pressable
+                  accessibilityLabel="Notifications"
+                  accessibilityRole="button"
+                  style={styles.notificationButton}
+                  onPress={() => {
+                    onClose();
+                    navigation.navigate('Notifications');
+                  }}>
+                  <Icon
+                    name={unreadCount > 0 ? 'bell' : 'bell-outline'}
+                    size={22}
+                    color="#1A1A1A"
+                  />
+                  {unreadCount > 0 ? (
+                    <View style={styles.notificationBadge}>
+                      <Text style={styles.notificationBadgeText}>
+                        {unreadCount > 9 ? '9+' : String(unreadCount)}
+                      </Text>
+                    </View>
+                  ) : null}
+                </Pressable>
+              ) : (
+                <View style={styles.notificationButton} />
+              )}
             </View>
 
             <ScrollView
@@ -208,17 +228,25 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
               contentContainerStyle={styles.content}>
               <View style={styles.profileSection}>
                 <Text style={styles.userName}>{displayName}</Text>
-                <Text style={styles.userPhone}>{displayPhone}</Text>
+                <Text style={styles.userPhone}>
+                  {isSuperAdmin
+                    ? 'Super Admin'
+                    : isAdmin
+                      ? 'Admin'
+                      : displayPhone}
+                </Text>
 
-                <Pressable
-                  accessibilityRole="button"
-                  style={styles.viewProfileButton}
-                  onPress={() => {
-                    onClose();
-                    Alert.alert('Profile', 'Profile screen coming soon.');
-                  }}>
-                  <Text style={styles.viewProfileText}>View Profile</Text>
-                </Pressable>
+                {!isAdmin ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    style={styles.viewProfileButton}
+                    onPress={() => {
+                      onClose();
+                      Alert.alert('Profile', 'Profile screen coming soon.');
+                    }}>
+                    <Text style={styles.viewProfileText}>View Profile</Text>
+                  </Pressable>
+                ) : null}
               </View>
 
               <View style={styles.menuSection}>

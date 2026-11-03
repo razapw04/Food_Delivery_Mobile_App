@@ -21,6 +21,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import CartIconButton from '../../components/CartIconButton';
 import SideDrawer from '../../components/SideDrawer';
+import {useAuth} from '../../context/AuthContext';
 import {useCart} from '../../context/CartContext';
 import {useLocation} from '../../context/LocationContext';
 import {useOrder, type OrderMode} from '../../context/OrderContext';
@@ -637,6 +638,7 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
   const [addressModalVisible, setAddressModalVisible] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [homeRecentOrders, setHomeRecentOrders] = useState<RecentOrder[]>([]);
+  const {user} = useAuth();
   const {deliveryAddress, isLocating} = useLocation();
   const {orderMode, setOrderMode, selectedBranch} = useOrder();
   const {addItem} = useCart();
@@ -652,7 +654,7 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
     useCallback(() => {
       let active = true;
       const loadRecent = async () => {
-        const stored = await getStoredOrders();
+        const stored = await getStoredOrders(user?.email);
         if (!active) {
           return;
         }
@@ -662,7 +664,7 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
       return () => {
         active = false;
       };
-    }, []),
+    }, [user?.email]),
   );
 
   const handleReorder = (order: RecentOrder) => {

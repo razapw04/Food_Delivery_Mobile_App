@@ -36,7 +36,10 @@ const useController = () => {
       return;
     }
 
-    navigation.replace('MainTabs');
+    navigation.reset({
+      index: 0,
+      routes: [{name: result.isAdmin ? 'AdminOrders' : 'MainTabs'}],
+    });
   };
 
   const goToSignup = () => {

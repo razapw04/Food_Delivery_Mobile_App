@@ -97,63 +97,9 @@ export const categories: Category[] = [
 /**
  * Recent orders for the signed-in user.
  * Keep empty `[]` when the user has no past orders — section hides automatically.
+ * Real orders come from per-user AsyncStorage via Home screen.
  */
-export const recentOrders: RecentOrder[] = [
-  {
-    id: 'ord-1001',
-    title: 'Smash Burger Combo',
-    price: 'Rs. 1,498',
-    day: 'Today',
-    time: '2:45 PM',
-    itemsSummary: '1x Smash Burger, 1x Loaded Fries',
-    image:
-      'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80',
-    cartItems: [
-      {
-        productId: 'bur-1',
-        name: 'Smash Burger',
-        image:
-          'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80',
-        variation: 'Regular',
-        toppings: [],
-        unitPrice: 999,
-        quantity: 1,
-      },
-      {
-        productId: 'side-1',
-        name: 'Loaded Fries',
-        image:
-          'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=400&q=80',
-        variation: 'Regular',
-        toppings: [],
-        unitPrice: 499,
-        quantity: 1,
-      },
-    ],
-  },
-  {
-    id: 'ord-1000',
-    title: 'Pepperoni Pizza',
-    price: 'Rs. 1,699',
-    day: 'Yesterday',
-    time: '8:10 PM',
-    itemsSummary: '1x Large Pepperoni',
-    image:
-      'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80',
-    cartItems: [
-      {
-        productId: 'piz-2',
-        name: 'Pepperoni Feast',
-        image:
-          'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80',
-        variation: 'Large',
-        toppings: [],
-        unitPrice: 1699,
-        quantity: 1,
-      },
-    ],
-  },
-];
+export const recentOrders: RecentOrder[] = [];
 
 /** Popular dishes shown in Explore Menu grid (ids match Menu model). */
 export const bestsellers: BestsellerItem[] = [

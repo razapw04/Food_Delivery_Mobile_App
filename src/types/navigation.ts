@@ -27,4 +27,5 @@ export type RootStackParamList = {
   Favorites: undefined;
   SavedAddresses: undefined;
   Notifications: undefined;
+  AdminOrders: undefined;
 };

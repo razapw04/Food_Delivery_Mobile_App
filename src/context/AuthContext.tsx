@@ -8,26 +8,35 @@ import React, {
 } from 'react';
 import {
   clearSession,
+  ensureAdminUser,
   getSessionEmail,
   getStoredUsers,
+  hasAdminAccess,
   saveSessionEmail,
   saveStoredUsers,
   type StoredUser,
+  type UserRole,
 } from '../storage/authStorage';
 
 export type AuthUser = {
   name: string;
   email: string;
   phone: string | null;
+  role: UserRole;
 };
 
 type AuthContextValue = {
   user: AuthUser | null;
   isLoading: boolean;
+  /** True for both admin and superadmin (order management access). */
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
   login: (
     email: string,
     password: string,
-  ) => Promise<{ok: true} | {ok: false; error: string}>;
+  ) => Promise<
+    {ok: true; isAdmin: boolean} | {ok: false; error: string}
+  >;
   signup: (payload: {
     name: string;
     email: string;
@@ -43,6 +52,7 @@ const toAuthUser = (stored: StoredUser): AuthUser => ({
   name: stored.name,
   email: stored.email,
   phone: stored.phone || null,
+  role: stored.role,
 });
 
 export const AuthProvider = ({children}: {children: React.ReactNode}) => {
@@ -52,6 +62,7 @@ export const AuthProvider = ({children}: {children: React.ReactNode}) => {
   useEffect(() => {
     const restoreSession = async () => {
       try {
+        await ensureAdminUser();
         const sessionEmail = await getSessionEmail();
         if (!sessionEmail) {
           return;
@@ -82,6 +93,7 @@ export const AuthProvider = ({children}: {children: React.ReactNode}) => {
       phone: string;
       password: string;
     }) => {
+      await ensureAdminUser();
       const email = payload.email.trim().toLowerCase();
       const users = await getStoredUsers();
 
@@ -97,6 +109,7 @@ export const AuthProvider = ({children}: {children: React.ReactNode}) => {
         email,
         phone: payload.phone.trim(),
         password: payload.password,
+        role: 'customer',
       };
 
       await saveStoredUsers([...users, newUser]);
@@ -107,6 +120,7 @@ export const AuthProvider = ({children}: {children: React.ReactNode}) => {
   );
 
   const login = useCallback(async (email: string, password: string) => {
+    await ensureAdminUser();
     const normalizedEmail = email.trim().toLowerCase();
     const users = await getStoredUsers();
     const matched = users.find(
@@ -128,9 +142,13 @@ export const AuthProvider = ({children}: {children: React.ReactNode}) => {
     }
 
     await saveSessionEmail(matched.email);
-    setUser(toAuthUser(matched));
+    const authUser = toAuthUser(matched);
+    setUser(authUser);
 
-    return {ok: true as const};
+    return {
+      ok: true as const,
+      isAdmin: hasAdminAccess(authUser.role),
+    };
   }, []);
 
   const logout = useCallback(async () => {
@@ -138,15 +156,20 @@ export const AuthProvider = ({children}: {children: React.ReactNode}) => {
     setUser(null);
   }, []);
 
+  const isAdmin = hasAdminAccess(user?.role);
+  const isSuperAdmin = user?.role === 'superadmin';
+
   const value = useMemo(
     () => ({
       user,
       isLoading,
+      isAdmin,
+      isSuperAdmin,
       login,
       signup,
       logout,
     }),
-    [user, isLoading, login, signup, logout],
+    [user, isLoading, isAdmin, isSuperAdmin, login, signup, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
