@@ -1,10 +1,10 @@
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useCart} from '../../context/CartContext';
+import {useCatalog} from '../../context/CatalogContext';
 import {useLocation} from '../../context/LocationContext';
 import {useOrder} from '../../context/OrderContext';
 import type {RootStackParamList} from '../../types/navigation';
-import {popularMenuItems} from '../Menu/model';
 
 const formatPrice = (value: number) =>
   `Rs. ${value.toLocaleString('en-PK')}`;
@@ -17,6 +17,7 @@ const useController = () => {
     useCart();
   const {deliveryAddress, isLocating} = useLocation();
   const {orderMode, selectedBranch} = useOrder();
+  const {popularMenuItems} = useCatalog();
 
   const isPickup = orderMode === 'pickup';
   const headerLabel = isPickup ? 'Pickup from' : 'Deliver to';

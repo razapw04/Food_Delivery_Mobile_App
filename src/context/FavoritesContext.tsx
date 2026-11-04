@@ -10,7 +10,8 @@ import {
   getStoredFavoriteIds,
   saveStoredFavoriteIds,
 } from '../storage/favoritesStorage';
-import {menuItems, type MenuItem} from '../screens/Menu/model';
+import type {MenuItem} from '../screens/Menu/model';
+import {useCatalog} from './CatalogContext';
 
 type FavoritesContextValue = {
   favoriteIds: string[];
@@ -22,6 +23,7 @@ type FavoritesContextValue = {
 const FavoritesContext = createContext<FavoritesContextValue | null>(null);
 
 export const FavoritesProvider = ({children}: {children: React.ReactNode}) => {
+  const {menuItems} = useCatalog();
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -63,7 +65,7 @@ export const FavoritesProvider = ({children}: {children: React.ReactNode}) => {
       favoriteIds
         .map(id => menuItems.find(item => item.id === id))
         .filter((item): item is MenuItem => Boolean(item)),
-    [favoriteIds],
+    [favoriteIds, menuItems],
   );
 
   const value = useMemo(

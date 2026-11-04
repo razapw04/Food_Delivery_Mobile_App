@@ -18,6 +18,15 @@ export const SUPERADMIN_PASSWORD = 'superadmin123';
 
 const USERS_KEY = '@food_app/users';
 const SESSION_KEY = '@food_app/session';
+const SESSION_USER_KEY = '@food_app/session_user';
+const SESSION_TOKEN_KEY = '@food_app/session_token';
+
+export type SessionUser = {
+  name: string;
+  email: string;
+  phone: string | null;
+  role: UserRole;
+};
 
 const DEFAULT_ADMIN: StoredUser = {
   name: 'Admin',
@@ -116,6 +125,53 @@ export const saveSessionEmail = async (email: string) => {
   await AsyncStorage.setItem(SESSION_KEY, email.trim().toLowerCase());
 };
 
+export const getSessionUser = async (): Promise<SessionUser | null> => {
+  const raw = await AsyncStorage.getItem(SESSION_USER_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<SessionUser>;
+    if (!parsed?.email) {
+      return null;
+    }
+    return {
+      name: parsed.name ?? '',
+      email: parsed.email.toLowerCase(),
+      phone: parsed.phone ?? null,
+      role: normalizeRole(parsed.role),
+    };
+  } catch {
+    return null;
+  }
+};
+
+export const saveSessionUser = async (user: SessionUser, token?: string) => {
+  const email = user.email.trim().toLowerCase();
+  await AsyncStorage.setItem(SESSION_KEY, email);
+  await AsyncStorage.setItem(
+    SESSION_USER_KEY,
+    JSON.stringify({
+      name: user.name,
+      email,
+      phone: user.phone,
+      role: normalizeRole(user.role),
+    }),
+  );
+  if (token) {
+    await AsyncStorage.setItem(SESSION_TOKEN_KEY, token);
+  }
+};
+
+export const getSessionToken = async (): Promise<string | null> => {
+  return AsyncStorage.getItem(SESSION_TOKEN_KEY);
+};
+
 export const clearSession = async () => {
-  await AsyncStorage.removeItem(SESSION_KEY);
+  await AsyncStorage.multiRemove([
+    SESSION_KEY,
+    SESSION_USER_KEY,
+    SESSION_TOKEN_KEY,
+  ]);
 };

@@ -6,15 +6,13 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import {ApiError} from '../services/apiClient';
+import {loginRequest, signupRequest} from '../services/authApi';
 import {
   clearSession,
-  ensureAdminUser,
-  getSessionEmail,
-  getStoredUsers,
+  getSessionUser,
   hasAdminAccess,
-  saveSessionEmail,
-  saveStoredUsers,
-  type StoredUser,
+  saveSessionUser,
   type UserRole,
 } from '../storage/authStorage';
 
@@ -48,13 +46,6 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const toAuthUser = (stored: StoredUser): AuthUser => ({
-  name: stored.name,
-  email: stored.email,
-  phone: stored.phone || null,
-  role: stored.role,
-});
-
 export const AuthProvider = ({children}: {children: React.ReactNode}) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,21 +53,9 @@ export const AuthProvider = ({children}: {children: React.ReactNode}) => {
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        await ensureAdminUser();
-        const sessionEmail = await getSessionEmail();
-        if (!sessionEmail) {
-          return;
-        }
-
-        const users = await getStoredUsers();
-        const matched = users.find(
-          item => item.email.toLowerCase() === sessionEmail.toLowerCase(),
-        );
-
-        if (matched) {
-          setUser(toAuthUser(matched));
-        } else {
-          await clearSession();
+        const sessionUser = await getSessionUser();
+        if (sessionUser) {
+          setUser(sessionUser);
         }
       } finally {
         setIsLoading(false);
@@ -93,62 +72,50 @@ export const AuthProvider = ({children}: {children: React.ReactNode}) => {
       phone: string;
       password: string;
     }) => {
-      await ensureAdminUser();
-      const email = payload.email.trim().toLowerCase();
-      const users = await getStoredUsers();
-
-      if (users.some(item => item.email.toLowerCase() === email)) {
-        return {
-          ok: false as const,
-          error: 'An account with this email already exists. Please log in.',
-        };
+      try {
+        await signupRequest({
+          name: payload.name.trim(),
+          email: payload.email.trim().toLowerCase(),
+          phone: payload.phone.trim(),
+          password: payload.password,
+        });
+        return {ok: true as const};
+      } catch (error) {
+        const message =
+          error instanceof ApiError
+            ? error.message
+            : 'Signup failed. Please try again.';
+        return {ok: false as const, error: message};
       }
-
-      const newUser: StoredUser = {
-        name: payload.name.trim(),
-        email,
-        phone: payload.phone.trim(),
-        password: payload.password,
-        role: 'customer',
-      };
-
-      await saveStoredUsers([...users, newUser]);
-
-      return {ok: true as const};
     },
     [],
   );
 
   const login = useCallback(async (email: string, password: string) => {
-    await ensureAdminUser();
-    const normalizedEmail = email.trim().toLowerCase();
-    const users = await getStoredUsers();
-    const matched = users.find(
-      item => item.email.toLowerCase() === normalizedEmail,
-    );
-
-    if (!matched) {
-      return {
-        ok: false as const,
-        error: 'No account found. Please sign up first.',
+    try {
+      const {token, user: apiUser} = await loginRequest(
+        email.trim().toLowerCase(),
+        password,
+      );
+      const authUser: AuthUser = {
+        name: apiUser.name,
+        email: apiUser.email,
+        phone: apiUser.phone || null,
+        role: apiUser.role,
       };
-    }
-
-    if (matched.password !== password) {
+      await saveSessionUser(authUser, token);
+      setUser(authUser);
       return {
-        ok: false as const,
-        error: 'Incorrect password. Please try again.',
+        ok: true as const,
+        isAdmin: hasAdminAccess(authUser.role),
       };
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : 'Login failed. Please try again.';
+      return {ok: false as const, error: message};
     }
-
-    await saveSessionEmail(matched.email);
-    const authUser = toAuthUser(matched);
-    setUser(authUser);
-
-    return {
-      ok: true as const,
-      isAdmin: hasAdminAccess(authUser.role),
-    };
   }, []);
 
   const logout = useCallback(async () => {

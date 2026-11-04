@@ -1,5 +1,10 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import type {CartItem} from '../context/CartContext';
+import {
+  createOrderRequest,
+  getAllOrdersRequest,
+  getOrdersByEmailRequest,
+  updateOrderStatusRequest,
+} from '../services/ordersApi';
 
 export type StoredPaymentMethod = 'cod' | 'card' | 'jazzcash';
 
@@ -32,24 +37,6 @@ export type StoredOrder = {
   status: OrderStatus;
 };
 
-const ALL_ORDERS_KEY = '@food_app/orders:all';
-
-const ordersKeyForUser = (email: string) =>
-  `@food_app/orders:${email.trim().toLowerCase()}`;
-
-const parseOrders = (raw: string | null): StoredOrder[] => {
-  if (!raw) {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
 export const getStoredOrders = async (
   userEmail?: string | null,
 ): Promise<StoredOrder[]> => {
@@ -57,85 +44,55 @@ export const getStoredOrders = async (
     return [];
   }
 
-  const raw = await AsyncStorage.getItem(ordersKeyForUser(userEmail));
-  return parseOrders(raw);
+  try {
+    return await getOrdersByEmailRequest(userEmail);
+  } catch {
+    return [];
+  }
 };
 
 export const getAllStoredOrders = async (): Promise<StoredOrder[]> => {
-  const raw = await AsyncStorage.getItem(ALL_ORDERS_KEY);
-  return parseOrders(raw);
-};
-
-const writeUserOrders = async (email: string, orders: StoredOrder[]) => {
-  await AsyncStorage.setItem(
-    ordersKeyForUser(email),
-    JSON.stringify(orders),
-  );
-};
-
-const writeAllOrders = async (orders: StoredOrder[]) => {
-  await AsyncStorage.setItem(ALL_ORDERS_KEY, JSON.stringify(orders));
+  try {
+    return await getAllOrdersRequest();
+  } catch {
+    return [];
+  }
 };
 
 export const saveStoredOrder = async (
-  order: StoredOrder,
+  order: Omit<StoredOrder, 'id' | 'orderId' | 'createdAt' | 'updatedAt' | 'status'> &
+    Partial<Pick<StoredOrder, 'id' | 'orderId' | 'createdAt' | 'updatedAt' | 'status'>>,
   userEmail: string,
-) => {
+): Promise<StoredOrder> => {
   const email = userEmail.trim().toLowerCase();
   if (!email) {
-    return;
+    throw new Error('You must be signed in to place an order.');
   }
 
-  const withCustomer: StoredOrder = {
-    ...order,
+  return createOrderRequest({
     customerEmail: order.customerEmail?.trim().toLowerCase() || email,
     customerName: order.customerName?.trim() || 'Customer',
-    updatedAt: order.updatedAt || order.createdAt,
-  };
-
-  const existing = await getStoredOrders(email);
-  await writeUserOrders(email, [withCustomer, ...existing]);
-
-  const allOrders = await getAllStoredOrders();
-  await writeAllOrders([withCustomer, ...allOrders]);
+    items: order.items,
+    productTotal: order.productTotal,
+    discount: order.discount,
+    deliveryFee: order.deliveryFee,
+    taxPercent: order.taxPercent,
+    taxAmount: order.taxAmount,
+    totalAmount: order.totalAmount,
+    paymentMethod: order.paymentMethod,
+    deliveryAddress: order.deliveryAddress,
+    deliveryInstructions: order.deliveryInstructions,
+    orderMode: order.orderMode,
+  });
 };
 
 export const updateStoredOrderStatus = async (
   orderId: string,
   status: OrderStatus,
 ): Promise<StoredOrder | null> => {
-  const allOrders = await getAllStoredOrders();
-  const index = allOrders.findIndex(
-    item => item.id === orderId || item.orderId === orderId,
-  );
-
-  if (index < 0) {
+  try {
+    return await updateOrderStatusRequest(orderId, status);
+  } catch {
     return null;
   }
-
-  const updatedAt = new Date().toISOString();
-  const updated: StoredOrder = {
-    ...allOrders[index],
-    status,
-    updatedAt,
-  };
-
-  const nextAll = [...allOrders];
-  nextAll[index] = updated;
-  await writeAllOrders(nextAll);
-
-  const customerEmail = updated.customerEmail?.trim().toLowerCase();
-  if (customerEmail) {
-    const userOrders = await getStoredOrders(customerEmail);
-    const userIndex = userOrders.findIndex(
-      item => item.id === updated.id || item.orderId === updated.orderId,
-    );
-    if (userIndex >= 0) {
-      const nextUser = [...userOrders];
-      nextUser[userIndex] = updated;
-      await writeUserOrders(customerEmail, nextUser);
-    }
-  }
-
-  return updated;
 };

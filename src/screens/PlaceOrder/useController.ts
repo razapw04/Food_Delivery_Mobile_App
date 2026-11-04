@@ -162,19 +162,12 @@ const useController = () => {
     const snapshot = orderSnapshotRef.current;
 
     try {
-      const now = new Date();
-      const id = `ord-${now.getTime()}`;
-      const orderId = `#FD-${String(now.getTime()).slice(-4)}`;
       if (!user?.email) {
         throw new Error('You must be signed in to place an order.');
       }
 
-      await saveStoredOrder(
+      const saved = await saveStoredOrder(
         {
-          id,
-          orderId,
-          createdAt: now.toISOString(),
-          updatedAt: now.toISOString(),
           customerEmail: user.email,
           customerName: user.name,
           items: snapshot.items,
@@ -188,17 +181,16 @@ const useController = () => {
           deliveryAddress: snapshot.fullAddress,
           deliveryInstructions: snapshot.deliveryInstructions.trim(),
           orderMode: snapshot.orderMode,
-          status: 'Pending',
         },
         user.email,
       );
 
       await addNotification({
         title: 'Order placed',
-        body: `Your order ${orderId} is pending. Total ${formatPrice(
+        body: `Your order ${saved.orderId} is pending. Total ${formatPrice(
           snapshot.totalAmount,
         )}.`,
-        orderId: id,
+        orderId: saved.id,
       });
 
       if (
@@ -227,6 +219,7 @@ const useController = () => {
     addSavedAddress,
     addNotification,
     user?.email,
+    user?.name,
   ]);
 
   const proceedOrderRef = useRef(proceedOrder);

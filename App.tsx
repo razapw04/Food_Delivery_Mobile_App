@@ -22,6 +22,7 @@ import MenuScreen from './src/screens/Menu';
 import MainTabs from './src/navigation/MainTabs';
 import {AuthProvider} from './src/context/AuthContext';
 import {CartProvider} from './src/context/CartContext';
+import {CatalogProvider} from './src/context/CatalogContext';
 import {FavoritesProvider} from './src/context/FavoritesContext';
 import {LocationProvider} from './src/context/LocationContext';
 import {NotificationsProvider} from './src/context/NotificationsContext';
@@ -35,6 +36,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const App = () => {
   return (
     <AuthProvider>
+      <CatalogProvider>
       <LocationProvider>
         <OrderProvider>
           <CartProvider>
@@ -73,6 +75,7 @@ const App = () => {
           </CartProvider>
         </OrderProvider>
       </LocationProvider>
+      </CatalogProvider>
     </AuthProvider>
   );
 };

@@ -1,9 +1,10 @@
 import {useMemo, useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useCatalog} from '../../context/CatalogContext';
 import {useOrder} from '../../context/OrderContext';
 import type {RootStackParamList} from '../../types/navigation';
-import {Branch, branches} from './model';
+import type {Branch} from './model';
 
 type BranchesNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -12,6 +13,7 @@ type BranchesNavigationProp = NativeStackNavigationProp<
 
 const useController = () => {
   const navigation = useNavigation<BranchesNavigationProp>();
+  const {branches} = useCatalog();
   const {selectedBranch: savedBranch, selectBranch} = useOrder();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
@@ -28,7 +30,7 @@ const useController = () => {
         branch.name.toLowerCase().includes(query) ||
         branch.address.toLowerCase().includes(query),
     );
-  }, [searchQuery]);
+  }, [branches, searchQuery]);
 
   const handleBack = () => {
     if (navigation.canGoBack()) {

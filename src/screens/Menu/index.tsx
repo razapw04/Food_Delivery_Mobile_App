@@ -17,11 +17,12 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {spacing} from '../../theme';
 import CartReviewFooter from '../../components/CartReviewFooter';
 import {useCart} from '../../context/CartContext';
+import {useCatalog} from '../../context/CatalogContext';
 import {useFavorites} from '../../context/FavoritesContext';
 import {useLocation} from '../../context/LocationContext';
 import {useOrder} from '../../context/OrderContext';
 import type {RootStackParamList} from '../../types/navigation';
-import {menuCategories, menuItems, type MenuItem} from './model';
+import type {MenuItem} from './model';
 import {styles} from './styles';
 
 type MenuScreenProps = NativeStackScreenProps<RootStackParamList, 'Menu'>;
@@ -110,12 +111,13 @@ const MenuItemCard = ({
 const MenuScreen = ({navigation}: MenuScreenProps) => {
   const {deliveryAddress, isLocating} = useLocation();
   const {orderMode, selectedBranch} = useOrder();
+  const {menuCategories, menuItems} = useCatalog();
   const {itemCount, cartTotal} = useCart();
   const {isFavorite, toggleFavorite} = useFavorites();
   const isPickup = orderMode === 'pickup';
   const hasCartItems = itemCount > 0;
   const [selectedCategoryId, setSelectedCategoryId] = useState(
-    menuCategories[0].id,
+    () => menuCategories[0]?.id ?? 'pizza',
   );
   const isScrollingToCategory = useRef(false);
   const listRef = useRef<FlatList<MenuRow>>(null);
@@ -146,7 +148,7 @@ const MenuScreen = ({navigation}: MenuScreenProps) => {
     });
 
     return nextRows;
-  }, []);
+  }, [menuCategories, menuItems]);
 
   const categoryIndexMap = useMemo(() => {
     const map: Record<string, number> = {};

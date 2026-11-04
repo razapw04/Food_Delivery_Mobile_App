@@ -3,10 +3,10 @@ import {useNavigation} from '@react-navigation/native';
 import type {CompositeNavigationProp} from '@react-navigation/native';
 import type {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useCatalog} from '../../context/CatalogContext';
 import {useLocation} from '../../context/LocationContext';
 import {useOrder} from '../../context/OrderContext';
 import type {MainTabParamList, RootStackParamList} from '../../types/navigation';
-import {menuCategories, menuItems, popularMenuItems} from '../Menu/model';
 
 type ExploreNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList, 'Explore'>,
@@ -17,6 +17,7 @@ const useController = () => {
   const navigation = useNavigation<ExploreNavigationProp>();
   const {deliveryAddress, isLocating} = useLocation();
   const {orderMode, selectedBranch} = useOrder();
+  const {menuCategories, menuItems, popularMenuItems} = useCatalog();
   const [query, setQuery] = useState('');
 
   const isPickup = orderMode === 'pickup';
@@ -41,7 +42,7 @@ const useController = () => {
         `${item.name} ${item.description} ${categoryName}`.toLowerCase();
       return searchableText.includes(normalizedQuery);
     });
-  }, [query]);
+  }, [menuCategories, menuItems, query]);
 
   const showEmptyState = query.trim().length === 0 || visibleItems.length === 0;
 

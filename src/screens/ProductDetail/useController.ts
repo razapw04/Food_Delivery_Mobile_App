@@ -5,11 +5,11 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import type {RouteProp} from '@react-navigation/native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useCart} from '../../context/CartContext';
+import {useCatalog} from '../../context/CatalogContext';
 import {useFavorites} from '../../context/FavoritesContext';
 import {useLocation} from '../../context/LocationContext';
 import {useOrder} from '../../context/OrderContext';
 import type {RootStackParamList} from '../../types/navigation';
-import {getMenuItemById} from '../Menu/model';
 
 type VariationKey = 'regular' | 'large';
 
@@ -45,6 +45,7 @@ const useController = () => {
   const insets = useSafeAreaInsets();
   const {deliveryAddress, isLocating} = useLocation();
   const {orderMode, selectedBranch} = useOrder();
+  const {getMenuItemById} = useCatalog();
   const {addItem} = useCart();
   const {isFavorite: checkFavorite, toggleFavorite: toggleFavoriteId} =
     useFavorites();
