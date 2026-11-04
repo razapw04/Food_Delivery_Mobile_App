@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {Skeleton} from '../../components/Skeleton';
+import {OfflineBanner} from '../../components/StateMessage';
 import type {MenuItem} from '../Menu/model';
 import {styles} from './styles';
 import useController from './useController';
@@ -77,6 +79,9 @@ const ExploreScreen = () => {
     popularMenuItems,
     visibleItems,
     showEmptyState,
+    isLoading,
+    isUsingFallback,
+    refreshCatalog,
     goHome,
     goMenu,
     openProduct,
@@ -90,6 +95,13 @@ const ExploreScreen = () => {
         value={headerValue}
         onBack={goHome}
       />
+
+      {isUsingFallback ? (
+        <OfflineBanner
+          message="Couldn't refresh search data. Showing saved items."
+          onRetry={refreshCatalog}
+        />
+      ) : null}
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -122,20 +134,34 @@ const ExploreScreen = () => {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Popular searches</Text>
-          <ScrollView
-            contentContainerStyle={styles.keywordList}
-            horizontal
-            showsHorizontalScrollIndicator={false}>
-            {popularMenuItems.map(item => (
-              <Pressable
-                accessibilityRole="button"
-                key={item.id}
-                onPress={() => openProduct(item.id)}
-                style={styles.keywordCard}>
-                <Text style={styles.keywordText}>{item.name}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
+          {isLoading ? (
+            <View style={styles.keywordList}>
+              {Array.from({length: 4}).map((_, index) => (
+                <Skeleton
+                  key={`popular-skel-${index}`}
+                  width={96}
+                  height={36}
+                  borderRadius={18}
+                  style={{marginRight: 8}}
+                />
+              ))}
+            </View>
+          ) : (
+            <ScrollView
+              contentContainerStyle={styles.keywordList}
+              horizontal
+              showsHorizontalScrollIndicator={false}>
+              {popularMenuItems.map(item => (
+                <Pressable
+                  accessibilityRole="button"
+                  key={item.id}
+                  onPress={() => openProduct(item.id)}
+                  style={styles.keywordCard}>
+                  <Text style={styles.keywordText}>{item.name}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         <View style={styles.exploreMenuWrap}>

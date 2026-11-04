@@ -17,6 +17,7 @@ import {
   type MenuCategory,
   type MenuItem,
 } from '../screens/Menu/model';
+import {ApiError} from '../services/apiClient';
 import {
   fetchBranches,
   fetchMenuCategories,
@@ -25,6 +26,8 @@ import {
 
 type CatalogContextValue = {
   isLoading: boolean;
+  error: string | null;
+  isUsingFallback: boolean;
   menuCategories: MenuCategory[];
   menuItems: MenuItem[];
   popularMenuItems: MenuItem[];
@@ -37,12 +40,17 @@ const CatalogContext = createContext<CatalogContextValue | null>(null);
 
 export const CatalogProvider = ({children}: {children: React.ReactNode}) => {
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isUsingFallback, setIsUsingFallback] = useState(false);
   const [menuCategories, setMenuCategories] =
     useState<MenuCategory[]>(localMenuCategories);
   const [menuItems, setMenuItems] = useState<MenuItem[]>(localMenuItems);
   const [branches, setBranches] = useState<Branch[]>(localBranches);
 
   const refreshCatalog = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
     try {
       const [categories, items, nextBranches] = await Promise.all([
         fetchMenuCategories(),
@@ -59,8 +67,15 @@ export const CatalogProvider = ({children}: {children: React.ReactNode}) => {
       if (nextBranches.length > 0) {
         setBranches(nextBranches);
       }
-    } catch {
-      // Keep local seed data if API is unreachable.
+      setIsUsingFallback(false);
+      setError(null);
+    } catch (err) {
+      setIsUsingFallback(true);
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Couldn't load latest menu. Showing saved data.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -86,6 +101,8 @@ export const CatalogProvider = ({children}: {children: React.ReactNode}) => {
   const value = useMemo(
     () => ({
       isLoading,
+      error,
+      isUsingFallback,
       menuCategories,
       menuItems,
       popularMenuItems,
@@ -95,6 +112,8 @@ export const CatalogProvider = ({children}: {children: React.ReactNode}) => {
     }),
     [
       isLoading,
+      error,
+      isUsingFallback,
       menuCategories,
       menuItems,
       popularMenuItems,

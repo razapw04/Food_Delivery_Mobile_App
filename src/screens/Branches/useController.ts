@@ -13,7 +13,13 @@ type BranchesNavigationProp = NativeStackNavigationProp<
 
 const useController = () => {
   const navigation = useNavigation<BranchesNavigationProp>();
-  const {branches} = useCatalog();
+  const {
+    branches,
+    isLoading,
+    isUsingFallback,
+    error,
+    refreshCatalog,
+  } = useCatalog();
   const {selectedBranch: savedBranch, selectBranch} = useOrder();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
@@ -65,6 +71,10 @@ const useController = () => {
     selectedBranch,
     savedBranch,
     confirmVisible,
+    isLoading,
+    isUsingFallback,
+    error,
+    refreshCatalog,
     handleBack,
     handleBranchPress,
     handleCancelConfirm,

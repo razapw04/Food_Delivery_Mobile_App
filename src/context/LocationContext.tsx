@@ -265,7 +265,12 @@ export const LocationProvider = ({children}: {children: React.ReactNode}) => {
     let active = true;
     const loadAddresses = async () => {
       const stored = await getStoredAddresses();
-      const orders = await getStoredOrders(user?.email);
+      let orders: Awaited<ReturnType<typeof getStoredOrders>> = [];
+      try {
+        orders = await getStoredOrders(user?.email);
+      } catch {
+        orders = [];
+      }
       const fromOrders: SavedAddress[] = [];
 
       orders.forEach(order => {

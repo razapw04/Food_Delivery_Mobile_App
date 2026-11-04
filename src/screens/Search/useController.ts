@@ -17,7 +17,14 @@ const useController = () => {
   const navigation = useNavigation<ExploreNavigationProp>();
   const {deliveryAddress, isLocating} = useLocation();
   const {orderMode, selectedBranch} = useOrder();
-  const {menuCategories, menuItems, popularMenuItems} = useCatalog();
+  const {
+    menuCategories,
+    menuItems,
+    popularMenuItems,
+    isLoading,
+    isUsingFallback,
+    refreshCatalog,
+  } = useCatalog();
   const [query, setQuery] = useState('');
 
   const isPickup = orderMode === 'pickup';
@@ -71,6 +78,9 @@ const useController = () => {
     popularMenuItems,
     visibleItems,
     showEmptyState,
+    isLoading,
+    isUsingFallback,
+    refreshCatalog,
     goHome,
     goMenu,
     openProduct,

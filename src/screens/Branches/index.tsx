@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {BranchListSkeleton} from '../../components/Skeleton';
+import {OfflineBanner, StateMessage} from '../../components/StateMessage';
 import {
   Branch,
   formatBranchHours,
@@ -114,6 +116,9 @@ const BranchesScreen = () => {
     filteredBranches,
     selectedBranch,
     confirmVisible,
+    isLoading,
+    isUsingFallback,
+    refreshCatalog,
     handleBack,
     handleBranchPress,
     handleCancelConfirm,
@@ -134,6 +139,13 @@ const BranchesScreen = () => {
         </Pressable>
         <Text style={styles.headerTitle}>Branches</Text>
       </View>
+
+      {isUsingFallback ? (
+        <OfflineBanner
+          message="Couldn't load branches from server. Showing saved list."
+          onRetry={refreshCatalog}
+        />
+      ) : null}
 
       <View style={styles.mapContainer}>
         <Image
@@ -162,21 +174,31 @@ const BranchesScreen = () => {
 
         <Text style={styles.sectionTitle}>All branches</Text>
 
-        <FlatList
-          data={filteredBranches}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>No branches found.</Text>
-          }
-          renderItem={({item}) => (
-            <BranchItem
-              branch={item}
-              onPress={() => handleBranchPress(item)}
-            />
-          )}
-        />
+        {isLoading ? (
+          <BranchListSkeleton />
+        ) : (
+          <FlatList
+            data={filteredBranches}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <StateMessage
+                icon="storefront-outline"
+                title="No branches found"
+                subtitle="Try another search or pull the latest list from the server."
+                actionLabel="Retry"
+                onAction={refreshCatalog}
+              />
+            }
+            renderItem={({item}) => (
+              <BranchItem
+                branch={item}
+                onPress={() => handleBranchPress(item)}
+              />
+            )}
+          />
+        )}
       </View>
 
       <ConfirmBranchModal

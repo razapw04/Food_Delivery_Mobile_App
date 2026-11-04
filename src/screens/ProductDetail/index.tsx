@@ -11,6 +11,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import CartIconButton from '../../components/CartIconButton';
 import LiquidGlassPanel from '../../components/LiquidGlassPanel';
+import {StateMessage} from '../../components/StateMessage';
 import {styles} from './styles';
 import useController from './useController';
 
@@ -44,7 +45,24 @@ const ProductDetailScreen = () => {
     return (
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <StatusBar barStyle="dark-content" />
-        <Text style={styles.missingText}>Product not found</Text>
+        <View style={styles.header}>
+          <View style={styles.topRow}>
+            <Pressable
+              accessibilityLabel="Go back"
+              accessibilityRole="button"
+              style={styles.circleButton}
+              onPress={handleBack}>
+              <Icon name="arrow-left" size={22} color="#1A1A1A" />
+            </Pressable>
+          </View>
+        </View>
+        <StateMessage
+          icon="food-off"
+          title="Product not found"
+          subtitle="This item may have been removed or isn't available right now."
+          actionLabel="Go back"
+          onAction={handleBack}
+        />
       </SafeAreaView>
     );
   }

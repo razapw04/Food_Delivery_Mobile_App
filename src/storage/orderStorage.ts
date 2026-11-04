@@ -44,24 +44,21 @@ export const getStoredOrders = async (
     return [];
   }
 
-  try {
-    return await getOrdersByEmailRequest(userEmail);
-  } catch {
-    return [];
-  }
+  return getOrdersByEmailRequest(userEmail);
 };
 
 export const getAllStoredOrders = async (): Promise<StoredOrder[]> => {
-  try {
-    return await getAllOrdersRequest();
-  } catch {
-    return [];
-  }
+  return getAllOrdersRequest();
 };
 
 export const saveStoredOrder = async (
-  order: Omit<StoredOrder, 'id' | 'orderId' | 'createdAt' | 'updatedAt' | 'status'> &
-    Partial<Pick<StoredOrder, 'id' | 'orderId' | 'createdAt' | 'updatedAt' | 'status'>>,
+  order: Omit<
+    StoredOrder,
+    'id' | 'orderId' | 'createdAt' | 'updatedAt' | 'status'
+  > &
+    Partial<
+      Pick<StoredOrder, 'id' | 'orderId' | 'createdAt' | 'updatedAt' | 'status'>
+    >,
   userEmail: string,
 ): Promise<StoredOrder> => {
   const email = userEmail.trim().toLowerCase();
@@ -89,10 +86,6 @@ export const saveStoredOrder = async (
 export const updateStoredOrderStatus = async (
   orderId: string,
   status: OrderStatus,
-): Promise<StoredOrder | null> => {
-  try {
-    return await updateOrderStatusRequest(orderId, status);
-  } catch {
-    return null;
-  }
+): Promise<StoredOrder> => {
+  return updateOrderStatusRequest(orderId, status);
 };

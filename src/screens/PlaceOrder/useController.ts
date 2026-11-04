@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
-import {Animated, Easing} from 'react-native';
+import {Alert, Animated, Easing} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import {useCart} from '../../context/CartContext';
 import {useLocation} from '../../context/LocationContext';
 import {useNotifications} from '../../context/NotificationsContext';
 import {useOrder} from '../../context/OrderContext';
+import {ApiError} from '../../services/apiClient';
 import {saveStoredOrder} from '../../storage/orderStorage';
 import type {RootStackParamList} from '../../types/navigation';
 
@@ -206,8 +207,16 @@ const useController = () => {
       setModalType(null);
       progressWidth.setValue(0);
       navigation.navigate('MainTabs', {screen: 'Orders'});
-    } catch {
+    } catch (error) {
       didProceedRef.current = false;
+      Alert.alert(
+        'Order failed',
+        error instanceof ApiError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "Couldn't place your order. Please try again.",
+      );
     } finally {
       setIsPlacingOrder(false);
     }

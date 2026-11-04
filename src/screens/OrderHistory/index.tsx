@@ -11,7 +11,10 @@ import type {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {useFocusEffect} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {OrderListSkeleton} from '../../components/Skeleton';
+import {StateMessage} from '../../components/StateMessage';
 import {useAuth} from '../../context/AuthContext';
+import {ApiError} from '../../services/apiClient';
 import type {MainTabParamList} from '../../types/navigation';
 import {
   getStoredOrders,
@@ -168,39 +171,85 @@ const OrderCard = ({order}: {order: OrderHistoryItem}) => {
   );
 };
 
-const EmptyOrders = () => (
-  <View style={styles.emptyWrap}>
-    <View style={styles.emptyIconWrap}>
-      <Icon name="package-variant-closed" size={32} color="#9CA3AF" />
-    </View>
-    <Text style={styles.emptyTitle}>No orders yet</Text>
-    <Text style={styles.emptySubtitle}>
-      When you place an order, it will show up here with its status and details.
-    </Text>
-  </View>
-);
-
 const OrderHistoryScreen = ({navigation}: Props) => {
   const showBack = navigation.canGoBack();
   const {user} = useAuth();
   const [orders, setOrders] = useState<OrderHistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadOrders = useCallback(async () => {
+    if (!user?.email) {
+      setOrders([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const stored = await getStoredOrders(user.email);
+      setOrders(stored.map(mapStoredOrder));
+    } catch (err) {
+      setOrders([]);
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Couldn't load your orders. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.email]);
 
   useFocusEffect(
     useCallback(() => {
       let active = true;
-      const loadOrders = async () => {
-        const stored = await getStoredOrders(user?.email);
+      const run = async () => {
+        await loadOrders();
         if (!active) {
           return;
         }
-        setOrders(stored.map(mapStoredOrder));
       };
-      loadOrders();
+      run();
       return () => {
         active = false;
       };
-    }, [user?.email]),
+    }, [loadOrders]),
   );
+
+  const listEmpty = () => {
+    if (error) {
+      return (
+        <StateMessage
+          icon="wifi-off"
+          title="Couldn't load orders"
+          subtitle={error}
+          actionLabel="Retry"
+          onAction={loadOrders}
+        />
+      );
+    }
+
+    if (!user?.email) {
+      return (
+        <StateMessage
+          icon="account-outline"
+          title="Sign in to see orders"
+          subtitle="Your order history will appear here after you log in."
+        />
+      );
+    }
+
+    return (
+      <StateMessage
+        icon="package-variant-closed"
+        title="No orders yet"
+        subtitle="When you place an order, it will show up here with its status and details."
+      />
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -221,14 +270,18 @@ const OrderHistoryScreen = ({navigation}: Props) => {
         <Text style={styles.headerTitle}>Order History</Text>
       </View>
 
-      <FlatList
-        data={orders}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={<EmptyOrders />}
-        renderItem={({item}) => <OrderCard order={item} />}
-      />
+      {loading ? (
+        <OrderListSkeleton />
+      ) : (
+        <FlatList
+          data={orders}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={listEmpty}
+          renderItem={({item}) => <OrderCard order={item} />}
+        />
+      )}
     </SafeAreaView>
   );
 };

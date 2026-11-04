@@ -654,11 +654,17 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
     useCallback(() => {
       let active = true;
       const loadRecent = async () => {
-        const stored = await getStoredOrders(user?.email);
-        if (!active) {
-          return;
+        try {
+          const stored = await getStoredOrders(user?.email);
+          if (!active) {
+            return;
+          }
+          setHomeRecentOrders(stored.slice(0, 2).map(mapStoredToRecentOrder));
+        } catch {
+          if (active) {
+            setHomeRecentOrders([]);
+          }
         }
-        setHomeRecentOrders(stored.slice(0, 2).map(mapStoredToRecentOrder));
       };
       loadRecent();
       return () => {

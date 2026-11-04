@@ -16,6 +16,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {spacing} from '../../theme';
 import CartReviewFooter from '../../components/CartReviewFooter';
+import {MenuSkeleton} from '../../components/Skeleton';
+import {OfflineBanner, StateMessage} from '../../components/StateMessage';
 import {useCart} from '../../context/CartContext';
 import {useCatalog} from '../../context/CatalogContext';
 import {useFavorites} from '../../context/FavoritesContext';
@@ -111,7 +113,13 @@ const MenuItemCard = ({
 const MenuScreen = ({navigation}: MenuScreenProps) => {
   const {deliveryAddress, isLocating} = useLocation();
   const {orderMode, selectedBranch} = useOrder();
-  const {menuCategories, menuItems} = useCatalog();
+  const {
+    menuCategories,
+    menuItems,
+    isLoading,
+    isUsingFallback,
+    refreshCatalog,
+  } = useCatalog();
   const {itemCount, cartTotal} = useCart();
   const {isFavorite, toggleFavorite} = useFavorites();
   const isPickup = orderMode === 'pickup';
@@ -265,106 +273,131 @@ const MenuScreen = ({navigation}: MenuScreenProps) => {
         </Pressable>
       </View>
 
-      <View style={styles.categoriesSection}>
-        <ScrollView
-          ref={categoryScrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesRow}>
-          {menuCategories.map(category => {
-            const isActive = category.id === selectedCategoryId;
-            return (
-              <Pressable
-                key={category.id}
-                accessibilityRole="button"
-                accessibilityState={{selected: isActive}}
-                style={styles.categoryItem}
-                onLayout={event => {
-                  categoryOffsets.current[category.id] =
-                    event.nativeEvent.layout.x;
-                }}
-                onPress={() => selectCategory(category.id, true)}>
-                <View
-                  style={[
-                    styles.categoryImageWrap,
-                    isActive && styles.categoryImageWrapActive,
-                  ]}>
-                  <Image
-                    source={{uri: category.image}}
-                    style={styles.categoryImage}
-                    resizeMode="cover"
-                  />
-                </View>
-                <Text
-                  style={[
-                    styles.categoryName,
-                    isActive && styles.categoryNameActive,
-                  ]}
-                  numberOfLines={1}>
-                  {category.name}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
+      {isUsingFallback ? (
+        <OfflineBanner
+          message="Couldn't refresh menu from server. Showing saved items."
+          onRetry={refreshCatalog}
+        />
+      ) : null}
 
-      <FlatList
-        ref={listRef}
-        data={rows}
-        keyExtractor={row => row.key}
-        contentContainerStyle={[
-          styles.listContent,
-          hasCartItems && styles.listContentWithCartFooter,
-        ]}
-        showsVerticalScrollIndicator={false}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-        onMomentumScrollEnd={handleScrollEnd}
-        onScrollEndDrag={handleScrollEnd}
-        getItemLayout={(_, index) => {
-          const row = rows[index];
-          const length =
-            row?.type === 'header' ? SECTION_HEADER_HEIGHT : ITEM_ROW_HEIGHT;
-          let offset = spacing.lg;
-          for (let i = 0; i < index; i += 1) {
-            offset +=
-              rows[i].type === 'header'
-                ? SECTION_HEADER_HEIGHT
-                : ITEM_ROW_HEIGHT;
-          }
-          return {length, offset, index};
-        }}
-        onScrollToIndexFailed={info => {
-          setTimeout(() => {
-            listRef.current?.scrollToIndex({
-              index: info.index,
-              animated: true,
-              viewPosition: 0,
-            });
-          }, 250);
-        }}
-        renderItem={({item: row}) => {
-          if (row.type === 'header') {
-            return (
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>{row.title}</Text>
-              </View>
-            );
-          }
+      {isLoading ? (
+        <MenuSkeleton />
+      ) : rows.length === 0 ? (
+        <StateMessage
+          icon="food-off"
+          title="Menu unavailable"
+          subtitle="We couldn't load menu items right now. Check your connection and try again."
+          actionLabel="Retry"
+          onAction={refreshCatalog}
+        />
+      ) : (
+        <>
+          <View style={styles.categoriesSection}>
+            <ScrollView
+              ref={categoryScrollRef}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoriesRow}>
+              {menuCategories.map(category => {
+                const isActive = category.id === selectedCategoryId;
+                return (
+                  <Pressable
+                    key={category.id}
+                    accessibilityRole="button"
+                    accessibilityState={{selected: isActive}}
+                    style={styles.categoryItem}
+                    onLayout={event => {
+                      categoryOffsets.current[category.id] =
+                        event.nativeEvent.layout.x;
+                    }}
+                    onPress={() => selectCategory(category.id, true)}>
+                    <View
+                      style={[
+                        styles.categoryImageWrap,
+                        isActive && styles.categoryImageWrapActive,
+                      ]}>
+                      <Image
+                        source={{uri: category.image}}
+                        style={styles.categoryImage}
+                        resizeMode="cover"
+                      />
+                    </View>
+                    <Text
+                      style={[
+                        styles.categoryName,
+                        isActive && styles.categoryNameActive,
+                      ]}
+                      numberOfLines={1}>
+                      {category.name}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
 
-          return (
-            <MenuItemCard
-              item={row.item}
-              isFavorite={isFavorite(row.item.id)}
-              onToggleFavorite={() => toggleFavorite(row.item.id)}
-              onOpenProduct={() =>
-                navigation.navigate('ProductDetail', {itemId: row.item.id})
+          <FlatList
+            ref={listRef}
+            data={rows}
+            keyExtractor={row => row.key}
+            contentContainerStyle={[
+              styles.listContent,
+              hasCartItems && styles.listContentWithCartFooter,
+            ]}
+            showsVerticalScrollIndicator={false}
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
+            onMomentumScrollEnd={handleScrollEnd}
+            onScrollEndDrag={handleScrollEnd}
+            getItemLayout={(_, index) => {
+              const row = rows[index];
+              const length =
+                row?.type === 'header'
+                  ? SECTION_HEADER_HEIGHT
+                  : ITEM_ROW_HEIGHT;
+              let offset = spacing.lg;
+              for (let i = 0; i < index; i += 1) {
+                offset +=
+                  rows[i].type === 'header'
+                    ? SECTION_HEADER_HEIGHT
+                    : ITEM_ROW_HEIGHT;
               }
-            />
-          );
-        }}
-      />
+              return {length, offset, index};
+            }}
+            onScrollToIndexFailed={info => {
+              setTimeout(() => {
+                listRef.current?.scrollToIndex({
+                  index: info.index,
+                  animated: true,
+                  viewPosition: 0,
+                });
+              }, 250);
+            }}
+            renderItem={({item: row}) => {
+              if (row.type === 'header') {
+                return (
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>{row.title}</Text>
+                  </View>
+                );
+              }
+
+              return (
+                <MenuItemCard
+                  item={row.item}
+                  isFavorite={isFavorite(row.item.id)}
+                  onToggleFavorite={() => toggleFavorite(row.item.id)}
+                  onOpenProduct={() =>
+                    navigation.navigate('ProductDetail', {
+                      itemId: row.item.id,
+                    })
+                  }
+                />
+              );
+            }}
+          />
+        </>
+      )}
 
       {hasCartItems ? (
         <CartReviewFooter

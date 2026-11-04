@@ -1,6 +1,6 @@
 import React, {useCallback, useState} from 'react';
 import {
-  ActivityIndicator,
+  Alert,
   FlatList,
   Pressable,
   StatusBar,
@@ -11,7 +11,10 @@ import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {OrderListSkeleton} from '../../components/Skeleton';
+import {StateMessage} from '../../components/StateMessage';
 import {useAuth} from '../../context/AuthContext';
+import {ApiError} from '../../services/apiClient';
 import {notifyInApp} from '../../services/pushNotifications';
 import {
   getAllStoredOrders,
@@ -20,7 +23,6 @@ import {
   type StoredOrder,
 } from '../../storage/orderStorage';
 import type {RootStackParamList} from '../../types/navigation';
-import {colors} from '../../theme';
 import {styles} from './styles';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'AdminOrders'>;
@@ -161,23 +163,12 @@ const AdminOrderCard = ({
   );
 };
 
-const EmptyOrders = () => (
-  <View style={styles.emptyWrap}>
-    <View style={styles.emptyIconWrap}>
-      <Icon name="clipboard-list-outline" size={32} color="#9CA3AF" />
-    </View>
-    <Text style={styles.emptyTitle}>No orders yet</Text>
-    <Text style={styles.emptySubtitle}>
-      Customer orders will appear here so you can confirm and update status.
-    </Text>
-  </View>
-);
-
 const AdminOrdersScreen = () => {
   const navigation = useNavigation<Nav>();
   const {isAdmin, logout} = useAuth();
   const [orders, setOrders] = useState<StoredOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const handleLogout = useCallback(async () => {
@@ -189,9 +180,21 @@ const AdminOrdersScreen = () => {
   }, [logout, navigation]);
 
   const loadOrders = useCallback(async () => {
-    const stored = await getAllStoredOrders();
-    setOrders(stored);
-    setLoading(false);
+    setLoading(true);
+    setError(null);
+    try {
+      const stored = await getAllStoredOrders();
+      setOrders(stored);
+    } catch (err) {
+      setOrders([]);
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Couldn't load orders. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useFocusEffect(
@@ -203,16 +206,7 @@ const AdminOrdersScreen = () => {
         });
         return;
       }
-      let active = true;
-      setLoading(true);
-      loadOrders().finally(() => {
-        if (active) {
-          setLoading(false);
-        }
-      });
-      return () => {
-        active = false;
-      };
+      loadOrders();
     }, [isAdmin, loadOrders, navigation]),
   );
 
@@ -221,20 +215,47 @@ const AdminOrdersScreen = () => {
       setUpdatingId(orderId);
       try {
         const updated = await updateStoredOrderStatus(orderId, status);
-        if (updated) {
-          await notifyInApp(
-            'Order status updated',
-            `Your order ${updated.orderId} is now ${status}.`,
-            updated.id,
-          );
-          await loadOrders();
-        }
+        await notifyInApp(
+          'Order status updated',
+          `Your order ${updated.orderId} is now ${status}.`,
+          updated.id,
+        );
+        await loadOrders();
+      } catch (err) {
+        Alert.alert(
+          'Update failed',
+          err instanceof ApiError
+            ? err.message
+            : "Couldn't update order status. Please try again.",
+        );
       } finally {
         setUpdatingId(null);
       }
     },
     [loadOrders],
   );
+
+  const listEmpty = () => {
+    if (error) {
+      return (
+        <StateMessage
+          icon="wifi-off"
+          title="Couldn't load orders"
+          subtitle={error}
+          actionLabel="Retry"
+          onAction={loadOrders}
+        />
+      );
+    }
+
+    return (
+      <StateMessage
+        icon="clipboard-list-outline"
+        title="No orders yet"
+        subtitle="Customer orders will appear here so you can confirm and update status."
+      />
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -253,16 +274,14 @@ const AdminOrdersScreen = () => {
       </View>
 
       {loading ? (
-        <View style={styles.emptyWrap}>
-          <ActivityIndicator color={colors.primary} />
-        </View>
+        <OrderListSkeleton />
       ) : (
         <FlatList
           data={orders}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          ListEmptyComponent={<EmptyOrders />}
+          ListEmptyComponent={listEmpty}
           renderItem={({item}) => (
             <AdminOrderCard
               order={item}
