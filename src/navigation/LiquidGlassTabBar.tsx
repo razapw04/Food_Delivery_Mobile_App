@@ -4,7 +4,7 @@ import type {BottomTabBarProps} from '@react-navigation/bottom-tabs';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LiquidGlassPanel from '../components/LiquidGlassPanel';
-import {colors} from '../theme';
+import {colors, typography} from '../theme';
 
 const TAB_ICONS: Record<string, {active: string; inactive: string}> = {
   Home: {active: 'home', inactive: 'home-outline'},
@@ -145,8 +145,8 @@ const styles = StyleSheet.create({
 
   label: {
     marginTop: 2,
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
     color: '#6B7280',
   },
 

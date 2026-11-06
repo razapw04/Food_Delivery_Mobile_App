@@ -48,8 +48,8 @@ type ItemRow = {
 
 type MenuRow = HeaderRow | ItemRow;
 
-const SECTION_HEADER_HEIGHT = 52;
-const ITEM_ROW_HEIGHT = 120;
+const SECTION_HEADER_HEIGHT = 40;
+const ITEM_ROW_HEIGHT = 92;
 
 const MenuItemCard = ({
   item,
@@ -246,7 +246,7 @@ const MenuScreen = ({navigation}: MenuScreenProps) => {
           accessibilityRole="button"
           style={styles.backButton}
           onPress={() => navigation.navigate('MainTabs', {screen: 'Home'})}>
-          <Icon name="arrow-left" size={24} color="#1A1A1A" />
+          <Icon name="arrow-left" size={20} color="#1A1A1A" />
         </Pressable>
 
         <View style={styles.locationBlock}>
@@ -269,7 +269,7 @@ const MenuScreen = ({navigation}: MenuScreenProps) => {
           onPress={() =>
             navigation.navigate('MainTabs', {screen: 'Explore'})
           }>
-          <Icon name="magnify" size={22} color="#1A1A1A" />
+          <Icon name="magnify" size={18} color="#1A1A1A" />
         </Pressable>
       </View>
 

@@ -8,8 +8,8 @@ import {useCart} from '../../context/CartContext';
 import {useLocation} from '../../context/LocationContext';
 import {useNotifications} from '../../context/NotificationsContext';
 import {useOrder} from '../../context/OrderContext';
+import {usePlaceOrderMutation} from '../../hooks/useOrdersQuery';
 import {ApiError} from '../../services/apiClient';
-import {saveStoredOrder} from '../../storage/orderStorage';
 import type {RootStackParamList} from '../../types/navigation';
 
 type PlaceOrderNavigationProp = NativeStackNavigationProp<
@@ -48,6 +48,7 @@ const useController = () => {
   const {orderMode, selectedBranch} = useOrder();
   const {items, cartTotal, clearCart} = useCart();
   const {addNotification} = useNotifications();
+  const {mutateAsync: placeOrder} = usePlaceOrderMutation();
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethodId>('cod');
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
@@ -167,8 +168,9 @@ const useController = () => {
         throw new Error('You must be signed in to place an order.');
       }
 
-      const saved = await saveStoredOrder(
-        {
+      const saved = await placeOrder({
+        userEmail: user.email,
+        order: {
           customerEmail: user.email,
           customerName: user.name,
           items: snapshot.items,
@@ -183,8 +185,7 @@ const useController = () => {
           deliveryInstructions: snapshot.deliveryInstructions.trim(),
           orderMode: snapshot.orderMode,
         },
-        user.email,
-      );
+      });
 
       await addNotification({
         title: 'Order placed',
@@ -227,6 +228,7 @@ const useController = () => {
     navigation,
     addSavedAddress,
     addNotification,
+    placeOrder,
     user?.email,
     user?.name,
   ]);
@@ -287,6 +289,15 @@ const useController = () => {
       openModal('minOrder');
       return;
     }
+
+    if (selectedPaymentMethod === 'card') {
+      navigation.navigate('CardPayment', {
+        amount: totalAmount,
+        deliveryInstructions: deliveryInstructions.trim(),
+      });
+      return;
+    }
+
     openModal('confirm');
   };
 

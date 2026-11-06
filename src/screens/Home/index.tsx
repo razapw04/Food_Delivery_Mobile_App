@@ -64,7 +64,7 @@ const HomeHeader = ({
       accessibilityRole="button"
       onPress={onOpenDrawer}
       style={styles.iconButton}>
-      <Icon name="menu" size={24} color="#1A1A1A" />
+      <Icon name="menu" size={18} color="#1A1A1A" />
     </Pressable>
 
     <View style={styles.locationBlock}>
@@ -83,11 +83,13 @@ const HomeHeader = ({
         <Text numberOfLines={2} style={styles.locationText}>
           {value}
         </Text>
-        <Icon name="chevron-down" size={18} color="#1A1A1A" />
+        <Icon name="chevron-down" size={16} color="#1A1A1A" />
       </Pressable>
     </View>
 
-    <CartIconButton onPress={onOpenCart} />
+    <View style={styles.cartSlot}>
+      <CartIconButton onPress={onOpenCart} />
+    </View>
   </View>
 );
 

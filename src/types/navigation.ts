@@ -23,9 +23,18 @@ export type RootStackParamList = {
   ProductDetail: {itemId: string};
   Cart: undefined;
   PlaceOrder: undefined;
+  CardPayment: {
+    amount: number;
+    deliveryInstructions?: string;
+  };
   Voucher: undefined;
   Favorites: undefined;
   SavedAddresses: undefined;
   Notifications: undefined;
   AdminOrders: undefined;
+  AdminProducts: undefined;
+  AdminProductForm: {productId?: string} | undefined;
+  AdminRevenue: undefined;
+  AdminAdmins: undefined;
+  AdminAdminForm: {email?: string} | undefined;
 };

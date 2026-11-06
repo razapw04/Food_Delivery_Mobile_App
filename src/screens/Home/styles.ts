@@ -29,9 +29,9 @@ export const styles = StyleSheet.create({
   },
 
   iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: pale,
     alignItems: 'center',
     justifyContent: 'center',
@@ -41,6 +41,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: spacing.sm,
+    paddingRight: spacing.md,
   },
 
   locationLabelRow: {
@@ -51,7 +52,7 @@ export const styles = StyleSheet.create({
 
   locationLabel: {
     color: colors.primary,
-    fontSize: 11,
+    fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.bold,
     letterSpacing: 0.6,
     marginLeft: 4,
@@ -61,13 +62,18 @@ export const styles = StyleSheet.create({
   locationButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 2,
   },
 
   locationText: {
     color: ink,
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-    maxWidth: 220,
+    maxWidth: 200,
+  },
+
+  cartSlot: {
+    marginLeft: spacing.sm,
   },
 
   cartButton: {
@@ -96,7 +102,7 @@ export const styles = StyleSheet.create({
 
   cartBadgeText: {
     color: '#FFFFFF',
-    fontSize: 10,
+    fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.bold,
   },
 
@@ -151,7 +157,7 @@ export const styles = StyleSheet.create({
 
   sectionTitle: {
     color: ink,
-    fontSize: 18,
+    fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
   },
 
@@ -277,7 +283,7 @@ export const styles = StyleSheet.create({
 
   exploreBannerTitle: {
     color: '#FFFFFF',
-    fontSize: 22,
+    fontSize: typography.fontSize.xl,
     fontWeight: typography.fontWeight.bold,
     textAlign: 'center',
     textShadowColor: 'rgba(0,0,0,0.6)',
@@ -387,7 +393,7 @@ export const styles = StyleSheet.create({
 
   categoryName: {
     color: muted,
-    fontSize: 12,
+    fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.semibold,
     textAlign: 'center',
   },

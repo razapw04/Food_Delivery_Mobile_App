@@ -42,7 +42,7 @@ export const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: ink,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
     marginBottom: spacing.sm,
   },
@@ -67,7 +67,7 @@ export const styles = StyleSheet.create({
   },
   addressText: {
     color: ink,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
   },
   addressDescription: {
@@ -82,9 +82,9 @@ export const styles = StyleSheet.create({
   },
   editText: {
     color: colors.primary,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
-    lineHeight: typography.fontSize.lg,
+    lineHeight: typography.fontSize.md,
   },
   editUnderline: {
     marginTop: 2,
@@ -97,7 +97,7 @@ export const styles = StyleSheet.create({
   },
   paymentTitle: {
     color: ink,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
     marginBottom: spacing.sm,
   },
@@ -153,7 +153,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     marginRight: spacing.sm,
     color: ink,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
   },
   billCard: {
@@ -172,7 +172,7 @@ export const styles = StyleSheet.create({
   },
   billTitle: {
     color: ink,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
     marginBottom: spacing.md,
   },
@@ -212,7 +212,7 @@ export const styles = StyleSheet.create({
   },
   instructionsTitle: {
     color: ink,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
     marginBottom: spacing.xs,
   },
@@ -246,15 +246,15 @@ export const styles = StyleSheet.create({
     borderTopRightRadius: 20,
   },
   placeOrderButton: {
-    height: 56,
-    borderRadius: 16,
+    height: 46,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.primary,
   },
   placeOrderText: {
     color: '#FFFFFF',
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
     textAlign: 'center',
   },
@@ -287,7 +287,7 @@ export const styles = StyleSheet.create({
   },
   modalMessage: {
     color: ink,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
     textAlign: 'center',
     lineHeight: 28,
@@ -302,15 +302,15 @@ export const styles = StyleSheet.create({
   },
   modalOkButton: {
     marginTop: spacing.lg,
-    height: 48,
-    borderRadius: 14,
+    height: 42,
+    borderRadius: 12,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalOkText: {
     color: '#FFFFFF',
-    fontSize: typography.fontSize.md,
+    fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
   },
   progressTrack: {
@@ -333,8 +333,8 @@ export const styles = StyleSheet.create({
   },
   confirmButton: {
     flex: 1,
-    height: 48,
-    borderRadius: 14,
+    height: 42,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -346,12 +346,12 @@ export const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: ink,
-    fontSize: typography.fontSize.md,
+    fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
   },
   proceedButtonText: {
     color: '#FFFFFF',
-    fontSize: typography.fontSize.md,
+    fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
   },
 });

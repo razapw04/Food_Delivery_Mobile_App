@@ -78,7 +78,7 @@ const CartScreen = () => {
                   Add more items in your cart
                 </Text>
               </View>
-              <Icon name="chevron-right" size={24} color="#1A1A1A" />
+              <Icon name="chevron-right" size={20} color="#1A1A1A" />
             </Pressable>
           </View>
         </ScrollView>
@@ -200,7 +200,7 @@ const CartScreen = () => {
                         Add more items in your cart
                       </Text>
                     </View>
-                    <Icon name="chevron-right" size={24} color="#1A1A1A" />
+                    <Icon name="chevron-right" size={20} color="#1A1A1A" />
                   </Pressable>
                 </View>
               </>

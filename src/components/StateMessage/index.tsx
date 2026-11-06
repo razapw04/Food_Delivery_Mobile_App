@@ -89,12 +89,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm + 2,
+    paddingVertical: 6,
     borderRadius: 12,
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: typography.fontSize.md,
+    fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.semibold,
   },
   banner: {

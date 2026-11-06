@@ -6,11 +6,17 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import {queryClient} from '../lib/queryClient';
+import {resetToLogin} from '../navigation/navigationRef';
 import {ApiError} from '../services/apiClient';
 import {loginRequest, signupRequest} from '../services/authApi';
+import {setUnauthorizedHandler} from '../services/sessionEvents';
 import {
   clearSession,
+  ensureAdminUser,
+  findLocalAuthUser,
   getSessionUser,
+  getStoredUserByEmail,
   hasAdminAccess,
   saveSessionUser,
   type UserRole,
@@ -21,6 +27,7 @@ export type AuthUser = {
   email: string;
   phone: string | null;
   role: UserRole;
+  branchId: string | null;
 };
 
 type AuthContextValue = {
@@ -46,13 +53,20 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export const AuthProvider = ({children}: {children: React.ReactNode}) => {
+const AuthProvider = ({children}: {children: React.ReactNode}) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const logout = useCallback(async () => {
+    await clearSession();
+    setUser(null);
+    queryClient.clear();
+  }, []);
 
   useEffect(() => {
     const restoreSession = async () => {
       try {
+        await ensureAdminUser();
         const sessionUser = await getSessionUser();
         if (sessionUser) {
           setUser(sessionUser);
@@ -63,6 +77,19 @@ export const AuthProvider = ({children}: {children: React.ReactNode}) => {
     };
 
     restoreSession();
+  }, []);
+
+  useEffect(() => {
+    setUnauthorizedHandler(async () => {
+      await clearSession();
+      setUser(null);
+      queryClient.clear();
+      resetToLogin();
+    });
+
+    return () => {
+      setUnauthorizedHandler(null);
+    };
   }, []);
 
   const signup = useCallback(
@@ -92,16 +119,21 @@ export const AuthProvider = ({children}: {children: React.ReactNode}) => {
   );
 
   const login = useCallback(async (email: string, password: string) => {
+    const trimmedEmail = email.trim().toLowerCase();
+
     try {
-      const {token, user: apiUser} = await loginRequest(
-        email.trim().toLowerCase(),
-        password,
-      );
+      const {token, user: apiUser} = await loginRequest(trimmedEmail, password);
+      await ensureAdminUser();
+      const localUser = await getStoredUserByEmail(apiUser.email);
       const authUser: AuthUser = {
         name: apiUser.name,
         email: apiUser.email,
         phone: apiUser.phone || null,
         role: apiUser.role,
+        branchId:
+          apiUser.role === 'admin'
+            ? localUser?.branchId ?? null
+            : null,
       };
       await saveSessionUser(authUser, token);
       setUser(authUser);
@@ -110,17 +142,29 @@ export const AuthProvider = ({children}: {children: React.ReactNode}) => {
         isAdmin: hasAdminAccess(authUser.role),
       };
     } catch (error) {
+      const localUser = await findLocalAuthUser(trimmedEmail, password);
+      if (localUser && hasAdminAccess(localUser.role)) {
+        const authUser: AuthUser = {
+          name: localUser.name,
+          email: localUser.email,
+          phone: localUser.phone || null,
+          role: localUser.role,
+          branchId: localUser.role === 'admin' ? localUser.branchId : null,
+        };
+        await saveSessionUser(authUser);
+        setUser(authUser);
+        return {
+          ok: true as const,
+          isAdmin: true,
+        };
+      }
+
       const message =
         error instanceof ApiError
           ? error.message
           : 'Login failed. Please try again.';
       return {ok: false as const, error: message};
     }
-  }, []);
-
-  const logout = useCallback(async () => {
-    await clearSession();
-    setUser(null);
   }, []);
 
   const isAdmin = hasAdminAccess(user?.role);
@@ -141,6 +185,8 @@ export const AuthProvider = ({children}: {children: React.ReactNode}) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export {AuthProvider};
 
 export const useAuth = (): AuthContextValue => {
   const context = useContext(AuthContext);

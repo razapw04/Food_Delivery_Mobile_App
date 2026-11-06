@@ -67,8 +67,8 @@ export const styles = StyleSheet.create({
   },
 
   skipText: {
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
     color: '#666666',
   },
 });

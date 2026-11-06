@@ -19,7 +19,7 @@ const CartIconButton = ({onPress}: Props) => {
       accessibilityRole="button"
       onPress={onPress}
       style={styles.cartButton}>
-      <Icon name="cart-outline" size={22} color="#FFFFFF" />
+      <Icon name="cart-outline" size={18} color="#FFFFFF" />
       {itemCount > 0 ? (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>
@@ -33,9 +33,9 @@ const CartIconButton = ({onPress}: Props) => {
 
 const styles = StyleSheet.create({
   cartButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#202321',
     alignItems: 'center',
     justifyContent: 'center',
@@ -44,11 +44,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -2,
     right: -2,
-    minWidth: 18,
-    height: 18,
-    paddingHorizontal: 4,
-    borderRadius: 9,
-    borderWidth: 2,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 3,
+    borderRadius: 8,
+    borderWidth: 1.5,
     borderColor: '#FFFFFF',
     backgroundColor: colors.primary,
     alignItems: 'center',
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: '#FFFFFF',
-    fontSize: 10,
+    fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.bold,
   },
 });

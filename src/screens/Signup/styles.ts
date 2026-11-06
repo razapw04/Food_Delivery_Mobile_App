@@ -46,7 +46,7 @@ export const styles = StyleSheet.create({
   },
 
   input: {
-    height: 52,
+    height: 44,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 12,
@@ -55,6 +55,26 @@ export const styles = StyleSheet.create({
     color: '#202321',
     fontSize: typography.fontSize.sm,
     backgroundColor: colors.surface,
+  },
+
+  passwordWrap: {
+    position: 'relative',
+    marginBottom: spacing.xs,
+  },
+
+  passwordInput: {
+    marginBottom: 0,
+    paddingRight: 44,
+  },
+
+  eyeButton: {
+    position: 'absolute',
+    right: 4,
+    top: 0,
+    height: 44,
+    width: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   inputError: {

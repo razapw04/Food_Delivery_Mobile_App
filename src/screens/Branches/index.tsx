@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
   FlatList,
   Image,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import AppMap, {type MapMarker} from '../../components/AppMap';
 import {BranchListSkeleton} from '../../components/Skeleton';
 import {OfflineBanner, StateMessage} from '../../components/StateMessage';
 import {
@@ -20,9 +21,6 @@ import {
 } from './model';
 import {styles} from './styles';
 import useController from './useController';
-
-const MAP_IMAGE =
-  'https://staticmap.openstreetmap.de/staticmap.php?center=31.5204,74.3587&zoom=12&size=800x400&maptype=mapnik';
 
 const BranchItem = ({
   branch,
@@ -125,6 +123,34 @@ const BranchesScreen = () => {
     handleProceed,
   } = useController();
 
+  const mapMarkers = useMemo<MapMarker[]>(
+    () =>
+      filteredBranches.map(branch => ({
+        id: branch.id,
+        latitude: branch.latitude,
+        longitude: branch.longitude,
+        title: branch.name,
+        color: selectedBranch?.id === branch.id ? '#C74440' : '#FF7622',
+      })),
+    [filteredBranches, selectedBranch?.id],
+  );
+
+  const mapCenter = useMemo(() => {
+    if (selectedBranch) {
+      return {
+        latitude: selectedBranch.latitude,
+        longitude: selectedBranch.longitude,
+      };
+    }
+    if (filteredBranches[0]) {
+      return {
+        latitude: filteredBranches[0].latitude,
+        longitude: filteredBranches[0].longitude,
+      };
+    }
+    return {latitude: 31.5204, longitude: 74.3587};
+  }, [filteredBranches, selectedBranch]);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <StatusBar barStyle="dark-content" />
@@ -148,14 +174,18 @@ const BranchesScreen = () => {
       ) : null}
 
       <View style={styles.mapContainer}>
-        <Image
-          source={{uri: MAP_IMAGE}}
+        <AppMap
           style={styles.mapImage}
-          resizeMode="cover"
+          center={mapCenter}
+          zoom={12}
+          markers={mapMarkers}
+          onMarkerPress={id => {
+            const branch = filteredBranches.find(item => item.id === id);
+            if (branch) {
+              handleBranchPress(branch);
+            }
+          }}
         />
-        <View style={styles.mapPinOverlay} pointerEvents="none">
-          <Icon name="map-marker" size={36} color="#FF7622" />
-        </View>
       </View>
 
       <View style={styles.content}>

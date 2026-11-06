@@ -8,6 +8,8 @@ export type StoredUser = {
   phone: string;
   password: string;
   role: UserRole;
+  /** Assigned branch for role=admin. Superadmin has null (all branches). */
+  branchId: string | null;
 };
 
 export const ADMIN_EMAIL = 'admin@foodapp.com';
@@ -26,6 +28,7 @@ export type SessionUser = {
   email: string;
   phone: string | null;
   role: UserRole;
+  branchId: string | null;
 };
 
 const DEFAULT_ADMIN: StoredUser = {
@@ -34,6 +37,7 @@ const DEFAULT_ADMIN: StoredUser = {
   phone: '0000000000',
   password: ADMIN_PASSWORD,
   role: 'admin',
+  branchId: 'gulberg',
 };
 
 const DEFAULT_SUPERADMIN: StoredUser = {
@@ -42,6 +46,7 @@ const DEFAULT_SUPERADMIN: StoredUser = {
   phone: '0000000001',
   password: SUPERADMIN_PASSWORD,
   role: 'superadmin',
+  branchId: null,
 };
 
 export const hasAdminAccess = (role?: UserRole | null): boolean =>
@@ -57,6 +62,22 @@ const normalizeRole = (role: unknown): UserRole => {
   return 'customer';
 };
 
+const normalizeBranchId = (value: unknown): string | null => {
+  if (typeof value === 'string' && value.trim()) {
+    return value.trim();
+  }
+  return null;
+};
+
+const normalizeStoredUser = (item: Partial<StoredUser>): StoredUser => ({
+  name: item.name ?? '',
+  email: (item.email ?? '').toLowerCase(),
+  phone: item.phone ?? '',
+  password: item.password ?? '',
+  role: normalizeRole(item.role),
+  branchId: normalizeBranchId(item.branchId),
+});
+
 export const getStoredUsers = async (): Promise<StoredUser[]> => {
   const raw = await AsyncStorage.getItem(USERS_KEY);
   if (!raw) {
@@ -68,13 +89,7 @@ export const getStoredUsers = async (): Promise<StoredUser[]> => {
     if (!Array.isArray(parsed)) {
       return [];
     }
-    return parsed.map((item: Partial<StoredUser>) => ({
-      name: item.name ?? '',
-      email: (item.email ?? '').toLowerCase(),
-      phone: item.phone ?? '',
-      password: item.password ?? '',
-      role: normalizeRole(item.role),
-    }));
+    return parsed.map((item: Partial<StoredUser>) => normalizeStoredUser(item));
   } catch {
     return [];
   }
@@ -97,12 +112,20 @@ const upsertSeededUser = (
   }
 
   const existing = users[index];
-  if (existing.role === seeded.role) {
+  const needsRole = existing.role !== seeded.role;
+  const needsBranch =
+    seeded.branchId != null && existing.branchId == null;
+
+  if (!needsRole && !needsBranch) {
     return users;
   }
 
   const next = [...users];
-  next[index] = {...existing, role: seeded.role};
+  next[index] = {
+    ...existing,
+    role: seeded.role,
+    branchId: needsBranch ? seeded.branchId : existing.branchId,
+  };
   return next;
 };
 
@@ -115,6 +138,135 @@ export const ensureAdminUser = async (): Promise<void> => {
   if (withBoth !== users) {
     await saveStoredUsers(withBoth);
   }
+};
+
+export const getStoredUserByEmail = async (
+  email: string,
+): Promise<StoredUser | null> => {
+  const users = await getStoredUsers();
+  return (
+    users.find(item => item.email === email.trim().toLowerCase()) ?? null
+  );
+};
+
+export const findLocalAuthUser = async (
+  email: string,
+  password: string,
+): Promise<StoredUser | null> => {
+  await ensureAdminUser();
+  const users = await getStoredUsers();
+  const match = users.find(
+    item =>
+      item.email === email.trim().toLowerCase() && item.password === password,
+  );
+  return match ?? null;
+};
+
+export const listAdminAccounts = async (): Promise<StoredUser[]> => {
+  await ensureAdminUser();
+  const users = await getStoredUsers();
+  return users.filter(item => item.role === 'admin');
+};
+
+export const createAdminAccount = async (payload: {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  branchId: string;
+}): Promise<{ok: true} | {ok: false; error: string}> => {
+  await ensureAdminUser();
+  const email = payload.email.trim().toLowerCase();
+  const branchId = payload.branchId.trim();
+
+  if (!email || !payload.password || !payload.name.trim() || !branchId) {
+    return {ok: false, error: 'Please fill all required fields.'};
+  }
+
+  if (payload.password.length < 6) {
+    return {ok: false, error: 'Password must be at least 6 characters.'};
+  }
+
+  const users = await getStoredUsers();
+  if (users.some(item => item.email === email)) {
+    return {ok: false, error: 'An account with this email already exists.'};
+  }
+
+  const nextUser: StoredUser = {
+    name: payload.name.trim(),
+    email,
+    phone: payload.phone.trim() || '0000000000',
+    password: payload.password,
+    role: 'admin',
+    branchId,
+  };
+
+  await saveStoredUsers([nextUser, ...users]);
+  return {ok: true};
+};
+
+export const updateAdminAccount = async (payload: {
+  email: string;
+  name: string;
+  phone: string;
+  password?: string;
+  branchId: string;
+}): Promise<{ok: true} | {ok: false; error: string}> => {
+  await ensureAdminUser();
+  const email = payload.email.trim().toLowerCase();
+  const users = await getStoredUsers();
+  const index = users.findIndex(
+    item => item.email === email && item.role === 'admin',
+  );
+
+  if (index < 0) {
+    return {ok: false, error: 'Admin account not found.'};
+  }
+
+  if (!payload.name.trim() || !payload.branchId.trim()) {
+    return {ok: false, error: 'Please fill all required fields.'};
+  }
+
+  if (payload.password != null && payload.password.length > 0) {
+    if (payload.password.length < 6) {
+      return {ok: false, error: 'Password must be at least 6 characters.'};
+    }
+  }
+
+  const existing = users[index];
+  const next = [...users];
+  next[index] = {
+    ...existing,
+    name: payload.name.trim(),
+    phone: payload.phone.trim() || existing.phone,
+    password:
+      payload.password && payload.password.length > 0
+        ? payload.password
+        : existing.password,
+    branchId: payload.branchId.trim(),
+  };
+  await saveStoredUsers(next);
+  return {ok: true};
+};
+
+export const removeAdminAccount = async (
+  email: string,
+): Promise<{ok: true} | {ok: false; error: string}> => {
+  await ensureAdminUser();
+  const target = email.trim().toLowerCase();
+  const users = await getStoredUsers();
+  const existing = users.find(
+    item => item.email === target && item.role === 'admin',
+  );
+
+  if (!existing) {
+    return {ok: false, error: 'Admin account not found.'};
+  }
+
+  await saveStoredUsers(
+    users.filter(item => !(item.email === target && item.role === 'admin')),
+  );
+  return {ok: true};
 };
 
 export const getSessionEmail = async (): Promise<string | null> => {
@@ -141,6 +293,7 @@ export const getSessionUser = async (): Promise<SessionUser | null> => {
       email: parsed.email.toLowerCase(),
       phone: parsed.phone ?? null,
       role: normalizeRole(parsed.role),
+      branchId: normalizeBranchId(parsed.branchId),
     };
   } catch {
     return null;
@@ -157,6 +310,7 @@ export const saveSessionUser = async (user: SessionUser, token?: string) => {
       email,
       phone: user.phone,
       role: normalizeRole(user.role),
+      branchId: normalizeBranchId(user.branchId),
     }),
   );
   if (token) {

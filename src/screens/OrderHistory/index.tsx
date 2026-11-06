@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useMemo} from 'react';
 import {
   FlatList,
   Image,
@@ -14,12 +14,10 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {OrderListSkeleton} from '../../components/Skeleton';
 import {StateMessage} from '../../components/StateMessage';
 import {useAuth} from '../../context/AuthContext';
+import {useUserOrdersQuery} from '../../hooks/useOrdersQuery';
 import {ApiError} from '../../services/apiClient';
 import type {MainTabParamList} from '../../types/navigation';
-import {
-  getStoredOrders,
-  type StoredOrder,
-} from '../../storage/orderStorage';
+import type {StoredOrder} from '../../storage/orderStorage';
 import {type OrderHistoryItem, type OrderStatus} from './model';
 import {styles} from './styles';
 
@@ -174,60 +172,44 @@ const OrderCard = ({order}: {order: OrderHistoryItem}) => {
 const OrderHistoryScreen = ({navigation}: Props) => {
   const showBack = navigation.canGoBack();
   const {user} = useAuth();
-  const [orders, setOrders] = useState<OrderHistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadOrders = useCallback(async () => {
-    if (!user?.email) {
-      setOrders([]);
-      setError(null);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const stored = await getStoredOrders(user.email);
-      setOrders(stored.map(mapStoredOrder));
-    } catch (err) {
-      setOrders([]);
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "Couldn't load your orders. Please try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.email]);
+  const {
+    data: ordersData,
+    error: ordersError,
+    isPending,
+    refetch,
+  } = useUserOrdersQuery(user?.email);
 
   useFocusEffect(
     useCallback(() => {
-      let active = true;
-      const run = async () => {
-        await loadOrders();
-        if (!active) {
-          return;
-        }
-      };
-      run();
-      return () => {
-        active = false;
-      };
-    }, [loadOrders]),
+      if (user?.email) {
+        void refetch().catch(() => undefined);
+      }
+    }, [user?.email, refetch]),
   );
 
+  const orders = useMemo(
+    () => (ordersData ?? []).map(mapStoredOrder),
+    [ordersData],
+  );
+
+  const errorMessage =
+    ordersError instanceof ApiError
+      ? ordersError.message
+      : ordersError
+        ? "Couldn't load your orders. Please try again."
+        : null;
+
   const listEmpty = () => {
-    if (error) {
+    if (errorMessage) {
       return (
         <StateMessage
           icon="wifi-off"
           title="Couldn't load orders"
-          subtitle={error}
+          subtitle={errorMessage}
           actionLabel="Retry"
-          onAction={loadOrders}
+          onAction={() => {
+            void refetch().catch(() => undefined);
+          }}
         />
       );
     }
@@ -270,7 +252,7 @@ const OrderHistoryScreen = ({navigation}: Props) => {
         <Text style={styles.headerTitle}>Order History</Text>
       </View>
 
-      {loading ? (
+      {isPending ? (
         <OrderListSkeleton />
       ) : (
         <FlatList

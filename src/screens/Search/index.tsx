@@ -34,7 +34,7 @@ const ExploreHeader = ({
         accessibilityRole="button"
         onPress={onBack}
         style={styles.circleButton}>
-        <Icon name="arrow-left" size={24} color="#202321" />
+        <Icon name="arrow-left" size={20} color="#202321" />
       </Pressable>
 
       <View style={styles.locationBlock}>
@@ -109,7 +109,7 @@ const ExploreScreen = () => {
         showsVerticalScrollIndicator={false}>
         <View style={styles.searchWrap}>
           <View style={styles.searchBar}>
-            <Icon name="magnify" size={24} color="#858B87" />
+            <Icon name="magnify" size={18} color="#858B87" />
             <TextInput
               accessibilityLabel="Search your favourite items"
               onChangeText={setQuery}
@@ -126,7 +126,7 @@ const ExploreScreen = () => {
                 hitSlop={8}
                 onPress={clearQuery}
                 style={styles.clearButton}>
-                <Icon name="close-circle" size={20} color="#858B87" />
+                <Icon name="close-circle" size={16} color="#858B87" />
               </Pressable>
             )}
           </View>
@@ -175,7 +175,7 @@ const ExploreScreen = () => {
                 Add more items in your cart
               </Text>
             </View>
-            <Icon name="chevron-right" size={24} color="#1A1A1A" />
+            <Icon name="chevron-right" size={20} color="#1A1A1A" />
           </Pressable>
         </View>
 

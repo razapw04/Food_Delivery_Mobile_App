@@ -14,6 +14,7 @@ const useController = () => {
   const {login} = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -49,10 +50,12 @@ const useController = () => {
   return {
     email,
     password,
+    showPassword,
     error,
     isSubmitting,
     setEmail,
     setPassword,
+    toggleShowPassword: () => setShowPassword(prev => !prev),
     handleLogin,
     goToSignup,
   };

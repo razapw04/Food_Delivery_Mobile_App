@@ -55,7 +55,7 @@ export const styles = StyleSheet.create({
   },
   addressTitle: {
     color: ink,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
   },
   addressDescription: {
@@ -109,7 +109,7 @@ export const styles = StyleSheet.create({
   },
   addAddressLinkText: {
     color: colors.primary,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
     borderBottomWidth: 1,
     borderBottomColor: colors.primary,

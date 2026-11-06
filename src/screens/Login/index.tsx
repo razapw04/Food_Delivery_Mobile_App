@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Button from '../../components/button/Button';
 import {styles} from './styles';
@@ -19,9 +20,11 @@ const LoginScreen = () => {
   const {
     email,
     password,
+    showPassword,
     error,
     setEmail,
     setPassword,
+    toggleShowPassword,
     isSubmitting,
     handleLogin,
     goToSignup,
@@ -64,14 +67,30 @@ const LoginScreen = () => {
           />
 
           <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Enter your password"
-            placeholderTextColor="#9A9F9B"
-            secureTextEntry
-          />
+          <View style={styles.passwordWrap}>
+            <TextInput
+              style={[styles.input, styles.passwordInput]}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Enter your password"
+              placeholderTextColor="#9A9F9B"
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <Pressable
+              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={toggleShowPassword}
+              style={styles.eyeButton}>
+              <Icon
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color="#858B87"
+              />
+            </Pressable>
+          </View>
 
           {!!error && <Text style={styles.errorText}>{error}</Text>}
 

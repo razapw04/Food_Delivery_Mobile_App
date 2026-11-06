@@ -2,10 +2,10 @@ import React, {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useState,
 } from 'react';
+import {useQuery, useQueryClient} from '@tanstack/react-query';
+import {queryKeys} from '../lib/queryClient';
 import {
   branches as localBranches,
   type Branch,
@@ -24,6 +24,14 @@ import {
   fetchMenuItems,
 } from '../services/catalogApi';
 
+type CatalogPayload = {
+  menuCategories: MenuCategory[];
+  menuItems: MenuItem[];
+  branches: Branch[];
+  usedFallback: boolean;
+  errorMessage: string | null;
+};
+
 type CatalogContextValue = {
   isLoading: boolean;
   error: string | null;
@@ -38,52 +46,53 @@ type CatalogContextValue = {
 
 const CatalogContext = createContext<CatalogContextValue | null>(null);
 
-export const CatalogProvider = ({children}: {children: React.ReactNode}) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isUsingFallback, setIsUsingFallback] = useState(false);
-  const [menuCategories, setMenuCategories] =
-    useState<MenuCategory[]>(localMenuCategories);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(localMenuItems);
-  const [branches, setBranches] = useState<Branch[]>(localBranches);
+const fetchCatalog = async (): Promise<CatalogPayload> => {
+  try {
+    const [categories, items, nextBranches] = await Promise.all([
+      fetchMenuCategories(),
+      fetchMenuItems(),
+      fetchBranches(),
+    ]);
 
-  const refreshCatalog = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const [categories, items, nextBranches] = await Promise.all([
-        fetchMenuCategories(),
-        fetchMenuItems(),
-        fetchBranches(),
-      ]);
-
-      if (categories.length > 0) {
-        setMenuCategories(categories);
-      }
-      if (items.length > 0) {
-        setMenuItems(items);
-      }
-      if (nextBranches.length > 0) {
-        setBranches(nextBranches);
-      }
-      setIsUsingFallback(false);
-      setError(null);
-    } catch (err) {
-      setIsUsingFallback(true);
-      setError(
+    return {
+      menuCategories:
+        categories.length > 0 ? categories : localMenuCategories,
+      menuItems: items.length > 0 ? items : localMenuItems,
+      branches: nextBranches.length > 0 ? nextBranches : localBranches,
+      usedFallback: false,
+      errorMessage: null,
+    };
+  } catch (err) {
+    return {
+      menuCategories: localMenuCategories,
+      menuItems: localMenuItems,
+      branches: localBranches,
+      usedFallback: true,
+      errorMessage:
         err instanceof ApiError
           ? err.message
           : "Couldn't load latest menu. Showing saved data.",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    };
+  }
+};
 
-  useEffect(() => {
-    refreshCatalog();
-  }, [refreshCatalog]);
+export const CatalogProvider = ({children}: {children: React.ReactNode}) => {
+  const queryClient = useQueryClient();
+  const catalogQuery = useQuery({
+    queryKey: queryKeys.catalog,
+    queryFn: fetchCatalog,
+  });
+
+  const payload = catalogQuery.data;
+  const menuCategories = payload?.menuCategories ?? localMenuCategories;
+  const menuItems = payload?.menuItems ?? localMenuItems;
+  const branches = payload?.branches ?? localBranches;
+  const isUsingFallback = payload?.usedFallback ?? false;
+  const error = payload?.errorMessage ?? null;
+
+  const refreshCatalog = useCallback(async () => {
+    await queryClient.invalidateQueries({queryKey: queryKeys.catalog});
+  }, [queryClient]);
 
   const getMenuItemById = useCallback(
     (id: string) => menuItems.find(item => item.id === id),
@@ -100,7 +109,7 @@ export const CatalogProvider = ({children}: {children: React.ReactNode}) => {
 
   const value = useMemo(
     () => ({
-      isLoading,
+      isLoading: catalogQuery.isPending,
       error,
       isUsingFallback,
       menuCategories,
@@ -111,7 +120,7 @@ export const CatalogProvider = ({children}: {children: React.ReactNode}) => {
       refreshCatalog,
     }),
     [
-      isLoading,
+      catalogQuery.isPending,
       error,
       isUsingFallback,
       menuCategories,

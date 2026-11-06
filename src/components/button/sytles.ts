@@ -12,24 +12,25 @@ export const styles = StyleSheet.create({
   },
 
   buttonText: {
-    fontSize: typography.fontSize.md,
+    fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
     color: '#FFFFFF',
   },
-  content: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
-   },
-   iconContainer: { 
-     borderRadius: 16, 
-     backgroundColor: colors.iconBackground,
-      alignItems: 'center', 
-      justifyContent: 'center', 
-    }, icon: {
-       width: 32,
-        height: 32,
-         resizeMode: 'contain', 
-        },
+  },
+  iconContainer: {
+    borderRadius: 14,
+    backgroundColor: colors.iconBackground,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  icon: {
+    width: 26,
+    height: 26,
+    resizeMode: 'contain',
+  },
 });

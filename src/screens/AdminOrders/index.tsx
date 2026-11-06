@@ -1,6 +1,7 @@
 import React, {useCallback, useState} from 'react';
 import {
   Alert,
+  BackHandler,
   FlatList,
   Pressable,
   StatusBar,
@@ -14,14 +15,13 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {OrderListSkeleton} from '../../components/Skeleton';
 import {StateMessage} from '../../components/StateMessage';
 import {useAuth} from '../../context/AuthContext';
+import {
+  useAllOrdersQuery,
+  useUpdateOrderStatusMutation,
+} from '../../hooks/useOrdersQuery';
 import {ApiError} from '../../services/apiClient';
 import {notifyInApp} from '../../services/pushNotifications';
-import {
-  getAllStoredOrders,
-  updateStoredOrderStatus,
-  type OrderStatus,
-  type StoredOrder,
-} from '../../storage/orderStorage';
+import type {OrderStatus, StoredOrder} from '../../storage/orderStorage';
 import type {RootStackParamList} from '../../types/navigation';
 import {styles} from './styles';
 
@@ -165,37 +165,30 @@ const AdminOrderCard = ({
 
 const AdminOrdersScreen = () => {
   const navigation = useNavigation<Nav>();
-  const {isAdmin, logout} = useAuth();
-  const [orders, setOrders] = useState<StoredOrder[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {isAdmin, isSuperAdmin, logout} = useAuth();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const {
+    data: orders = [],
+    error: ordersError,
+    isPending,
+    refetch,
+  } = useAllOrdersQuery(isAdmin);
+  const {mutateAsync: updateOrderStatus} = useUpdateOrderStatusMutation();
 
   const handleLogout = useCallback(async () => {
-    await logout();
-    navigation.reset({
-      index: 0,
-      routes: [{name: 'Login'}],
-    });
-  }, [logout, navigation]);
-
-  const loadOrders = useCallback(async () => {
-    setLoading(true);
-    setError(null);
     try {
-      const stored = await getAllStoredOrders();
-      setOrders(stored);
-    } catch (err) {
-      setOrders([]);
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "Couldn't load orders. Please try again.",
-      );
-    } finally {
-      setLoading(false);
+      await logout();
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'Login'}],
+      });
+    } catch {
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'Login'}],
+      });
     }
-  }, []);
+  }, [logout, navigation]);
 
   useFocusEffect(
     useCallback(() => {
@@ -206,21 +199,44 @@ const AdminOrdersScreen = () => {
         });
         return;
       }
-      loadOrders();
-    }, [isAdmin, loadOrders, navigation]),
+
+      void refetch().catch(() => undefined);
+
+      const onHardwareBack = () => {
+        Alert.alert('Logout', 'Do you want to logout?', [
+          {text: 'Cancel', style: 'cancel'},
+          {
+            text: 'Logout',
+            style: 'destructive',
+            onPress: () => {
+              void handleLogout();
+            },
+          },
+        ]);
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onHardwareBack,
+      );
+
+      return () => {
+        subscription.remove();
+      };
+    }, [handleLogout, isAdmin, navigation, refetch]),
   );
 
   const handleUpdateStatus = useCallback(
     async (orderId: string, status: OrderStatus) => {
       setUpdatingId(orderId);
       try {
-        const updated = await updateStoredOrderStatus(orderId, status);
+        const updated = await updateOrderStatus({orderId, status});
         await notifyInApp(
           'Order status updated',
           `Your order ${updated.orderId} is now ${status}.`,
           updated.id,
         );
-        await loadOrders();
       } catch (err) {
         Alert.alert(
           'Update failed',
@@ -232,18 +248,27 @@ const AdminOrdersScreen = () => {
         setUpdatingId(null);
       }
     },
-    [loadOrders],
+    [updateOrderStatus],
   );
 
+  const errorMessage =
+    ordersError instanceof ApiError
+      ? ordersError.message
+      : ordersError
+        ? "Couldn't load orders. Please try again."
+        : null;
+
   const listEmpty = () => {
-    if (error) {
+    if (errorMessage) {
       return (
         <StateMessage
           icon="wifi-off"
           title="Couldn't load orders"
-          subtitle={error}
+          subtitle={errorMessage}
           actionLabel="Retry"
-          onAction={loadOrders}
+          onAction={() => {
+            void refetch().catch(() => undefined);
+          }}
         />
       );
     }
@@ -273,7 +298,43 @@ const AdminOrdersScreen = () => {
         </Pressable>
       </View>
 
-      {loading ? (
+      {isSuperAdmin ? (
+        <View style={styles.adminNav}>
+          <Pressable
+            accessibilityRole="button"
+            style={styles.adminNavButton}
+            onPress={() => navigation.navigate('AdminProducts')}>
+            <Icon name="food" size={18} color="#FF7622" />
+            <Text style={styles.adminNavText}>Products</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            style={styles.adminNavButton}
+            onPress={() => navigation.navigate('AdminRevenue')}>
+            <Icon name="chart-line" size={18} color="#FF7622" />
+            <Text style={styles.adminNavText}>Revenue</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            style={styles.adminNavButton}
+            onPress={() => navigation.navigate('AdminAdmins')}>
+            <Icon name="account-key" size={18} color="#FF7622" />
+            <Text style={styles.adminNavText}>Admins</Text>
+          </Pressable>
+        </View>
+      ) : isAdmin ? (
+        <View style={styles.adminNav}>
+          <Pressable
+            accessibilityRole="button"
+            style={styles.adminNavButton}
+            onPress={() => navigation.navigate('AdminRevenue')}>
+            <Icon name="chart-line" size={18} color="#FF7622" />
+            <Text style={styles.adminNavText}>My branch revenue</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      {isPending ? (
         <OrderListSkeleton />
       ) : (
         <FlatList

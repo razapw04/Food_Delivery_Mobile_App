@@ -44,8 +44,7 @@ export const styles = StyleSheet.create({
   },
 
   mapImage: {
-    width: '100%',
-    height: '100%',
+    ...StyleSheet.absoluteFillObject,
   },
 
   searchOverlay: {
@@ -115,7 +114,7 @@ export const styles = StyleSheet.create({
 
   addressLabel: {
     color: colors.primary,
-    fontSize: 11,
+    fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.bold,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
@@ -128,10 +127,22 @@ export const styles = StyleSheet.create({
     marginTop: 2,
   },
 
+  gpsButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+    marginLeft: spacing.sm,
+  },
+
   confirmButton: {
     backgroundColor: colors.primary,
-    borderRadius: 14,
-    paddingVertical: spacing.md,
+    borderRadius: 12,
+    paddingVertical: spacing.sm + 2,
     alignItems: 'center',
     justifyContent: 'center',
   },

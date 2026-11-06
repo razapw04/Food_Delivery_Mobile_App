@@ -15,15 +15,15 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
   },
 
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: pale,
@@ -37,9 +37,9 @@ export const styles = StyleSheet.create({
 
   locationLabel: {
     color: colors.primary,
-    fontSize: typography.fontSize.sm,
+    fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.bold,
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
 
@@ -47,20 +47,20 @@ export const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-    marginTop: 2,
+    marginTop: 1,
   },
 
   searchButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: pale,
   },
 
   categoriesSection: {
-    paddingTop: spacing.md,
+    paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
@@ -71,15 +71,15 @@ export const styles = StyleSheet.create({
   },
 
   categoryItem: {
-    width: 78,
+    width: 64,
     alignItems: 'center',
-    marginRight: spacing.md,
+    marginRight: spacing.sm,
   },
 
   categoryImageWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     overflow: 'hidden',
     backgroundColor: pale,
     borderWidth: 2,
@@ -98,7 +98,7 @@ export const styles = StyleSheet.create({
 
   categoryName: {
     color: ink,
-    fontSize: typography.fontSize.sm,
+    fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.semibold,
     textAlign: 'center',
   },
@@ -109,22 +109,25 @@ export const styles = StyleSheet.create({
   },
 
   listContent: {
-    padding: spacing.lg,
-    paddingBottom: 110,
+    paddingHorizontal: 0,
+    paddingTop: spacing.sm,
+    paddingBottom: 100,
   },
 
   listContentWithCartFooter: {
-    paddingBottom: 150,
+    paddingBottom: 140,
   },
 
   sectionHeader: {
-    height: 52,
+    height: 40,
     justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+    width: '100%',
   },
 
   sectionTitle: {
     color: colors.primary,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
   },
 
@@ -132,24 +135,27 @@ export const styles = StyleSheet.create({
     color: muted,
     fontSize: typography.fontSize.sm,
     textAlign: 'center',
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
   },
 
   itemCard: {
-    minHeight: 112,
+    width: '100%',
+    alignSelf: 'stretch',
+    minHeight: 84,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.card,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
     marginBottom: 0,
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
   },
 
   itemImageWrap: {
-    width: 88,
-    height: 88,
-    borderRadius: 14,
+    width: 68,
+    height: 68,
+    borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: pale,
   },
@@ -161,7 +167,7 @@ export const styles = StyleSheet.create({
 
   itemInfo: {
     flex: 1,
-    marginLeft: spacing.md,
+    marginLeft: spacing.sm,
   },
 
   titleRow: {
@@ -173,15 +179,15 @@ export const styles = StyleSheet.create({
   itemName: {
     flex: 1,
     color: ink,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
     marginRight: spacing.sm,
   },
 
   favoriteButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: pale,
     alignItems: 'center',
     justifyContent: 'center',
@@ -189,28 +195,28 @@ export const styles = StyleSheet.create({
 
   itemDescription: {
     color: muted,
-    fontSize: typography.fontSize.sm,
-    marginTop: 4,
-    lineHeight: 20,
+    fontSize: typography.fontSize.xs,
+    marginTop: 2,
+    lineHeight: 16,
   },
 
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 8,
+    marginTop: 6,
   },
 
   itemPrice: {
     color: colors.primary,
-    fontSize: typography.fontSize.md,
+    fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
   },
 
   addButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',

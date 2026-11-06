@@ -97,21 +97,69 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
     ? user.phone
     : 'No phone number added';
 
+  const logoutItem: MenuItem = {
+    key: 'logout',
+    label: 'Logout',
+    icon: 'logout',
+    danger: true,
+    onPress: () => {
+      void (async () => {
+        try {
+          await logout();
+        } finally {
+          navigation.reset({
+            index: 0,
+            routes: [{name: 'Login'}],
+          });
+        }
+      })();
+    },
+  };
+
   const menuItems: MenuItem[] = isAdmin
     ? [
-        {
-          key: 'logout',
-          label: 'Logout',
-          icon: 'logout',
-          danger: true,
-          onPress: async () => {
-            await logout();
-            navigation.reset({
-              index: 0,
-              routes: [{name: 'Login'}],
-            });
-          },
-        },
+        ...(isSuperAdmin
+          ? [
+              {
+                key: 'admin-orders',
+                label: 'Manage Orders',
+                icon: 'clipboard-list-outline',
+                onPress: () => navigation.navigate('AdminOrders'),
+              },
+              {
+                key: 'admin-products',
+                label: 'Manage Products',
+                icon: 'food',
+                onPress: () => navigation.navigate('AdminProducts'),
+              },
+              {
+                key: 'admin-revenue',
+                label: 'Revenue & Sales',
+                icon: 'chart-line',
+                onPress: () => navigation.navigate('AdminRevenue'),
+              },
+              {
+                key: 'admin-admins',
+                label: 'Manage Admins',
+                icon: 'account-key',
+                onPress: () => navigation.navigate('AdminAdmins'),
+              },
+            ]
+          : [
+              {
+                key: 'admin-orders',
+                label: 'Manage Orders',
+                icon: 'clipboard-list-outline',
+                onPress: () => navigation.navigate('AdminOrders'),
+              },
+              {
+                key: 'admin-revenue',
+                label: 'My Branch Revenue',
+                icon: 'chart-line',
+                onPress: () => navigation.navigate('AdminRevenue'),
+              },
+            ]),
+        logoutItem,
       ]
     : [
         {
@@ -144,19 +192,7 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
           icon: 'star-outline',
           onPress: () => Alert.alert('Ratings & Feedbacks', 'Coming soon.'),
         },
-        {
-          key: 'logout',
-          label: 'Logout',
-          icon: 'logout',
-          danger: true,
-          onPress: async () => {
-            await logout();
-            navigation.reset({
-              index: 0,
-              routes: [{name: 'Login'}],
-            });
-          },
-        },
+        logoutItem,
       ];
 
   if (!mounted) {

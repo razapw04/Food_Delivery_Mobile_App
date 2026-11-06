@@ -104,8 +104,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: colors.primary,
-    borderRadius: 14,
-    paddingVertical: spacing.sm,
+    borderRadius: 12,
+    paddingVertical: 6,
     paddingHorizontal: spacing.md,
   },
   reviewCardMenu: {

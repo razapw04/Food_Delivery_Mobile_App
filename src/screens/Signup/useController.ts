@@ -29,6 +29,8 @@ const useController = () => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -132,6 +134,8 @@ const useController = () => {
     phone,
     password,
     confirmPassword,
+    showPassword,
+    showConfirmPassword,
     fieldErrors,
     formError,
     isSubmitting,
@@ -158,6 +162,8 @@ const useController = () => {
       setConfirmPassword(value);
       clearFieldError('confirmPassword');
     },
+    toggleShowPassword: () => setShowPassword(prev => !prev),
+    toggleShowConfirmPassword: () => setShowConfirmPassword(prev => !prev),
     handleSignup,
     goToLogin,
   };

@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Button from '../../components/button/Button';
 import {styles} from './styles';
@@ -22,6 +23,8 @@ const SignupScreen = () => {
     phone,
     password,
     confirmPassword,
+    showPassword,
+    showConfirmPassword,
     fieldErrors,
     formError,
     setName,
@@ -29,6 +32,8 @@ const SignupScreen = () => {
     setPhone,
     setPassword,
     setConfirmPassword,
+    toggleShowPassword,
+    toggleShowConfirmPassword,
     isSubmitting,
     handleSignup,
     goToLogin,
@@ -100,30 +105,69 @@ const SignupScreen = () => {
           )}
 
           <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={[styles.input, !!fieldErrors.password && styles.inputError]}
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Create a password"
-            placeholderTextColor="#9A9F9B"
-            secureTextEntry
-          />
+          <View style={styles.passwordWrap}>
+            <TextInput
+              style={[
+                styles.input,
+                styles.passwordInput,
+                !!fieldErrors.password && styles.inputError,
+              ]}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Create a password"
+              placeholderTextColor="#9A9F9B"
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <Pressable
+              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={toggleShowPassword}
+              style={styles.eyeButton}>
+              <Icon
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color="#858B87"
+              />
+            </Pressable>
+          </View>
           {!!fieldErrors.password && (
             <Text style={styles.fieldErrorText}>{fieldErrors.password}</Text>
           )}
 
           <Text style={styles.label}>Confirm password</Text>
-          <TextInput
-            style={[
-              styles.input,
-              !!fieldErrors.confirmPassword && styles.inputError,
-            ]}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder="Confirm your password"
-            placeholderTextColor="#9A9F9B"
-            secureTextEntry
-          />
+          <View style={styles.passwordWrap}>
+            <TextInput
+              style={[
+                styles.input,
+                styles.passwordInput,
+                !!fieldErrors.confirmPassword && styles.inputError,
+              ]}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="Confirm your password"
+              placeholderTextColor="#9A9F9B"
+              secureTextEntry={!showConfirmPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <Pressable
+              accessibilityLabel={
+                showConfirmPassword ? 'Hide password' : 'Show password'
+              }
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={toggleShowConfirmPassword}
+              style={styles.eyeButton}>
+              <Icon
+                name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color="#858B87"
+              />
+            </Pressable>
+          </View>
           {!!fieldErrors.confirmPassword && (
             <Text style={styles.fieldErrorText}>
               {fieldErrors.confirmPassword}

@@ -52,7 +52,7 @@ const ProductDetailScreen = () => {
               accessibilityRole="button"
               style={styles.circleButton}
               onPress={handleBack}>
-              <Icon name="arrow-left" size={22} color="#1A1A1A" />
+              <Icon name="arrow-left" size={20} color="#1A1A1A" />
             </Pressable>
           </View>
         </View>
@@ -78,7 +78,7 @@ const ProductDetailScreen = () => {
             accessibilityRole="button"
             onPress={handleBack}
             style={styles.circleButton}>
-            <Icon name="arrow-left" size={24} color="#202321" />
+            <Icon name="arrow-left" size={20} color="#202321" />
           </Pressable>
 
           <View style={styles.locationBlock}>
@@ -120,7 +120,7 @@ const ProductDetailScreen = () => {
               style={styles.favoriteButton}>
               <Icon
                 name={isFavorite ? 'heart' : 'heart-outline'}
-                size={22}
+                size={18}
                 color={isFavorite ? '#FF3B30' : '#9CA3AF'}
               />
             </Pressable>
@@ -214,7 +214,7 @@ const ProductDetailScreen = () => {
                 hitSlop={6}
                 onPress={decreaseQuantity}
                 style={styles.qtyButton}>
-                <Icon name="minus" size={18} color="#202321" />
+                <Icon name="minus" size={16} color="#202321" />
               </Pressable>
               <Text style={styles.qtyValue}>{quantity}</Text>
               <Pressable
@@ -223,7 +223,7 @@ const ProductDetailScreen = () => {
                 hitSlop={6}
                 onPress={increaseQuantity}
                 style={styles.qtyButton}>
-                <Icon name="plus" size={18} color="#202321" />
+                <Icon name="plus" size={16} color="#202321" />
               </Pressable>
             </View>
 

@@ -76,7 +76,7 @@ export const styles = StyleSheet.create({
 
   notificationBadgeText: {
     color: '#FFFFFF',
-    fontSize: 10,
+    fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.bold,
   },
 
@@ -105,8 +105,8 @@ export const styles = StyleSheet.create({
   viewProfileButton: {
     marginTop: spacing.lg,
     backgroundColor: colors.primary,
-    borderRadius: 14,
-    paddingVertical: spacing.md,
+    borderRadius: 12,
+    paddingVertical: spacing.sm + 2,
     alignItems: 'center',
     justifyContent: 'center',
   },

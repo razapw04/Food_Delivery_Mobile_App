@@ -34,6 +34,8 @@ type LocationContextValue = {
   useCurrentLocation: () => Promise<void>;
   addSavedAddress: (label: string, address: string) => void;
   confirmCurrentLocation: () => void;
+  /** Update pin from map drag / tap and reverse-geocode. */
+  updateLocationFromCoords: (coords: Coordinates) => Promise<void>;
 };
 
 const FALLBACK_ADDRESS = 'Select delivery address';
@@ -388,6 +390,27 @@ export const LocationProvider = ({children}: {children: React.ReactNode}) => {
     });
   }, [liveAddress]);
 
+  const updateLocationFromCoords = useCallback(
+    async (coords: Coordinates) => {
+      setCoordinates(coords);
+      setIsLocating(true);
+      try {
+        const address = await reverseGeocode(
+          coords.latitude,
+          coords.longitude,
+        );
+        if (address && address !== FALLBACK_ADDRESS && !isCoordinateLabel(address)) {
+          setLiveAddress(address);
+        }
+      } catch {
+        // keep last known address
+      } finally {
+        setIsLocating(false);
+      }
+    },
+    [],
+  );
+
   const addSavedAddress = useCallback(
     (label: string, address: string) => {
       if (!address || isCoordinateLabel(address) || address === FALLBACK_ADDRESS) {
@@ -436,6 +459,7 @@ export const LocationProvider = ({children}: {children: React.ReactNode}) => {
       useCurrentLocation,
       addSavedAddress,
       confirmCurrentLocation,
+      updateLocationFromCoords,
     }),
     [
       deliveryAddress,
@@ -448,6 +472,7 @@ export const LocationProvider = ({children}: {children: React.ReactNode}) => {
       useCurrentLocation,
       addSavedAddress,
       confirmCurrentLocation,
+      updateLocationFromCoords,
     ],
   );
 

@@ -1,8 +1,7 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Pressable,
   StatusBar,
   Text,
@@ -12,14 +11,12 @@ import {
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import AppMap, {type MapCoordinate} from '../../components/AppMap';
 import {useLocation} from '../../context/LocationContext';
 import type {RootStackParamList} from '../../types/navigation';
 import {styles} from '../ChooseLocation/styles';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddAddress'>;
-
-const buildMapUrl = (latitude: number, longitude: number) =>
-  `https://staticmap.openstreetmap.de/staticmap.php?center=${latitude},${longitude}&zoom=15&size=800x600&maptype=mapnik&markers=${latitude},${longitude},orang-pushpin`;
 
 const AddAddressScreen = ({navigation}: Props) => {
   const {
@@ -29,25 +26,43 @@ const AddAddressScreen = ({navigation}: Props) => {
     isLocating,
     useCurrentLocation,
     addSavedAddress,
+    updateLocationFromCoords,
   } = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
+  const [mapCenter, setMapCenter] = useState<MapCoordinate>({
+    latitude: coordinates.latitude,
+    longitude: coordinates.longitude,
+  });
 
   useEffect(() => {
     useCurrentLocation();
   }, [useCurrentLocation]);
 
-  const latitude = coordinates?.latitude ?? 31.5204;
-  const longitude = coordinates?.longitude ?? 74.3587;
+  useEffect(() => {
+    setMapCenter({
+      latitude: coordinates.latitude,
+      longitude: coordinates.longitude,
+    });
+  }, [coordinates.latitude, coordinates.longitude]);
+
+  const onRegionChangeComplete = useCallback(
+    (coords: MapCoordinate) => {
+      setMapCenter(coords);
+      void updateLocationFromCoords(coords);
+    },
+    [updateLocationFromCoords],
+  );
+
   const addressText =
     searchQuery.trim() ||
     liveAddress ||
     (deliveryAddress !== 'Select delivery address' ? deliveryAddress : null) ||
-    'Enter or search an address';
+    'Move the map or enter an address';
 
   const handleSave = () => {
     const trimmed = searchQuery.trim() || liveAddress?.trim() || '';
     if (!trimmed) {
-      Alert.alert('Address required', 'Please search or enter an address.');
+      Alert.alert('Address required', 'Please search or pick a map location.');
       return;
     }
 
@@ -71,10 +86,12 @@ const AddAddressScreen = ({navigation}: Props) => {
       </View>
 
       <View style={styles.mapContainer}>
-        <Image
-          source={{uri: buildMapUrl(latitude, longitude)}}
+        <AppMap
           style={styles.mapImage}
-          resizeMode="cover"
+          center={mapCenter}
+          zoom={15}
+          showCenterPin
+          onRegionChangeComplete={onRegionChangeComplete}
         />
 
         <View style={styles.searchOverlay}>
@@ -92,12 +109,8 @@ const AddAddressScreen = ({navigation}: Props) => {
           </View>
         </View>
 
-        <View style={styles.mapPinOverlay} pointerEvents="none">
-          <Icon name="map-marker" size={42} color="#FF7622" />
-        </View>
-
         {isLocating ? (
-          <View style={styles.mapPinOverlay}>
+          <View style={styles.mapPinOverlay} pointerEvents="none">
             <ActivityIndicator size="large" color="#FF7622" />
           </View>
         ) : null}
@@ -114,6 +127,15 @@ const AddAddressScreen = ({navigation}: Props) => {
               {addressText}
             </Text>
           </View>
+          <Pressable
+            accessibilityLabel="Use current GPS location"
+            accessibilityRole="button"
+            onPress={() => {
+              void useCurrentLocation();
+            }}
+            style={styles.gpsButton}>
+            <Icon name="crosshairs-gps" size={20} color="#FF7622" />
+          </Pressable>
         </View>
 
         <Pressable

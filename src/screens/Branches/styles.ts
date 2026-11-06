@@ -39,14 +39,13 @@ export const styles = StyleSheet.create({
   },
 
   mapContainer: {
-    height: 200,
+    height: 220,
     backgroundColor: '#E8EEF2',
     overflow: 'hidden',
   },
 
   mapImage: {
-    width: '100%',
-    height: '100%',
+    ...StyleSheet.absoluteFillObject,
   },
 
   mapPinOverlay: {
@@ -236,7 +235,7 @@ export const styles = StyleSheet.create({
 
   cancelButton: {
     flex: 1,
-    minHeight: 48,
+    minHeight: 42,
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: colors.border,
@@ -253,7 +252,7 @@ export const styles = StyleSheet.create({
 
   proceedButton: {
     flex: 1,
-    minHeight: 48,
+    minHeight: 42,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
