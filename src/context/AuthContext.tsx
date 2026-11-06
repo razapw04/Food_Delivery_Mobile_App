@@ -142,8 +142,9 @@ const AuthProvider = ({children}: {children: React.ReactNode}) => {
         isAdmin: hasAdminAccess(authUser.role),
       };
     } catch (error) {
+      // Local fallback for demo/testing without backend (customer + admins).
       const localUser = await findLocalAuthUser(trimmedEmail, password);
-      if (localUser && hasAdminAccess(localUser.role)) {
+      if (localUser) {
         const authUser: AuthUser = {
           name: localUser.name,
           email: localUser.email,
@@ -155,7 +156,7 @@ const AuthProvider = ({children}: {children: React.ReactNode}) => {
         setUser(authUser);
         return {
           ok: true as const,
-          isAdmin: true,
+          isAdmin: hasAdminAccess(authUser.role),
         };
       }
 

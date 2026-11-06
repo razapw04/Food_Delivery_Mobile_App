@@ -9,6 +9,7 @@ export type RootStackParamList = {
   Splash: undefined;
   Login: undefined;
   Signup: undefined;
+  ForgotPassword: undefined;
   OnboardingOne: undefined;
   LocationAccess: undefined;
   MainTabs: undefined | {screen?: keyof MainTabParamList};
@@ -37,4 +38,6 @@ export type RootStackParamList = {
   AdminRevenue: undefined;
   AdminAdmins: undefined;
   AdminAdminForm: {email?: string} | undefined;
+  AdminPriceRequest: {productId: string};
+  AdminPriceApprovals: undefined;
 };

@@ -18,10 +18,15 @@ export const ADMIN_PASSWORD = 'admin123';
 export const SUPERADMIN_EMAIL = 'superadmin@foodapp.com';
 export const SUPERADMIN_PASSWORD = 'superadmin123';
 
+/** Local-only demo customer — no backend required. */
+export const DEMO_CUSTOMER_EMAIL = 'user@foodapp.com';
+export const DEMO_CUSTOMER_PASSWORD = 'user123';
+
 const USERS_KEY = '@food_app/users';
 const SESSION_KEY = '@food_app/session';
 const SESSION_USER_KEY = '@food_app/session_user';
 const SESSION_TOKEN_KEY = '@food_app/session_token';
+const REMEMBER_ME_KEY = '@food_app/remember_me';
 
 export type SessionUser = {
   name: string;
@@ -46,6 +51,15 @@ const DEFAULT_SUPERADMIN: StoredUser = {
   phone: '0000000001',
   password: SUPERADMIN_PASSWORD,
   role: 'superadmin',
+  branchId: null,
+};
+
+const DEFAULT_CUSTOMER: StoredUser = {
+  name: 'Demo User',
+  email: DEMO_CUSTOMER_EMAIL,
+  phone: '03001234567',
+  password: DEMO_CUSTOMER_PASSWORD,
+  role: 'customer',
   branchId: null,
 };
 
@@ -129,14 +143,15 @@ const upsertSeededUser = (
   return next;
 };
 
-/** Ensures seeded admin + superadmin accounts exist (idempotent). */
+/** Ensures seeded admin + superadmin + demo customer exist (idempotent). */
 export const ensureAdminUser = async (): Promise<void> => {
   const users = await getStoredUsers();
   const withAdmin = upsertSeededUser(users, DEFAULT_ADMIN);
-  const withBoth = upsertSeededUser(withAdmin, DEFAULT_SUPERADMIN);
+  const withSuper = upsertSeededUser(withAdmin, DEFAULT_SUPERADMIN);
+  const withDemo = upsertSeededUser(withSuper, DEFAULT_CUSTOMER);
 
-  if (withBoth !== users) {
-    await saveStoredUsers(withBoth);
+  if (withDemo !== users) {
+    await saveStoredUsers(withDemo);
   }
 };
 
@@ -160,6 +175,74 @@ export const findLocalAuthUser = async (
       item.email === email.trim().toLowerCase() && item.password === password,
   );
   return match ?? null;
+};
+
+export const resetLocalPassword = async (payload: {
+  email: string;
+  newPassword: string;
+}): Promise<{ok: true} | {ok: false; error: string}> => {
+  await ensureAdminUser();
+  const email = payload.email.trim().toLowerCase();
+  const newPassword = payload.newPassword;
+
+  if (!email) {
+    return {ok: false, error: 'Email is required.'};
+  }
+  if (newPassword.length < 6) {
+    return {ok: false, error: 'Password must be at least 6 characters.'};
+  }
+
+  const users = await getStoredUsers();
+  const index = users.findIndex(item => item.email === email);
+  if (index < 0) {
+    return {
+      ok: false,
+      error: 'No local account found for this email. Try a demo account email.',
+    };
+  }
+
+  const next = [...users];
+  next[index] = {...users[index], password: newPassword};
+  await saveStoredUsers(next);
+  return {ok: true};
+};
+
+export type RememberMePayload = {
+  email: string;
+  password: string;
+};
+
+export const getRememberMe = async (): Promise<RememberMePayload | null> => {
+  const raw = await AsyncStorage.getItem(REMEMBER_ME_KEY);
+  if (!raw) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(raw) as Partial<RememberMePayload>;
+    if (!parsed.email || !parsed.password) {
+      return null;
+    }
+    return {
+      email: String(parsed.email),
+      password: String(parsed.password),
+    };
+  } catch {
+    return null;
+  }
+};
+
+export const saveRememberMe = async (payload: RememberMePayload) => {
+  await AsyncStorage.setItem(
+    REMEMBER_ME_KEY,
+    JSON.stringify({
+      email: payload.email.trim().toLowerCase(),
+      password: payload.password,
+    }),
+  );
+};
+
+export const clearRememberMe = async () => {
+  await AsyncStorage.removeItem(REMEMBER_ME_KEY);
 };
 
 export const listAdminAccounts = async (): Promise<StoredUser[]> => {

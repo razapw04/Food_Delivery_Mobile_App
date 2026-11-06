@@ -6,6 +6,7 @@ import {QueryClientProvider} from '@tanstack/react-query';
 import SplashScreen from './src/screens/Splash/SplashScreen';
 import LoginScreen from './src/screens/Login';
 import SignupScreen from './src/screens/Signup';
+import ForgotPasswordScreen from './src/screens/ForgotPassword';
 import OnboardingOneScreen from './src/screens/OnboardingOne/index';
 import LocationAcess from './src/screens/LocationAccess/index';
 import BranchesScreen from './src/screens/Branches';
@@ -25,6 +26,8 @@ import AdminProductFormScreen from './src/screens/AdminProductForm';
 import AdminRevenueScreen from './src/screens/AdminRevenue';
 import AdminAdminsScreen from './src/screens/AdminAdmins';
 import AdminAdminFormScreen from './src/screens/AdminAdminForm';
+import AdminPriceRequestScreen from './src/screens/AdminPriceRequest';
+import AdminPriceApprovalsScreen from './src/screens/AdminPriceApprovals';
 import MenuScreen from './src/screens/Menu';
 import MainTabs from './src/navigation/MainTabs';
 import {navigationRef} from './src/navigation/navigationRef';
@@ -63,6 +66,10 @@ const App = () => {
                         <Stack.Screen name="Splash" component={SplashScreen} />
                         <Stack.Screen name="Login" component={LoginScreen} />
                         <Stack.Screen name="Signup" component={SignupScreen} />
+                        <Stack.Screen
+                          name="ForgotPassword"
+                          component={ForgotPasswordScreen}
+                        />
                         <Stack.Screen name="MainTabs" component={MainTabs} />
                         <Stack.Screen name="Branches" component={BranchesScreen} />
                         <Stack.Screen
@@ -120,6 +127,14 @@ const App = () => {
                         <Stack.Screen
                           name="AdminAdminForm"
                           component={AdminAdminFormScreen}
+                        />
+                        <Stack.Screen
+                          name="AdminPriceRequest"
+                          component={AdminPriceRequestScreen}
+                        />
+                        <Stack.Screen
+                          name="AdminPriceApprovals"
+                          component={AdminPriceApprovalsScreen}
                         />
                         <Stack.Screen
                           name="OnboardingOne"

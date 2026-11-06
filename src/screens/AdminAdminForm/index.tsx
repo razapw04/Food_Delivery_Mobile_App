@@ -1,6 +1,8 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StatusBar,
@@ -23,6 +25,8 @@ import {styles} from './styles';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AdminAdminForm'>;
 
+const MAX_PHONE_LENGTH = 13;
+
 const AdminAdminFormScreen = ({navigation, route}: Props) => {
   const {isSuperAdmin} = useAuth();
   const {branches} = useCatalog();
@@ -33,6 +37,9 @@ const AdminAdminFormScreen = ({navigation, route}: Props) => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [branchId, setBranchId] = useState(branches[0]?.id ?? '');
   const [saving, setSaving] = useState(false);
 
@@ -55,7 +62,9 @@ const AdminAdminFormScreen = ({navigation, route}: Props) => {
       }
       setName(existing.name);
       setEmail(existing.email);
-      setPhone(existing.phone);
+      setPhone(existing.phone.slice(0, MAX_PHONE_LENGTH));
+      setPassword(existing.password);
+      setConfirmPassword(existing.password);
       setBranchId(existing.branchId ?? branches[0]?.id ?? '');
     };
 
@@ -65,18 +74,39 @@ const AdminAdminFormScreen = ({navigation, route}: Props) => {
     };
   }, [branches, editingEmail]);
 
+  const passwordsMatch =
+    password.trim().length > 0 && password.trim() === confirmPassword.trim();
+
   const canSave = useMemo(() => {
     if (!name.trim() || !branchId || saving) {
       return false;
     }
-    if (isEditing) {
-      return true;
+    if (password.trim().length < 6 || !passwordsMatch) {
+      return false;
     }
-    return email.trim().length > 0 && password.length >= 6;
-  }, [branchId, email, isEditing, name, password, saving]);
+    return isEditing || email.trim().length > 0;
+  }, [
+    branchId,
+    email,
+    isEditing,
+    name,
+    password,
+    passwordsMatch,
+    saving,
+  ]);
+
+  const handlePhoneChange = (value: string) => {
+    const cleaned = value.replace(/[^\d+]/g, '').slice(0, MAX_PHONE_LENGTH);
+    setPhone(cleaned);
+  };
 
   const handleSave = async () => {
     if (!canSave) {
+      return;
+    }
+
+    if (password.trim() !== confirmPassword.trim()) {
+      Alert.alert('Password mismatch', 'Password and confirm password must match.');
       return;
     }
 
@@ -87,14 +117,14 @@ const AdminAdminFormScreen = ({navigation, route}: Props) => {
             email: editingEmail!,
             name,
             phone,
-            password: password.trim() || undefined,
+            password: password.trim(),
             branchId,
           })
         : await createAdminAccount({
             name,
             email,
             phone,
-            password,
+            password: password.trim(),
             branchId,
           });
 
@@ -133,92 +163,154 @@ const AdminAdminFormScreen = ({navigation, route}: Props) => {
         <View style={styles.backButton} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
-        <Text style={styles.label}>Full name</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="Admin name"
-          placeholderTextColor="#9CA3AF"
-        />
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}>
+          <Text style={styles.label}>Full name</Text>
+          <TextInput
+            style={styles.input}
+            value={name}
+            onChangeText={setName}
+            placeholder="Admin name"
+            placeholderTextColor="#9CA3AF"
+          />
 
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          style={[styles.input, isEditing && styles.inputDisabled]}
-          value={email}
-          onChangeText={setEmail}
-          placeholder="admin@branch.com"
-          placeholderTextColor="#9CA3AF"
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          editable={!isEditing}
-        />
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={[styles.input, isEditing && styles.inputDisabled]}
+            value={email}
+            onChangeText={setEmail}
+            placeholder="admin@branch.com"
+            placeholderTextColor="#9CA3AF"
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            editable={!isEditing}
+          />
 
-        <Text style={styles.label}>Phone</Text>
-        <TextInput
-          style={styles.input}
-          value={phone}
-          onChangeText={setPhone}
-          placeholder="03XXXXXXXXX"
-          placeholderTextColor="#9CA3AF"
-          keyboardType="phone-pad"
-        />
-
-        <Text style={styles.label}>
-          {isEditing ? 'New password (optional)' : 'Password'}
-        </Text>
-        <TextInput
-          style={styles.input}
-          value={password}
-          onChangeText={setPassword}
-          placeholder={isEditing ? 'Leave blank to keep current' : 'Min 6 characters'}
-          placeholderTextColor="#9CA3AF"
-          secureTextEntry
-        />
-        {!isEditing ? (
-          <Text style={styles.hint}>Admin will use this email and password to log in.</Text>
-        ) : null}
-
-        <Text style={styles.label}>Assigned branch</Text>
-        <View style={styles.chipsRow}>
-          {branches.map(branch => {
-            const active = branch.id === branchId;
-            return (
-              <Pressable
-                key={branch.id}
-                accessibilityRole="button"
-                style={[styles.chip, active && styles.chipActive]}
-                onPress={() => setBranchId(branch.id)}>
-                <Text
-                  style={[styles.chipText, active && styles.chipTextActive]}>
-                  {branch.name}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <Pressable
-          accessibilityRole="button"
-          style={[styles.saveButton, !canSave && styles.saveButtonDisabled]}
-          disabled={!canSave}
-          onPress={() => {
-            void handleSave();
-          }}>
-          <Text style={styles.saveButtonText}>
-            {saving
-              ? 'Saving...'
-              : isEditing
-                ? 'Update admin'
-                : 'Grant admin access'}
+          <Text style={styles.label}>Phone</Text>
+          <TextInput
+            style={styles.input}
+            value={phone}
+            onChangeText={handlePhoneChange}
+            placeholder="03XXXXXXXXX"
+            placeholderTextColor="#9CA3AF"
+            keyboardType="phone-pad"
+            maxLength={MAX_PHONE_LENGTH}
+          />
+          <Text style={styles.hint}>
+            Max {MAX_PHONE_LENGTH} characters ({phone.length}/{MAX_PHONE_LENGTH})
           </Text>
-        </Pressable>
-      </ScrollView>
+
+          <Text style={styles.label}>Password</Text>
+          <View style={styles.passwordWrap}>
+            <TextInput
+              style={[styles.input, styles.passwordInput]}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Min 6 characters"
+              placeholderTextColor="#9CA3AF"
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <Pressable
+              accessibilityLabel={
+                showPassword ? 'Hide password' : 'Show password'
+              }
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={() => setShowPassword(prev => !prev)}
+              style={styles.eyeButton}>
+              <Icon
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color="#858B87"
+              />
+            </Pressable>
+          </View>
+
+          <Text style={styles.label}>Confirm password</Text>
+          <View style={styles.passwordWrap}>
+            <TextInput
+              style={[styles.input, styles.passwordInput]}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="Re-enter password"
+              placeholderTextColor="#9CA3AF"
+              secureTextEntry={!showConfirmPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <Pressable
+              accessibilityLabel={
+                showConfirmPassword
+                  ? 'Hide confirm password'
+                  : 'Show confirm password'
+              }
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={() => setShowConfirmPassword(prev => !prev)}
+              style={styles.eyeButton}>
+              <Icon
+                name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color="#858B87"
+              />
+            </Pressable>
+          </View>
+          {confirmPassword.length > 0 && !passwordsMatch ? (
+            <Text style={styles.errorText}>Passwords do not match.</Text>
+          ) : (
+            <Text style={styles.hint}>
+              {isEditing
+                ? 'Current password is loaded. Confirm again if you change it.'
+                : 'Admin will use this email and password to log in.'}
+            </Text>
+          )}
+
+          <Text style={styles.label}>Assigned branch</Text>
+          <View style={styles.chipsRow}>
+            {branches.map(branch => {
+              const active = branch.id === branchId;
+              return (
+                <Pressable
+                  key={branch.id}
+                  accessibilityRole="button"
+                  style={[styles.chip, active && styles.chipActive]}
+                  onPress={() => setBranchId(branch.id)}>
+                  <Text
+                    style={[styles.chipText, active && styles.chipTextActive]}>
+                    {branch.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.saveButton, !canSave && styles.saveButtonDisabled]}
+            disabled={!canSave}
+            onPress={() => {
+              void handleSave();
+            }}>
+            <Text style={styles.saveButtonText}>
+              {saving
+                ? 'Saving...'
+                : isEditing
+                  ? 'Update admin'
+                  : 'Grant admin access'}
+            </Text>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

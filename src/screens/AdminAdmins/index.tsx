@@ -23,6 +23,68 @@ import {styles} from './styles';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'AdminAdmins'>;
 
+const AdminCard = ({
+  item,
+  branchLabel,
+  onEdit,
+  onDelete,
+}: {
+  item: StoredUser;
+  branchLabel: string;
+  onEdit: () => void;
+  onDelete: () => void;
+}) => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardTop}>
+        <View style={styles.cardBody}>
+          <Text style={styles.name}>{item.name}</Text>
+          <Text style={styles.email}>{item.email}</Text>
+          <View style={styles.passwordRow}>
+            <Text style={styles.passwordLabel}>Password: </Text>
+            <Text style={styles.passwordValue}>
+              {showPassword ? item.password : '••••••••'}
+            </Text>
+            <Pressable
+              accessibilityLabel={
+                showPassword ? 'Hide password' : 'Show password'
+              }
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={() => setShowPassword(prev => !prev)}
+              style={styles.passwordEye}>
+              <Icon
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={18}
+                color="#6B7280"
+              />
+            </Pressable>
+          </View>
+          <Text style={styles.branch}>{branchLabel}</Text>
+        </View>
+        <View style={styles.actions}>
+          <Pressable
+            accessibilityLabel={`Edit ${item.name}`}
+            accessibilityRole="button"
+            style={styles.iconButton}
+            onPress={onEdit}>
+            <Icon name="pencil" size={18} color="#1A1A1A" />
+          </Pressable>
+          <Pressable
+            accessibilityLabel={`Remove ${item.name}`}
+            accessibilityRole="button"
+            style={[styles.iconButton, styles.iconButtonDanger]}
+            onPress={onDelete}>
+            <Icon name="delete-outline" size={18} color="#C74440" />
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+};
+
 const AdminAdminsScreen = () => {
   const navigation = useNavigation<Nav>();
   const {isSuperAdmin} = useAuth();
@@ -121,33 +183,14 @@ const AdminAdminsScreen = () => {
           </View>
         }
         renderItem={({item}) => (
-          <View style={styles.card}>
-            <View style={styles.cardTop}>
-              <View style={styles.cardBody}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.email}>{item.email}</Text>
-                <Text style={styles.branch}>{branchName(item.branchId)}</Text>
-              </View>
-              <View style={styles.actions}>
-                <Pressable
-                  accessibilityLabel={`Edit ${item.name}`}
-                  accessibilityRole="button"
-                  style={styles.iconButton}
-                  onPress={() =>
-                    navigation.navigate('AdminAdminForm', {email: item.email})
-                  }>
-                  <Icon name="pencil" size={18} color="#1A1A1A" />
-                </Pressable>
-                <Pressable
-                  accessibilityLabel={`Remove ${item.name}`}
-                  accessibilityRole="button"
-                  style={[styles.iconButton, styles.iconButtonDanger]}
-                  onPress={() => handleDelete(item)}>
-                  <Icon name="delete-outline" size={18} color="#C74440" />
-                </Pressable>
-              </View>
-            </View>
-          </View>
+          <AdminCard
+            item={item}
+            branchLabel={branchName(item.branchId)}
+            onEdit={() =>
+              navigation.navigate('AdminAdminForm', {email: item.email})
+            }
+            onDelete={() => handleDelete(item)}
+          />
         )}
       />
 

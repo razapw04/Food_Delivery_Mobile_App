@@ -321,9 +321,23 @@ const AdminOrdersScreen = () => {
             <Icon name="account-key" size={18} color="#FF7622" />
             <Text style={styles.adminNavText}>Admins</Text>
           </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            style={styles.adminNavButton}
+            onPress={() => navigation.navigate('AdminPriceApprovals')}>
+            <Icon name="clipboard-check-outline" size={18} color="#FF7622" />
+            <Text style={styles.adminNavText}>Approvals</Text>
+          </Pressable>
         </View>
       ) : isAdmin ? (
         <View style={styles.adminNav}>
+          <Pressable
+            accessibilityRole="button"
+            style={styles.adminNavButton}
+            onPress={() => navigation.navigate('AdminProducts')}>
+            <Icon name="cash-edit" size={18} color="#FF7622" />
+            <Text style={styles.adminNavText}>Request price</Text>
+          </Pressable>
           <Pressable
             accessibilityRole="button"
             style={styles.adminNavButton}

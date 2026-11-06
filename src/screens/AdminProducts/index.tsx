@@ -19,6 +19,7 @@ import {
   removeAdminProduct,
   type AdminProduct,
 } from '../../storage/adminProductsStorage';
+import {countPendingPriceChangeRequests} from '../../storage/priceChangeRequestsStorage';
 import type {RootStackParamList} from '../../types/navigation';
 import {styles} from './styles';
 
@@ -26,10 +27,11 @@ type Nav = NativeStackNavigationProp<RootStackParamList, 'AdminProducts'>;
 
 const AdminProductsScreen = () => {
   const navigation = useNavigation<Nav>();
-  const {isSuperAdmin} = useAuth();
+  const {isAdmin, isSuperAdmin} = useAuth();
   const {menuItems, menuCategories} = useCatalog();
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
 
   const categoryName = useCallback(
     (categoryId: string) =>
@@ -42,19 +44,22 @@ const AdminProductsScreen = () => {
     try {
       const stored = await getAdminProducts();
       setProducts(stored ?? menuItems);
+      if (isSuperAdmin) {
+        setPendingCount(await countPendingPriceChangeRequests());
+      }
     } finally {
       setLoading(false);
     }
-  }, [menuItems]);
+  }, [isSuperAdmin, menuItems]);
 
   useFocusEffect(
     useCallback(() => {
-      if (!isSuperAdmin) {
-        navigation.replace('AdminOrders');
+      if (!isAdmin) {
+        navigation.replace('Login');
         return;
       }
       void loadProducts();
-    }, [isSuperAdmin, loadProducts, navigation]),
+    }, [isAdmin, loadProducts, navigation]),
   );
 
   const handleDelete = (product: AdminProduct) => {
@@ -89,14 +94,29 @@ const AdminProductsScreen = () => {
           onPress={() => navigation.goBack()}>
           <Icon name="arrow-left" size={22} color="#1A1A1A" />
         </Pressable>
-        <Text style={styles.headerTitle}>Manage Products</Text>
-        <View style={styles.backButton} />
+        <Text style={styles.headerTitle}>
+          {isSuperAdmin ? 'Manage Products' : 'Products'}
+        </Text>
+        {isSuperAdmin ? (
+          <Pressable
+            accessibilityLabel="Price approvals"
+            accessibilityRole="button"
+            style={styles.backButton}
+            onPress={() => navigation.navigate('AdminPriceApprovals')}>
+            <Icon name="clipboard-check-outline" size={22} color="#1A1A1A" />
+          </Pressable>
+        ) : (
+          <View style={styles.backButton} />
+        )}
       </View>
 
       <View style={styles.banner}>
         <Text style={styles.bannerText}>
-          Changes are saved locally on this device. Backend sync will be added
-          later.
+          {isSuperAdmin
+            ? pendingCount > 0
+              ? `${pendingCount} price change request(s) waiting for approval.`
+              : 'You can edit products directly. Branch admin price changes need your approval.'
+            : 'To change a price, send a request. Super admin must approve it first.'}
         </Text>
       </View>
 
@@ -113,7 +133,9 @@ const AdminProductsScreen = () => {
           <View style={styles.emptyWrap}>
             <Text style={styles.emptyTitle}>No products yet</Text>
             <Text style={styles.emptySubtitle}>
-              Add your first product to start managing the menu.
+              {isSuperAdmin
+                ? 'Add your first product to start managing the menu.'
+                : 'No products available right now.'}
             </Text>
           </View>
         }
@@ -130,37 +152,55 @@ const AdminProductsScreen = () => {
               <Text style={styles.productPrice}>{item.price}</Text>
             </View>
             <View style={styles.cardActions}>
-              <Pressable
-                accessibilityLabel={`Edit ${item.name}`}
-                accessibilityRole="button"
-                style={styles.iconButton}
-                onPress={() =>
-                  navigation.navigate('AdminProductForm', {
-                    productId: item.id,
-                  })
-                }>
-                <Icon name="pencil" size={18} color="#1A1A1A" />
-              </Pressable>
-              <Pressable
-                accessibilityLabel={`Delete ${item.name}`}
-                accessibilityRole="button"
-                style={[styles.iconButton, styles.iconButtonDanger]}
-                onPress={() => handleDelete(item)}>
-                <Icon name="delete-outline" size={18} color="#C74440" />
-              </Pressable>
+              {isSuperAdmin ? (
+                <>
+                  <Pressable
+                    accessibilityLabel={`Edit ${item.name}`}
+                    accessibilityRole="button"
+                    style={styles.iconButton}
+                    onPress={() =>
+                      navigation.navigate('AdminProductForm', {
+                        productId: item.id,
+                      })
+                    }>
+                    <Icon name="pencil" size={18} color="#1A1A1A" />
+                  </Pressable>
+                  <Pressable
+                    accessibilityLabel={`Delete ${item.name}`}
+                    accessibilityRole="button"
+                    style={[styles.iconButton, styles.iconButtonDanger]}
+                    onPress={() => handleDelete(item)}>
+                    <Icon name="delete-outline" size={18} color="#C74440" />
+                  </Pressable>
+                </>
+              ) : (
+                <Pressable
+                  accessibilityLabel={`Request price change for ${item.name}`}
+                  accessibilityRole="button"
+                  style={styles.iconButton}
+                  onPress={() =>
+                    navigation.navigate('AdminPriceRequest', {
+                      productId: item.id,
+                    })
+                  }>
+                  <Icon name="cash-edit" size={18} color="#1A1A1A" />
+                </Pressable>
+              )}
             </View>
           </View>
         )}
       />
 
-      <Pressable
-        accessibilityLabel="Add product"
-        accessibilityRole="button"
-        style={styles.fab}
-        onPress={() => navigation.navigate('AdminProductForm', {})}>
-        <Icon name="plus" size={22} color="#FFFFFF" />
-        <Text style={styles.fabText}>Add product</Text>
-      </Pressable>
+      {isSuperAdmin ? (
+        <Pressable
+          accessibilityLabel="Add product"
+          accessibilityRole="button"
+          style={styles.fab}
+          onPress={() => navigation.navigate('AdminProductForm', {})}>
+          <Icon name="plus" size={22} color="#FFFFFF" />
+          <Text style={styles.fabText}>Add product</Text>
+        </Pressable>
+      ) : null}
     </SafeAreaView>
   );
 };

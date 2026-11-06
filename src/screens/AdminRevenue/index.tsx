@@ -7,6 +7,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {useAuth} from '../../context/AuthContext';
 import {useCatalog} from '../../context/CatalogContext';
 import type {RootStackParamList} from '../../types/navigation';
+import FinanceCharts from './FinanceCharts';
 import {
   aggregateRevenue,
   BRANCH_REVENUE,
@@ -30,25 +31,49 @@ const RevenueBody = ({
 
     <View style={styles.statsRow}>
       <View style={styles.statCard}>
-        <Text style={styles.statLabel}>Today</Text>
-        <Text style={styles.statValue}>{formatPrice(snapshot.today)}</Text>
+        <Text style={styles.statLabel}>Income today</Text>
+        <Text style={styles.incomeValue}>{formatPrice(snapshot.today)}</Text>
       </View>
       <View style={styles.statCard}>
-        <Text style={styles.statLabel}>Orders today</Text>
-        <Text style={styles.statValue}>{snapshot.ordersToday}</Text>
+        <Text style={styles.statLabel}>Expense today</Text>
+        <Text style={styles.expenseValue}>
+          {formatPrice(snapshot.expenseToday)}
+        </Text>
       </View>
     </View>
 
     <View style={styles.statsRow}>
       <View style={styles.statCard}>
-        <Text style={styles.statLabel}>This week</Text>
+        <Text style={styles.statLabel}>Income this week</Text>
         <Text style={styles.statValue}>{formatPrice(snapshot.week)}</Text>
       </View>
       <View style={styles.statCard}>
-        <Text style={styles.statLabel}>This month</Text>
-        <Text style={styles.statValue}>{formatPrice(snapshot.month)}</Text>
+        <Text style={styles.statLabel}>Expense this week</Text>
+        <Text style={styles.statValue}>
+          {formatPrice(snapshot.expenseWeek)}
+        </Text>
       </View>
     </View>
+
+    <View style={styles.statsRow}>
+      <View style={styles.statCard}>
+        <Text style={styles.statLabel}>Orders today</Text>
+        <Text style={styles.statValue}>{snapshot.ordersToday}</Text>
+      </View>
+      <View style={styles.statCard}>
+        <Text style={styles.statLabel}>Net today</Text>
+        <Text
+          style={
+            snapshot.today - snapshot.expenseToday >= 0
+              ? styles.incomeValue
+              : styles.expenseValue
+          }>
+          {formatPrice(snapshot.today - snapshot.expenseToday)}
+        </Text>
+      </View>
+    </View>
+
+    <FinanceCharts snapshot={snapshot} />
 
     <Text style={styles.sectionTitle}>Top selling products</Text>
     <View style={styles.card}>
@@ -146,8 +171,8 @@ const AdminRevenueScreen = () => {
         <View style={styles.banner}>
           <Text style={styles.bannerText}>
             {isSuperAdmin
-              ? 'Demo data for all branches. Live totals will connect when the backend is ready.'
-              : 'You can only view revenue for your assigned branch. Demo data for now.'}
+              ? 'Demo income/expense charts for all branches. Live totals will connect when the backend is ready.'
+              : 'You can only view income/expense for your assigned branch. Demo charts for now.'}
           </Text>
         </View>
 
@@ -193,10 +218,7 @@ const AdminRevenueScreen = () => {
             <RevenueBody snapshot={superSnapshot} title={superTitle} />
           </>
         ) : adminSnapshot && adminBranch ? (
-          <RevenueBody
-            snapshot={adminSnapshot}
-            title={adminBranch.name}
-          />
+          <RevenueBody snapshot={adminSnapshot} title={adminBranch.name} />
         ) : (
           <View style={styles.card}>
             <Text style={styles.saleTitle}>No branch assigned</Text>

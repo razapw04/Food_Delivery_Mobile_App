@@ -83,9 +83,27 @@ export const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 
+  optionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+  },
+
+  rememberWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+
+  rememberText: {
+    color: '#202321',
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.medium,
+  },
+
   forgotWrap: {
     alignSelf: 'flex-end',
-    marginBottom: spacing.lg,
   },
 
   forgotText: {

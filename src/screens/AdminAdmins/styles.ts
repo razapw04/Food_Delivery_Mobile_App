@@ -80,6 +80,25 @@ export const styles = StyleSheet.create({
     fontSize: typography.fontSize.sm,
     marginTop: 2,
   },
+  passwordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.xs,
+    flexWrap: 'wrap',
+  },
+  passwordLabel: {
+    color: muted,
+    fontSize: typography.fontSize.xs,
+  },
+  passwordValue: {
+    color: ink,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  passwordEye: {
+    marginLeft: spacing.xs,
+    padding: 2,
+  },
   branch: {
     color: colors.primary,
     fontSize: typography.fontSize.xs,

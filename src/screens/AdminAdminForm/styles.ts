@@ -10,6 +10,9 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  flex: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -58,8 +61,31 @@ export const styles = StyleSheet.create({
     backgroundColor: pale,
     color: muted,
   },
+  passwordWrap: {
+    position: 'relative',
+    marginBottom: spacing.md,
+  },
+  passwordInput: {
+    marginBottom: 0,
+    paddingRight: 44,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 4,
+    top: 0,
+    height: 44,
+    width: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   hint: {
     color: muted,
+    fontSize: typography.fontSize.xs,
+    marginTop: -spacing.sm,
+    marginBottom: spacing.md,
+  },
+  errorText: {
+    color: colors.error,
     fontSize: typography.fontSize.xs,
     marginTop: -spacing.sm,
     marginBottom: spacing.md,

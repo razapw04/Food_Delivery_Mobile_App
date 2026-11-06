@@ -1,9 +1,19 @@
+export type WeeklyFinancePoint = {
+  label: string;
+  income: number;
+  expense: number;
+};
+
 export type BranchRevenueSnapshot = {
   branchId: string;
   today: number;
   week: number;
   month: number;
   ordersToday: number;
+  expenseToday: number;
+  expenseWeek: number;
+  expenseMonth: number;
+  weeklyTrend: WeeklyFinancePoint[];
   topProducts: {name: string; units: number}[];
   recentSales: {
     id: string;
@@ -20,6 +30,18 @@ export const BRANCH_REVENUE: Record<string, BranchRevenueSnapshot> = {
     week: 126800,
     month: 498350,
     ordersToday: 27,
+    expenseToday: 6200,
+    expenseWeek: 41200,
+    expenseMonth: 168400,
+    weeklyTrend: [
+      {label: 'Mon', income: 16800, expense: 5400},
+      {label: 'Tue', income: 19200, expense: 6100},
+      {label: 'Wed', income: 15400, expense: 5800},
+      {label: 'Thu', income: 21000, expense: 6900},
+      {label: 'Fri', income: 24600, expense: 7200},
+      {label: 'Sat', income: 18200, expense: 5500},
+      {label: 'Sun', income: 11600, expense: 4300},
+    ],
     topProducts: [
       {name: 'Pepperoni Feast', units: 42},
       {name: 'Family Feast', units: 31},
@@ -37,6 +59,18 @@ export const BRANCH_REVENUE: Record<string, BranchRevenueSnapshot> = {
     week: 142500,
     month: 512900,
     ordersToday: 31,
+    expenseToday: 7800,
+    expenseWeek: 48600,
+    expenseMonth: 179500,
+    weeklyTrend: [
+      {label: 'Mon', income: 18800, expense: 6200},
+      {label: 'Tue', income: 20500, expense: 6800},
+      {label: 'Wed', income: 17600, expense: 6400},
+      {label: 'Thu', income: 22900, expense: 7400},
+      {label: 'Fri', income: 26800, expense: 8100},
+      {label: 'Sat', income: 21400, expense: 7100},
+      {label: 'Sun', income: 14500, expense: 5600},
+    ],
     topProducts: [
       {name: 'Classic Burger', units: 38},
       {name: 'Margherita', units: 29},
@@ -54,6 +88,18 @@ export const BRANCH_REVENUE: Record<string, BranchRevenueSnapshot> = {
     week: 71500,
     month: 268400,
     ordersToday: 14,
+    expenseToday: 3400,
+    expenseWeek: 24800,
+    expenseMonth: 94500,
+    weeklyTrend: [
+      {label: 'Mon', income: 9200, expense: 3100},
+      {label: 'Tue', income: 10400, expense: 3600},
+      {label: 'Wed', income: 8800, expense: 3300},
+      {label: 'Thu', income: 11200, expense: 3900},
+      {label: 'Fri', income: 12900, expense: 4200},
+      {label: 'Sat', income: 10100, expense: 3500},
+      {label: 'Sun', income: 8900, expense: 3200},
+    ],
     topProducts: [
       {name: 'BBQ Chicken', units: 19},
       {name: 'Soft Drink Bundle', units: 17},
@@ -71,6 +117,18 @@ export const BRANCH_REVENUE: Record<string, BranchRevenueSnapshot> = {
     week: 98500,
     month: 356700,
     ordersToday: 19,
+    expenseToday: 4900,
+    expenseWeek: 33200,
+    expenseMonth: 121800,
+    weeklyTrend: [
+      {label: 'Mon', income: 12400, expense: 4100},
+      {label: 'Tue', income: 14100, expense: 4700},
+      {label: 'Wed', income: 11800, expense: 4300},
+      {label: 'Thu', income: 15200, expense: 5100},
+      {label: 'Fri', income: 17600, expense: 5600},
+      {label: 'Sat', income: 14900, expense: 4900},
+      {label: 'Sun', income: 12500, expense: 4500},
+    ],
     topProducts: [
       {name: 'Family Feast', units: 26},
       {name: 'Classic Burger', units: 21},
@@ -107,12 +165,29 @@ export const aggregateRevenue = (
     .sort((a, b) => b.units - a.units)
     .slice(0, 4);
 
+  const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const weeklyTrend: WeeklyFinancePoint[] = dayLabels.map((label, index) => ({
+    label,
+    income: snapshots.reduce(
+      (sum, item) => sum + (item.weeklyTrend[index]?.income ?? 0),
+      0,
+    ),
+    expense: snapshots.reduce(
+      (sum, item) => sum + (item.weeklyTrend[index]?.expense ?? 0),
+      0,
+    ),
+  }));
+
   return {
     branchId: 'all',
     today: snapshots.reduce((sum, item) => sum + item.today, 0),
     week: snapshots.reduce((sum, item) => sum + item.week, 0),
     month: snapshots.reduce((sum, item) => sum + item.month, 0),
     ordersToday: snapshots.reduce((sum, item) => sum + item.ordersToday, 0),
+    expenseToday: snapshots.reduce((sum, item) => sum + item.expenseToday, 0),
+    expenseWeek: snapshots.reduce((sum, item) => sum + item.expenseWeek, 0),
+    expenseMonth: snapshots.reduce((sum, item) => sum + item.expenseMonth, 0),
+    weeklyTrend,
     topProducts,
     recentSales,
   };

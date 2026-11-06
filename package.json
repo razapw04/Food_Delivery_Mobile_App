@@ -23,9 +23,11 @@
     "react": "19.2.3",
     "react-native": "0.87.1",
     "react-native-geolocation-service": "^5.3.1",
+    "react-native-gifted-charts": "^1.4.81",
     "react-native-onboarding-swiper": "^1.4.0",
     "react-native-safe-area-context": "^5.10.0",
     "react-native-screens": "^4.28.0",
+    "react-native-svg": "^15.16.1",
     "react-native-vector-icons": "^10.3.0",
     "react-native-webview": "^14.0.1"
   },

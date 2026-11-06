@@ -172,4 +172,86 @@ export const styles = StyleSheet.create({
     color: muted,
     fontSize: typography.fontSize.xs,
   },
+  chartsWrap: {
+    marginBottom: spacing.sm,
+  },
+  chartCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    overflow: 'hidden',
+  },
+  chartTitle: {
+    color: ink,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+    marginBottom: spacing.sm,
+  },
+  legendRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  legendText: {
+    color: muted,
+    fontSize: typography.fontSize.xs,
+  },
+  pieWrap: {
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  pieCenter: {
+    alignItems: 'center',
+  },
+  pieCenterLabel: {
+    color: muted,
+    fontSize: typography.fontSize.xs,
+  },
+  pieCenterValue: {
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
+  },
+  pieExpenseBlock: {
+    alignItems: 'flex-end',
+  },
+  hBarLabel: {
+    color: muted,
+    fontSize: typography.fontSize.xs,
+  },
+  hBarValue: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
+    marginTop: 2,
+  },
+  profitRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  expenseValue: {
+    color: '#DC2626',
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+  },
+  incomeValue: {
+    color: '#16A34A',
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+  },
 });

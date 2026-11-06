@@ -13,6 +13,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Button from '../../components/button/Button';
+import {colors} from '../../theme';
 import {styles} from './styles';
 import useController from './useController';
 
@@ -20,14 +21,17 @@ const LoginScreen = () => {
   const {
     email,
     password,
+    rememberMe,
     showPassword,
     error,
     setEmail,
     setPassword,
+    toggleRememberMe,
     toggleShowPassword,
     isSubmitting,
     handleLogin,
     goToSignup,
+    goToForgotPassword,
   } = useController();
 
   return (
@@ -79,7 +83,9 @@ const LoginScreen = () => {
               autoCorrect={false}
             />
             <Pressable
-              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+              accessibilityLabel={
+                showPassword ? 'Hide password' : 'Show password'
+              }
               accessibilityRole="button"
               hitSlop={8}
               onPress={toggleShowPassword}
@@ -94,9 +100,31 @@ const LoginScreen = () => {
 
           {!!error && <Text style={styles.errorText}>{error}</Text>}
 
-          <Pressable style={styles.forgotWrap} hitSlop={8}>
-            <Text style={styles.forgotText}>Forgot password?</Text>
-          </Pressable>
+          <View style={styles.optionsRow}>
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{checked: rememberMe}}
+              accessibilityLabel="Remember me"
+              style={styles.rememberWrap}
+              onPress={toggleRememberMe}
+              hitSlop={8}>
+              <Icon
+                name={
+                  rememberMe ? 'checkbox-marked' : 'checkbox-blank-outline'
+                }
+                size={20}
+                color={rememberMe ? colors.primary : '#9CA3AF'}
+              />
+              <Text style={styles.rememberText}>Remember me</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.forgotWrap}
+              hitSlop={8}
+              onPress={goToForgotPassword}>
+              <Text style={styles.forgotText}>Forgot password?</Text>
+            </Pressable>
+          </View>
 
           <View style={styles.buttonWrap}>
             <Button

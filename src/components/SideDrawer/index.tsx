@@ -144,6 +144,12 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
                 icon: 'account-key',
                 onPress: () => navigation.navigate('AdminAdmins'),
               },
+              {
+                key: 'admin-approvals',
+                label: 'Price Approvals',
+                icon: 'clipboard-check-outline',
+                onPress: () => navigation.navigate('AdminPriceApprovals'),
+              },
             ]
           : [
               {
@@ -151,6 +157,12 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
                 label: 'Manage Orders',
                 icon: 'clipboard-list-outline',
                 onPress: () => navigation.navigate('AdminOrders'),
+              },
+              {
+                key: 'admin-products',
+                label: 'Request Price Change',
+                icon: 'cash-edit',
+                onPress: () => navigation.navigate('AdminProducts'),
               },
               {
                 key: 'admin-revenue',
