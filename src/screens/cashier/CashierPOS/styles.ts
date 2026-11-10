@@ -1,0 +1,282 @@
+import {StyleSheet} from 'react-native';
+import {colors, spacing, typography} from '../../../theme';
+
+const ink = '#1A1A1A';
+const muted = '#6B7280';
+const pale = '#F5F5F5';
+
+export const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: pale,
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: 'center',
+    color: ink,
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+  },
+  branchLabel: {
+    textAlign: 'center',
+    color: muted,
+    fontSize: typography.fontSize.xs,
+    paddingBottom: spacing.sm,
+    paddingHorizontal: spacing.lg,
+  },
+  searchWrap: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    color: ink,
+    fontSize: typography.fontSize.sm,
+    paddingVertical: 0,
+  },
+  chipsRow: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    gap: spacing.xs,
+  },
+  chip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: pale,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginRight: spacing.xs,
+  },
+  chipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  chipText: {
+    color: ink,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.medium,
+  },
+  chipTextActive: {
+    color: '#FFFFFF',
+  },
+  body: {
+    flex: 1,
+  },
+  productList: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+  },
+  productCard: {
+    flex: 1,
+    margin: spacing.xs,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+    overflow: 'hidden',
+  },
+  productImage: {
+    width: '100%',
+    height: 88,
+    backgroundColor: pale,
+  },
+  productBody: {
+    padding: spacing.sm,
+  },
+  productName: {
+    color: ink,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  productPrice: {
+    color: colors.primary,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
+    marginTop: 4,
+  },
+  addRow: {
+    marginTop: spacing.sm,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#FFF7ED',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 4,
+  },
+  addRowText: {
+    color: colors.primary,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
+  },
+  cartPanel: {
+    borderTopWidth: 1,
+    borderTopColor: '#EEEEEE',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    maxHeight: '46%',
+  },
+  cartHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  cartTitle: {
+    color: ink,
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
+  },
+  clearText: {
+    color: '#C74440',
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  cartScroll: {
+    maxHeight: 120,
+  },
+  cartLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  cartLineName: {
+    flex: 1,
+    color: ink,
+    fontSize: typography.fontSize.sm,
+  },
+  qtyControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  qtyButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: pale,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  qtyValue: {
+    minWidth: 20,
+    textAlign: 'center',
+    color: ink,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+  },
+  cartLineTotal: {
+    minWidth: 72,
+    textAlign: 'right',
+    color: ink,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  emptyCart: {
+    color: muted,
+    fontSize: typography.fontSize.sm,
+    marginBottom: spacing.sm,
+  },
+  fieldLabel: {
+    color: muted,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+    marginBottom: 4,
+  },
+  input: {
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 10,
+    paddingHorizontal: spacing.sm,
+    marginBottom: spacing.sm,
+    color: ink,
+    fontSize: typography.fontSize.sm,
+    backgroundColor: colors.surface,
+  },
+  payRow: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  payChip: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    backgroundColor: pale,
+    alignItems: 'center',
+  },
+  payChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  payChipText: {
+    color: ink,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  payChipTextActive: {
+    color: '#FFFFFF',
+  },
+  totalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  totalLabel: {
+    color: muted,
+    fontSize: typography.fontSize.sm,
+  },
+  totalValue: {
+    color: ink,
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+  },
+  placeButton: {
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  placeButtonDisabled: {
+    opacity: 0.55,
+  },
+  placeButtonText: {
+    color: '#FFFFFF',
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
+  },
+});

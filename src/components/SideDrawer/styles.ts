@@ -81,7 +81,31 @@ export const styles = StyleSheet.create({
   },
 
   content: {
+    flexGrow: 1,
     paddingBottom: spacing.xl,
+  },
+
+  contactFooter: {
+    marginTop: 'auto',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+  },
+
+  contactButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+
+  contactButtonText: {
+    color: '#FFFFFF',
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
   },
 
   profileSection: {

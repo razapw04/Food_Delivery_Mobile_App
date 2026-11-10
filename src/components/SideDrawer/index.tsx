@@ -1,8 +1,6 @@
-import React, {useEffect, useRef} from 'react';
+import React, {useEffect, useMemo, useRef} from 'react';
 import {
-  Alert,
   Animated,
-  Dimensions,
   Easing,
   Image,
   Modal,
@@ -17,6 +15,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useAuth} from '../../context/AuthContext';
 import {useNotifications} from '../../context/NotificationsContext';
+import {useResponsive} from '../../hooks/useResponsive';
 import type {RootStackParamList} from '../../types/navigation';
 import {styles} from './styles';
 
@@ -35,20 +34,32 @@ type MenuItem = {
   danger?: boolean;
 };
 
-const PANEL_WIDTH = Math.min(Dimensions.get('window').width * 0.78, 340);
-
 const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
-  const {user, logout, isAdmin, isSuperAdmin} = useAuth();
+  const {
+    user,
+    logout,
+    isAdmin,
+    isSuperAdmin,
+    isCashier,
+    isKitchen,
+    isStaff,
+    canViewRevenue,
+  } = useAuth();
   const {unreadCount} = useNotifications();
+  const {width, isTablet} = useResponsive();
   const navigation = useNavigation<DrawerNav>();
+  const panelWidth = useMemo(
+    () => Math.min(width * (isTablet ? 0.42 : 0.78), isTablet ? 400 : 340),
+    [isTablet, width],
+  );
   const [mounted, setMounted] = React.useState(visible);
-  const translateX = useRef(new Animated.Value(-PANEL_WIDTH)).current;
+  const translateX = useRef(new Animated.Value(-panelWidth)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
       setMounted(true);
-      translateX.setValue(-PANEL_WIDTH);
+      translateX.setValue(-panelWidth);
       overlayOpacity.setValue(0);
       Animated.parallel([
         Animated.timing(overlayOpacity, {
@@ -80,7 +91,7 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
         useNativeDriver: true,
       }),
       Animated.timing(translateX, {
-        toValue: -PANEL_WIDTH,
+        toValue: -panelWidth,
         duration: 220,
         easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
@@ -90,7 +101,7 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
         setMounted(false);
       }
     });
-  }, [visible, mounted, overlayOpacity, translateX]);
+  }, [visible, mounted, overlayOpacity, panelWidth, translateX]);
 
   const displayName = user?.name ?? 'Guest User';
   const displayPhone = user?.phone?.trim()
@@ -106,6 +117,8 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
       void (async () => {
         try {
           await logout();
+        } catch {
+          // ignore logout errors so navigation still happens
         } finally {
           navigation.reset({
             index: 0,
@@ -140,7 +153,7 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
               },
               {
                 key: 'admin-admins',
-                label: 'Manage Admins',
+                label: 'Manage Staff',
                 icon: 'account-key',
                 onPress: () => navigation.navigate('AdminAdmins'),
               },
@@ -161,51 +174,88 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
               {
                 key: 'admin-products',
                 label: 'Request Price Change',
-                icon: 'cash-edit',
+                icon: 'tag-outline',
                 onPress: () => navigation.navigate('AdminProducts'),
               },
-              {
-                key: 'admin-revenue',
-                label: 'My Branch Revenue',
-                icon: 'chart-line',
-                onPress: () => navigation.navigate('AdminRevenue'),
-              },
+              ...(canViewRevenue
+                ? [
+                    {
+                      key: 'admin-revenue',
+                      label: 'My Branch Revenue',
+                      icon: 'chart-line',
+                      onPress: () => navigation.navigate('AdminRevenue'),
+                    },
+                  ]
+                : []),
             ]),
         logoutItem,
       ]
-    : [
-        {
-          key: 'orders',
-          label: 'Order History',
-          icon: 'package-variant-closed',
-          onPress: () => navigation.navigate('MainTabs', {screen: 'Orders'}),
-        },
-        {
-          key: 'favorites',
-          label: 'My Favorites',
-          icon: 'heart-outline',
-          onPress: () => navigation.navigate('Favorites'),
-        },
-        {
-          key: 'menu',
-          label: 'Explore Menu',
-          icon: 'food',
-          onPress: () => navigation.navigate('Menu'),
-        },
-        {
-          key: 'addresses',
-          label: 'Saved Addresses',
-          icon: 'map-marker-outline',
-          onPress: () => navigation.navigate('SavedAddresses'),
-        },
-        {
-          key: 'feedback',
-          label: 'Ratings & Feedbacks',
-          icon: 'star-outline',
-          onPress: () => Alert.alert('Ratings & Feedbacks', 'Coming soon.'),
-        },
-        logoutItem,
-      ];
+    : isCashier
+      ? [
+          {
+            key: 'cashier-orders',
+            label: 'Orders',
+            icon: 'clipboard-list-outline',
+            onPress: () => navigation.navigate('CashierOrders'),
+          },
+          {
+            key: 'cashier-pos',
+            label: 'POS',
+            icon: 'point-of-sale',
+            onPress: () => navigation.navigate('CashierPOS'),
+          },
+          {
+            key: 'cashier-sales',
+            label: 'Branch Sales',
+            icon: 'chart-line',
+            onPress: () => navigation.navigate('CashierSales'),
+          },
+          logoutItem,
+        ]
+      : isKitchen
+        ? [
+            {
+              key: 'kitchen-orders',
+              label: 'Kitchen Orders',
+              icon: 'chef-hat',
+              onPress: () => navigation.navigate('KitchenOrders'),
+            },
+            logoutItem,
+          ]
+        : [
+            {
+              key: 'orders',
+              label: 'Order History',
+              icon: 'package-variant-closed',
+              onPress: () =>
+                navigation.navigate('MainTabs', {screen: 'Orders'}),
+            },
+            {
+              key: 'favorites',
+              label: 'My Favorites',
+              icon: 'heart-outline',
+              onPress: () => navigation.navigate('Favorites'),
+            },
+            {
+              key: 'menu',
+              label: 'Explore Menu',
+              icon: 'food',
+              onPress: () => navigation.navigate('Menu'),
+            },
+            {
+              key: 'addresses',
+              label: 'Saved Addresses',
+              icon: 'map-marker-outline',
+              onPress: () => navigation.navigate('SavedAddresses'),
+            },
+            {
+              key: 'feedback',
+              label: 'Ratings & Feedbacks',
+              icon: 'star-outline',
+              onPress: () => navigation.navigate('Feedback'),
+            },
+            logoutItem,
+          ];
 
   if (!mounted) {
     return null;
@@ -233,7 +283,7 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
           style={[
             styles.panelWrap,
             {
-              width: PANEL_WIDTH,
+              width: panelWidth,
               transform: [{translateX}],
             },
           ]}>
@@ -244,7 +294,7 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
                 style={styles.logo}
                 resizeMode="contain"
               />
-              {!isAdmin ? (
+              {!isStaff ? (
                 <Pressable
                   accessibilityLabel="Notifications"
                   accessibilityRole="button"
@@ -280,17 +330,21 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
                   {isSuperAdmin
                     ? 'Super Admin'
                     : isAdmin
-                      ? 'Admin'
-                      : displayPhone}
+                      ? 'Manager'
+                      : isCashier
+                        ? 'Cashier'
+                        : isKitchen
+                          ? 'Kitchen'
+                          : displayPhone}
                 </Text>
 
-                {!isAdmin ? (
+                {!isStaff ? (
                   <Pressable
                     accessibilityRole="button"
                     style={styles.viewProfileButton}
                     onPress={() => {
                       onClose();
-                      Alert.alert('Profile', 'Profile screen coming soon.');
+                      navigation.navigate('Profile');
                     }}>
                     <Text style={styles.viewProfileText}>View Profile</Text>
                   </Pressable>
@@ -334,6 +388,20 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
                     />
                   </Pressable>
                 ))}
+              </View>
+
+              <View style={styles.contactFooter}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Contact us"
+                  style={styles.contactButton}
+                  onPress={() => {
+                    onClose();
+                    navigation.navigate('ContactUs');
+                  }}>
+                  <Icon name="headset" size={20} color="#FFFFFF" />
+                  <Text style={styles.contactButtonText}>Contact Us</Text>
+                </Pressable>
               </View>
             </ScrollView>
           </SafeAreaView>

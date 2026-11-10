@@ -16,7 +16,10 @@ export type PriceChangeRequest = {
   productId: string;
   productName: string;
   currentPrice: string;
+  /** Admin suggestion only — super admin may approve a different final price. */
   requestedPrice: string;
+  /** Final price set by super admin on approval. */
+  approvedPrice?: string;
   requestedByEmail: string;
   requestedByName: string;
   branchId: string | null;
@@ -111,6 +114,8 @@ export const reviewPriceChangeRequest = async (payload: {
   requestId: string;
   decision: 'approved' | 'rejected';
   seedProducts: AdminProduct[];
+  /** Required when approving — super admin sets the final price (not forced to admin suggestion). */
+  approvedAmount?: number;
   note?: string;
 }): Promise<{ok: true} | {ok: false; error: string}> => {
   const items = await readAll();
@@ -124,14 +129,28 @@ export const reviewPriceChangeRequest = async (payload: {
     return {ok: false, error: 'This request was already reviewed.'};
   }
 
+  let approvedPrice: string | undefined;
+
   if (payload.decision === 'approved') {
+    if (
+      payload.approvedAmount == null ||
+      !Number.isFinite(payload.approvedAmount)
+    ) {
+      return {ok: false, error: 'Enter the final price to approve.'};
+    }
+    const amount = Math.round(payload.approvedAmount);
+    if (amount <= 0) {
+      return {ok: false, error: 'Final price must be greater than 0.'};
+    }
+
+    approvedPrice = formatAdminPrice(amount);
     const products = (await getAdminProducts()) ?? payload.seedProducts;
     const product = products.find(item => item.id === request.productId);
     if (!product) {
       return {ok: false, error: 'Product no longer exists.'};
     }
     await upsertAdminProduct(
-      {...product, price: request.requestedPrice},
+      {...product, price: approvedPrice},
       payload.seedProducts,
     );
   }
@@ -140,6 +159,7 @@ export const reviewPriceChangeRequest = async (payload: {
   next[index] = {
     ...request,
     status: payload.decision,
+    approvedPrice,
     reviewedAt: new Date().toISOString(),
     reviewNote: payload.note?.trim() || undefined,
   };

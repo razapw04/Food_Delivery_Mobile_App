@@ -3,32 +3,39 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {QueryClientProvider} from '@tanstack/react-query';
 
-import SplashScreen from './src/screens/Splash/SplashScreen';
-import LoginScreen from './src/screens/Login';
-import SignupScreen from './src/screens/Signup';
-import ForgotPasswordScreen from './src/screens/ForgotPassword';
-import OnboardingOneScreen from './src/screens/OnboardingOne/index';
-import LocationAcess from './src/screens/LocationAccess/index';
-import BranchesScreen from './src/screens/Branches';
-import ChooseLocationScreen from './src/screens/ChooseLocation';
-import AddAddressScreen from './src/screens/AddAddress';
-import ProductDetailScreen from './src/screens/ProductDetail';
-import CartScreen from './src/screens/Cart';
-import PlaceOrderScreen from './src/screens/PlaceOrder';
-import CardPaymentScreen from './src/screens/CardPayment';
-import VoucherScreen from './src/screens/Voucher';
-import FavoritesScreen from './src/screens/Favorites';
-import SavedAddressesScreen from './src/screens/SavedAddresses';
-import NotificationsScreen from './src/screens/Notifications';
-import AdminOrdersScreen from './src/screens/AdminOrders';
-import AdminProductsScreen from './src/screens/AdminProducts';
-import AdminProductFormScreen from './src/screens/AdminProductForm';
-import AdminRevenueScreen from './src/screens/AdminRevenue';
-import AdminAdminsScreen from './src/screens/AdminAdmins';
-import AdminAdminFormScreen from './src/screens/AdminAdminForm';
-import AdminPriceRequestScreen from './src/screens/AdminPriceRequest';
-import AdminPriceApprovalsScreen from './src/screens/AdminPriceApprovals';
-import MenuScreen from './src/screens/Menu';
+import SplashScreen from './src/screens/user/Splash/SplashScreen';
+import LoginScreen from './src/screens/user/Login';
+import SignupScreen from './src/screens/user/Signup';
+import ForgotPasswordScreen from './src/screens/user/ForgotPassword';
+import OnboardingOneScreen from './src/screens/user/OnboardingOne/index';
+import LocationAcess from './src/screens/user/LocationAccess/index';
+import BranchesScreen from './src/screens/user/Branches';
+import ChooseLocationScreen from './src/screens/user/ChooseLocation';
+import AddAddressScreen from './src/screens/user/AddAddress';
+import ProductDetailScreen from './src/screens/user/ProductDetail';
+import CartScreen from './src/screens/user/Cart';
+import PlaceOrderScreen from './src/screens/user/PlaceOrder';
+import CardPaymentScreen from './src/screens/user/CardPayment';
+import VoucherScreen from './src/screens/user/Voucher';
+import FavoritesScreen from './src/screens/user/Favorites';
+import SavedAddressesScreen from './src/screens/user/SavedAddresses';
+import NotificationsScreen from './src/screens/user/Notifications';
+import ProfileScreen from './src/screens/user/Profile';
+import FeedbackScreen from './src/screens/user/Feedback';
+import ContactUsScreen from './src/screens/user/ContactUs';
+import AdminOrdersScreen from './src/screens/admin/AdminOrders';
+import AdminProductsScreen from './src/screens/admin/AdminProducts';
+import AdminProductFormScreen from './src/screens/admin/AdminProductForm';
+import AdminRevenueScreen from './src/screens/admin/AdminRevenue';
+import AdminAdminsScreen from './src/screens/admin/AdminAdmins';
+import AdminAdminFormScreen from './src/screens/admin/AdminAdminForm';
+import AdminPriceRequestScreen from './src/screens/admin/AdminPriceRequest';
+import AdminPriceApprovalsScreen from './src/screens/admin/AdminPriceApprovals';
+import CashierOrdersScreen from './src/screens/cashier/CashierOrders';
+import CashierSalesScreen from './src/screens/cashier/CashierSales';
+import CashierPOSScreen from './src/screens/cashier/CashierPOS';
+import KitchenOrdersScreen from './src/screens/kitchen/KitchenOrders';
+import MenuScreen from './src/screens/user/Menu';
 import MainTabs from './src/navigation/MainTabs';
 import {navigationRef} from './src/navigation/navigationRef';
 import {AuthProvider} from './src/context/AuthContext';
@@ -104,6 +111,15 @@ const App = () => {
                           name="Notifications"
                           component={NotificationsScreen}
                         />
+                        <Stack.Screen name="Profile" component={ProfileScreen} />
+                        <Stack.Screen
+                          name="Feedback"
+                          component={FeedbackScreen}
+                        />
+                        <Stack.Screen
+                          name="ContactUs"
+                          component={ContactUsScreen}
+                        />
                         <Stack.Screen
                           name="AdminOrders"
                           component={AdminOrdersScreen}
@@ -135,6 +151,22 @@ const App = () => {
                         <Stack.Screen
                           name="AdminPriceApprovals"
                           component={AdminPriceApprovalsScreen}
+                        />
+                        <Stack.Screen
+                          name="CashierOrders"
+                          component={CashierOrdersScreen}
+                        />
+                        <Stack.Screen
+                          name="CashierSales"
+                          component={CashierSalesScreen}
+                        />
+                        <Stack.Screen
+                          name="CashierPOS"
+                          component={CashierPOSScreen}
+                        />
+                        <Stack.Screen
+                          name="KitchenOrders"
+                          component={KitchenOrdersScreen}
                         />
                         <Stack.Screen
                           name="OnboardingOne"

@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type {MenuItem} from '../screens/Menu/model';
+import type {MenuItem} from '../screens/user/Menu/model';
 
 const ADMIN_PRODUCTS_KEY = '@food_app/admin_products';
 

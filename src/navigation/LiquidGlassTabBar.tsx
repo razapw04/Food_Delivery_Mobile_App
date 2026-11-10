@@ -4,7 +4,8 @@ import type {BottomTabBarProps} from '@react-navigation/bottom-tabs';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LiquidGlassPanel from '../components/LiquidGlassPanel';
-import {colors, typography} from '../theme';
+import {useResponsive} from '../hooks/useResponsive';
+import {colors, moderateScale, typography} from '../theme';
 
 const TAB_ICONS: Record<string, {active: string; inactive: string}> = {
   Home: {active: 'home', inactive: 'home-outline'},
@@ -19,13 +20,19 @@ const LiquidGlassTabBar = ({
   navigation,
 }: BottomTabBarProps) => {
   const insets = useSafeAreaInsets();
+  const {isTablet, contentMaxWidth} = useResponsive();
   const bottomPad = Math.max(insets.bottom, 6);
 
   return (
     <View
       pointerEvents="box-none"
       style={[styles.wrapper, {paddingBottom: bottomPad}]}>
-      <LiquidGlassPanel style={styles.pill} glassType="regular">
+      <LiquidGlassPanel
+        style={[
+          styles.pill,
+          {maxWidth: isTablet ? Math.min(contentMaxWidth, 520) : 420},
+        ]}
+        glassType="regular">
         <View style={styles.glassBorder} pointerEvents="none" />
 
         <View style={styles.row}>
@@ -68,7 +75,7 @@ const LiquidGlassTabBar = ({
                   ]}>
                   <Icon
                     name={isFocused ? icons.active : icons.inactive}
-                    size={22}
+                    size={moderateScale(22)}
                     color={isFocused ? colors.primary : '#6B7280'}
                   />
                 </View>
@@ -93,14 +100,14 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: moderateScale(16),
   },
 
   pill: {
     width: '100%',
     maxWidth: 420,
-    borderRadius: 28,
-    minHeight: 56,
+    borderRadius: moderateScale(28),
+    minHeight: moderateScale(56),
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.12,
@@ -111,7 +118,7 @@ const styles = StyleSheet.create({
 
   glassBorder: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 28,
+    borderRadius: moderateScale(28),
     borderWidth: StyleSheet.hairlineWidth * 2,
     borderColor: 'rgba(255,255,255,0.55)',
   },
@@ -120,8 +127,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
   },
 
   tabItem: {
@@ -132,15 +139,15 @@ const styles = StyleSheet.create({
   },
 
   iconWrap: {
-    width: 70,
-    height: 36,
+    width: moderateScale(70),
+    height: moderateScale(36),
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   iconWrapActive: {
     backgroundColor: 'rgba(255,118,34,0.12)',
-    borderRadius: 16,
+    borderRadius: moderateScale(16),
   },
 
   label: {

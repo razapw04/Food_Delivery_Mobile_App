@@ -1,6 +1,9 @@
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {queryKeys} from '../lib/queryClient';
+import type {CartItem} from '../context/CartContext';
 import {
+  appendItemsToStoredOrder,
+  closeDineInTab,
   getAllStoredOrders,
   getStoredOrders,
   saveStoredOrder,
@@ -54,6 +57,36 @@ export const useUpdateOrderStatusMutation = () => {
       orderId: string;
       status: OrderStatus;
     }) => updateStoredOrderStatus(orderId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: queryKeys.allOrders});
+      queryClient.invalidateQueries({queryKey: ['orders']});
+    },
+  });
+};
+
+export const useAppendOrderItemsMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      orderId,
+      items,
+    }: {
+      orderId: string;
+      items: CartItem[];
+    }) => appendItemsToStoredOrder(orderId, items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: queryKeys.allOrders});
+      queryClient.invalidateQueries({queryKey: ['orders']});
+    },
+  });
+};
+
+export const useCloseDineInTabMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (orderId: string) => closeDineInTab(orderId),
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: queryKeys.allOrders});
       queryClient.invalidateQueries({queryKey: ['orders']});

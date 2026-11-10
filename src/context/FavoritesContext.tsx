@@ -10,7 +10,7 @@ import {
   getStoredFavoriteIds,
   saveStoredFavoriteIds,
 } from '../storage/favoritesStorage';
-import type {MenuItem} from '../screens/Menu/model';
+import type {MenuItem} from '../screens/user/Menu/model';
 import {useCatalog} from './CatalogContext';
 
 type FavoritesContextValue = {

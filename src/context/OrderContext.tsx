@@ -5,7 +5,7 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import type {Branch} from '../screens/Branches/model';
+import type {Branch} from '../screens/user/Branches/model';
 
 export type OrderMode = 'delivery' | 'pickup';
 

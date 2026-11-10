@@ -1,9 +1,9 @@
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import HomeScreen from '../screens/Home';
-import SearchScreen from '../screens/Search';
-import BranchesScreen from '../screens/Branches';
-import OrderHistoryScreen from '../screens/OrderHistory';
+import HomeScreen from '../screens/user/Home';
+import SearchScreen from '../screens/user/Search';
+import BranchesScreen from '../screens/user/Branches';
+import OrderHistoryScreen from '../screens/user/OrderHistory';
 import type {MainTabParamList} from '../types/navigation';
 import LiquidGlassTabBar from './LiquidGlassTabBar';
 

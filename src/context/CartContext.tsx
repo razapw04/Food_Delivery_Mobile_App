@@ -7,6 +7,10 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import {
+  calcVoucherDiscount,
+  type VoucherOffer,
+} from '../screens/user/Voucher/model';
 import {useAuth} from './AuthContext';
 
 export type CartItem = {
@@ -34,6 +38,10 @@ type CartContextValue = {
   items: CartItem[];
   itemCount: number;
   cartTotal: number;
+  appliedVoucher: VoucherOffer | null;
+  discountAmount: number;
+  applyVoucher: (voucher: VoucherOffer) => {ok: true} | {ok: false; error: string};
+  clearVoucher: () => void;
   addItem: (item: AddCartItemInput) => void;
   updateQuantity: (id: string, quantity: number) => void;
   removeItem: (id: string) => void;
@@ -48,6 +56,9 @@ const buildCartItemId = (item: AddCartItemInput) =>
 export const CartProvider = ({children}: {children: React.ReactNode}) => {
   const {user} = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
+  const [appliedVoucher, setAppliedVoucher] = useState<VoucherOffer | null>(
+    null,
+  );
   const lastUserEmailRef = useRef<string | null>(null);
 
   // New / switched accounts always start with an empty cart.
@@ -58,6 +69,7 @@ export const CartProvider = ({children}: {children: React.ReactNode}) => {
     }
     lastUserEmailRef.current = email;
     setItems([]);
+    setAppliedVoucher(null);
   }, [user?.email]);
 
   const addItem = useCallback((input: AddCartItemInput) => {
@@ -105,6 +117,11 @@ export const CartProvider = ({children}: {children: React.ReactNode}) => {
 
   const clearCart = useCallback(() => {
     setItems([]);
+    setAppliedVoucher(null);
+  }, []);
+
+  const clearVoucher = useCallback(() => {
+    setAppliedVoucher(null);
   }, []);
 
   const itemCount = useMemo(
@@ -117,17 +134,65 @@ export const CartProvider = ({children}: {children: React.ReactNode}) => {
     [items],
   );
 
+  const applyVoucher = useCallback(
+    (voucher: VoucherOffer) => {
+      if (cartTotal <= 0) {
+        return {ok: false as const, error: 'Add items to your cart first.'};
+      }
+      if (cartTotal < voucher.minOrder) {
+        return {
+          ok: false as const,
+          error: `Minimum order for this voucher is Rs. ${voucher.minOrder.toLocaleString('en-PK')}.`,
+        };
+      }
+      setAppliedVoucher(voucher);
+      return {ok: true as const};
+    },
+    [cartTotal],
+  );
+
+  const discountAmount = useMemo(
+    () => calcVoucherDiscount(appliedVoucher, cartTotal),
+    [appliedVoucher, cartTotal],
+  );
+
+  // Drop voucher if cart no longer meets minimum.
+  useEffect(() => {
+    if (!appliedVoucher) {
+      return;
+    }
+    if (cartTotal < appliedVoucher.minOrder) {
+      setAppliedVoucher(null);
+    }
+  }, [appliedVoucher, cartTotal]);
+
   const value = useMemo(
     () => ({
       items,
       itemCount,
       cartTotal,
+      appliedVoucher,
+      discountAmount,
+      applyVoucher,
+      clearVoucher,
       addItem,
       updateQuantity,
       removeItem,
       clearCart,
     }),
-    [items, itemCount, cartTotal, addItem, updateQuantity, removeItem, clearCart],
+    [
+      items,
+      itemCount,
+      cartTotal,
+      appliedVoucher,
+      discountAmount,
+      applyVoucher,
+      clearVoucher,
+      addItem,
+      updateQuantity,
+      removeItem,
+      clearCart,
+    ],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

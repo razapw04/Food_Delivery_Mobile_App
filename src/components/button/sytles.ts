@@ -1,11 +1,19 @@
-import { StyleSheet } from 'react-native';
-import { colors, layout, typography } from '../../theme';
+import {StyleSheet} from 'react-native';
+import {
+  colors,
+  getContentMaxWidth,
+  layout,
+  moderateScale,
+  typography,
+} from '../../theme';
 
 export const styles = StyleSheet.create({
   button: {
     width: layout.buttonWidth,
+    maxWidth: Math.min(getContentMaxWidth(), 420),
     height: layout.buttonHeight,
-    borderRadius: 12,
+    alignSelf: 'center',
+    borderRadius: moderateScale(12),
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.primary,
@@ -20,17 +28,17 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: moderateScale(8),
   },
   iconContainer: {
-    borderRadius: 14,
+    borderRadius: moderateScale(14),
     backgroundColor: colors.iconBackground,
     alignItems: 'center',
     justifyContent: 'center',
   },
   icon: {
-    width: 26,
-    height: 26,
+    width: moderateScale(26),
+    height: moderateScale(26),
     resizeMode: 'contain',
   },
 });
