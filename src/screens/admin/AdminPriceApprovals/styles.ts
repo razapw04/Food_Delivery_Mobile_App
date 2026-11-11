@@ -35,7 +35,7 @@ export const styles = StyleSheet.create({
   },
   listContent: {
     padding: spacing.lg,
-    paddingBottom: spacing.xxl,
+    paddingBottom: 120,
     flexGrow: 1,
   },
   banner: {

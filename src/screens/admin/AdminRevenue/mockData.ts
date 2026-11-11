@@ -15,6 +15,8 @@ export type BranchRevenueSnapshot = {
   expenseMonth: number;
   weeklyTrend: WeeklyFinancePoint[];
   topProducts: {name: string; units: number}[];
+  leastProducts: {name: string; units: number}[];
+  hotProducts: {name: string; units: number}[];
   recentSales: {
     id: string;
     title: string;
@@ -46,6 +48,29 @@ export const BRANCH_REVENUE: Record<string, BranchRevenueSnapshot> = {
       {name: 'Pepperoni Feast', units: 42},
       {name: 'Family Feast', units: 31},
       {name: 'BBQ Chicken', units: 28},
+      {name: 'Classic Burger', units: 24},
+      {name: 'Margherita', units: 21},
+      {name: 'Soft Drink Bundle', units: 18},
+      {name: 'Fries Box', units: 14},
+      {name: 'Garlic Bread', units: 9},
+    ],
+    leastProducts: [
+      {name: 'Cheese Sticks', units: 2},
+      {name: 'Garlic Bread', units: 3},
+      {name: 'Soft Drink Bundle', units: 5},
+      {name: 'Fries Box', units: 7},
+      {name: 'Margherita', units: 9},
+      {name: 'Classic Burger', units: 12},
+      {name: 'BBQ Chicken', units: 15},
+      {name: 'Family Feast', units: 18},
+    ],
+    hotProducts: [
+      {name: 'Pepperoni Feast', units: 18},
+      {name: 'BBQ Chicken', units: 14},
+      {name: 'Family Feast', units: 11},
+      {name: 'Classic Burger', units: 9},
+      {name: 'Margherita', units: 7},
+      {name: 'Fries Box', units: 5},
     ],
     recentSales: [
       {id: 'g1', title: 'Order #FD-1042', meta: 'Today · 2:14 PM', amount: 2499},
@@ -75,6 +100,29 @@ export const BRANCH_REVENUE: Record<string, BranchRevenueSnapshot> = {
       {name: 'Classic Burger', units: 38},
       {name: 'Margherita', units: 29},
       {name: 'Family Feast', units: 22},
+      {name: 'Pepperoni Feast', units: 20},
+      {name: 'BBQ Chicken', units: 17},
+      {name: 'Fries Box', units: 13},
+      {name: 'Soft Drink Bundle', units: 11},
+      {name: 'Garlic Bread', units: 8},
+    ],
+    leastProducts: [
+      {name: 'Cheese Sticks', units: 2},
+      {name: 'Soft Drink Bundle', units: 4},
+      {name: 'Garlic Bread', units: 6},
+      {name: 'Fries Box', units: 8},
+      {name: 'BBQ Chicken', units: 10},
+      {name: 'Pepperoni Feast', units: 12},
+      {name: 'Family Feast', units: 14},
+      {name: 'Margherita', units: 16},
+    ],
+    hotProducts: [
+      {name: 'Classic Burger', units: 16},
+      {name: 'Margherita', units: 12},
+      {name: 'Family Feast', units: 9},
+      {name: 'Pepperoni Feast', units: 8},
+      {name: 'BBQ Chicken', units: 6},
+      {name: 'Fries Box', units: 4},
     ],
     recentSales: [
       {id: 'd1', title: 'Order #FD-2048', meta: 'Today · 3:02 PM', amount: 2799},
@@ -104,6 +152,29 @@ export const BRANCH_REVENUE: Record<string, BranchRevenueSnapshot> = {
       {name: 'BBQ Chicken', units: 19},
       {name: 'Soft Drink Bundle', units: 17},
       {name: 'Pepperoni Feast', units: 15},
+      {name: 'Family Feast', units: 12},
+      {name: 'Classic Burger', units: 10},
+      {name: 'Margherita', units: 8},
+      {name: 'Fries Box', units: 6},
+      {name: 'Garlic Bread', units: 4},
+    ],
+    leastProducts: [
+      {name: 'Cheese Sticks', units: 1},
+      {name: 'Margherita', units: 2},
+      {name: 'Fries Box', units: 3},
+      {name: 'Garlic Bread', units: 4},
+      {name: 'Classic Burger', units: 5},
+      {name: 'Family Feast', units: 7},
+      {name: 'Pepperoni Feast', units: 9},
+      {name: 'Soft Drink Bundle', units: 11},
+    ],
+    hotProducts: [
+      {name: 'BBQ Chicken', units: 8},
+      {name: 'Soft Drink Bundle', units: 7},
+      {name: 'Pepperoni Feast', units: 6},
+      {name: 'Family Feast', units: 5},
+      {name: 'Classic Burger', units: 4},
+      {name: 'Margherita', units: 3},
     ],
     recentSales: [
       {id: 'j1', title: 'Order #FD-3011', meta: 'Today · 1:20 PM', amount: 1299},
@@ -133,6 +204,29 @@ export const BRANCH_REVENUE: Record<string, BranchRevenueSnapshot> = {
       {name: 'Family Feast', units: 26},
       {name: 'Classic Burger', units: 21},
       {name: 'Margherita', units: 18},
+      {name: 'Pepperoni Feast', units: 16},
+      {name: 'BBQ Chicken', units: 13},
+      {name: 'Soft Drink Bundle', units: 11},
+      {name: 'Fries Box', units: 9},
+      {name: 'Garlic Bread', units: 6},
+    ],
+    leastProducts: [
+      {name: 'Cheese Sticks', units: 2},
+      {name: 'Garlic Bread', units: 3},
+      {name: 'Soft Drink Bundle', units: 5},
+      {name: 'Fries Box', units: 6},
+      {name: 'BBQ Chicken', units: 8},
+      {name: 'Pepperoni Feast', units: 10},
+      {name: 'Margherita', units: 12},
+      {name: 'Classic Burger', units: 14},
+    ],
+    hotProducts: [
+      {name: 'Family Feast', units: 12},
+      {name: 'Classic Burger', units: 10},
+      {name: 'Margherita', units: 8},
+      {name: 'Pepperoni Feast', units: 7},
+      {name: 'BBQ Chicken', units: 5},
+      {name: 'Soft Drink Bundle', units: 4},
     ],
     recentSales: [
       {id: 'm1', title: 'Order #FD-4015', meta: 'Today · 4:05 PM', amount: 3299},
@@ -142,28 +236,31 @@ export const BRANCH_REVENUE: Record<string, BranchRevenueSnapshot> = {
   },
 };
 
+const mergeNamedUnits = (
+  snapshots: BranchRevenueSnapshot[],
+  key: 'topProducts' | 'leastProducts' | 'hotProducts',
+  sortAsc = false,
+  limit = 4,
+) => {
+  const map = new Map<string, number>();
+  snapshots.forEach(snapshot => {
+    snapshot[key].forEach(product => {
+      map.set(product.name, (map.get(product.name) ?? 0) + product.units);
+    });
+  });
+  return Array.from(map.entries())
+    .map(([name, units]) => ({name, units}))
+    .sort((a, b) => (sortAsc ? a.units - b.units : b.units - a.units))
+    .slice(0, limit);
+};
+
 export const aggregateRevenue = (
   snapshots: BranchRevenueSnapshot[],
 ): BranchRevenueSnapshot => {
-  const topMap = new Map<string, number>();
   const recentSales = snapshots
     .flatMap(item => item.recentSales)
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 6);
-
-  snapshots.forEach(snapshot => {
-    snapshot.topProducts.forEach(product => {
-      topMap.set(
-        product.name,
-        (topMap.get(product.name) ?? 0) + product.units,
-      );
-    });
-  });
-
-  const topProducts = Array.from(topMap.entries())
-    .map(([name, units]) => ({name, units}))
-    .sort((a, b) => b.units - a.units)
-    .slice(0, 4);
 
   const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const weeklyTrend: WeeklyFinancePoint[] = dayLabels.map((label, index) => ({
@@ -188,7 +285,9 @@ export const aggregateRevenue = (
     expenseWeek: snapshots.reduce((sum, item) => sum + item.expenseWeek, 0),
     expenseMonth: snapshots.reduce((sum, item) => sum + item.expenseMonth, 0),
     weeklyTrend,
-    topProducts,
+    topProducts: mergeNamedUnits(snapshots, 'topProducts', false, 20),
+    leastProducts: mergeNamedUnits(snapshots, 'leastProducts', true, 20),
+    hotProducts: mergeNamedUnits(snapshots, 'hotProducts', false, 20),
     recentSales,
   };
 };

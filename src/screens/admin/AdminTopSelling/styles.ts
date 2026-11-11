@@ -1,0 +1,280 @@
+import {StyleSheet} from 'react-native';
+import {colors, spacing, typography} from '../../../theme';
+
+const ink = '#1A1A1A';
+const muted = '#6B7280';
+const pale = '#F5F5F5';
+
+export const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+    backgroundColor: colors.background,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    textAlign: 'center',
+    color: ink,
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: pale,
+  },
+  content: {
+    padding: spacing.md,
+    paddingBottom: 40,
+  },
+  modeRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  modeChip: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#EEF0F3',
+  },
+  modeChipActive: {
+    backgroundColor: '#FFF4EC',
+    borderColor: colors.primary,
+  },
+  modeChipText: {
+    color: muted,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  modeChipTextActive: {
+    color: colors.primary,
+  },
+  toolbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#EEF0F3',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    maxWidth: '58%',
+  },
+  filterChipText: {
+    color: ink,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+    flexShrink: 1,
+  },
+  periodChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 'auto',
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    maxWidth: '40%',
+  },
+  periodChipText: {
+    color: '#FFFFFF',
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+    flexShrink: 1,
+  },
+  sectionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#EEF0F3',
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: 4,
+  },
+  sectionIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionTitle: {
+    color: ink,
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
+    flex: 1,
+  },
+  sectionMeta: {
+    color: muted,
+    fontSize: typography.fontSize.xs,
+    marginBottom: spacing.sm,
+  },
+  insightRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  insightCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#EEF0F3',
+    padding: spacing.sm,
+  },
+  insightLabel: {
+    color: muted,
+    fontSize: 10,
+    fontWeight: typography.fontWeight.semibold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    marginBottom: 4,
+  },
+  insightName: {
+    color: ink,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+  },
+  insightUnits: {
+    marginTop: 2,
+    color: muted,
+    fontSize: typography.fontSize.xs,
+  },
+  emptyText: {
+    color: muted,
+    fontSize: typography.fontSize.sm,
+    textAlign: 'center',
+    paddingVertical: spacing.md,
+  },
+  row: {
+    paddingVertical: spacing.sm,
+  },
+  rowHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: 6,
+  },
+  rankBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    backgroundColor: pale,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rankBadgeTop: {
+    backgroundColor: '#FFF4EC',
+  },
+  rankText: {
+    color: ink,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
+  },
+  rankTextTop: {
+    color: colors.primary,
+  },
+  name: {
+    flex: 1,
+    color: ink,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
+  },
+  units: {
+    color: muted,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  progressTrack: {
+    height: 7,
+    borderRadius: 999,
+    backgroundColor: '#F3F4F6',
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: colors.primary,
+  },
+  branchModalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  branchModalSheet: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+    maxHeight: '70%',
+  },
+  branchModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  branchModalTitle: {
+    color: ink,
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
+  },
+  branchModalList: {
+    maxHeight: 360,
+  },
+  branchModalOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: spacing.sm,
+    borderRadius: 12,
+  },
+  branchModalOptionActive: {
+    backgroundColor: '#FFF4EC',
+  },
+  branchModalOptionText: {
+    color: ink,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
+  },
+  branchModalOptionTextActive: {
+    color: colors.primary,
+    fontWeight: typography.fontWeight.bold,
+  },
+});

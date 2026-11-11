@@ -22,6 +22,8 @@ import {
   type StaffHomeRoute,
   type UserRole,
 } from '../storage/authStorage';
+import {listInventoryRequests} from '../storage/inventoryRequestsStorage';
+import type {ManagerInventoryAlertPayload} from '../components/ManagerInventoryAlertModal';
 
 export type AuthUser = {
   name: string;
@@ -46,6 +48,15 @@ type AuthContextValue = {
   isStaff: boolean;
   /** Superadmin always; managers only if superadmin granted revenue access. */
   canViewRevenue: boolean;
+  /** One-shot welcome after superadmin login / app restore. */
+  pendingSuperAdminWelcome: boolean;
+  consumeSuperAdminWelcome: () => void;
+  /** One-shot inventory pending alert after manager login / restore. */
+  pendingInventoryLoginAlert: ManagerInventoryAlertPayload | null;
+  consumeInventoryLoginAlert: () => void;
+  /** One-shot approved-inventory alert after cashier login / restore. */
+  pendingCashierInventoryAlert: ManagerInventoryAlertPayload | null;
+  consumeCashierInventoryAlert: () => void;
   login: (
     email: string,
     password: string,
@@ -66,11 +77,71 @@ type AuthContextValue = {
   logout: () => Promise<void>;
 };
 
+const buildManagerInventoryAlert = async (
+  branchId: string | null,
+): Promise<ManagerInventoryAlertPayload | null> => {
+  if (!branchId) {
+    return null;
+  }
+  const pending = await listInventoryRequests({
+    branchId,
+    status: 'pending',
+  });
+  if (pending.length === 0) {
+    return null;
+  }
+  const first = pending[0];
+  const summary =
+    pending.length === 1
+      ? `${first.requestedByName} requested ${first.requestedQuantity} ${first.unit} of ${first.itemName} for ${first.branchName}.`
+      : `${pending.length} inventory requests waiting for approval. Latest: ${first.itemName} (${first.requestedQuantity} ${first.unit}).`;
+  return {count: pending.length, summary};
+};
+
+const buildCashierInventoryAlert = async (
+  branchId: string | null,
+): Promise<ManagerInventoryAlertPayload | null> => {
+  if (!branchId) {
+    return null;
+  }
+  const awaiting = await listInventoryRequests({
+    branchId,
+    status: 'approved',
+  });
+  if (awaiting.length === 0) {
+    return null;
+  }
+  const first = awaiting[0];
+  const summary =
+    awaiting.length === 1
+      ? `Arrange ${first.requestedQuantity} ${first.unit} of ${first.itemName} with cash (approved by ${first.reviewedByName ?? 'manager'}).`
+      : `${awaiting.length} approved inventory items need cash arrangement. Latest: ${first.itemName}.`;
+  return {count: awaiting.length, summary};
+};
+
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const AuthProvider = ({children}: {children: React.ReactNode}) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingSuperAdminWelcome, setPendingSuperAdminWelcome] =
+    useState(false);
+  const [pendingInventoryLoginAlert, setPendingInventoryLoginAlert] =
+    useState<ManagerInventoryAlertPayload | null>(null);
+  const [pendingCashierInventoryAlert, setPendingCashierInventoryAlert] =
+    useState<ManagerInventoryAlertPayload | null>(null);
+
+  const consumeSuperAdminWelcome = useCallback(() => {
+    setPendingSuperAdminWelcome(false);
+  }, []);
+
+  const consumeInventoryLoginAlert = useCallback(() => {
+    setPendingInventoryLoginAlert(null);
+  }, []);
+
+  const consumeCashierInventoryAlert = useCallback(() => {
+    setPendingCashierInventoryAlert(null);
+  }, []);
 
   const logout = useCallback(async () => {
     try {
@@ -85,6 +156,9 @@ const AuthProvider = ({children}: {children: React.ReactNode}) => {
       // ignore storage errors — still end the session locally
     }
 
+    setPendingSuperAdminWelcome(false);
+    setPendingInventoryLoginAlert(null);
+    setPendingCashierInventoryAlert(null);
     setUser(null);
     queryClient.clear();
   }, []);
@@ -96,6 +170,21 @@ const AuthProvider = ({children}: {children: React.ReactNode}) => {
         const sessionUser = await getSessionUser();
         if (sessionUser) {
           setUser(sessionUser);
+          if (sessionUser.role === 'superadmin') {
+            setPendingSuperAdminWelcome(true);
+          }
+          if (sessionUser.role === 'manager') {
+            const alert = await buildManagerInventoryAlert(
+              sessionUser.branchId,
+            );
+            setPendingInventoryLoginAlert(alert);
+          }
+          if (sessionUser.role === 'cashier') {
+            const alert = await buildCashierInventoryAlert(
+              sessionUser.branchId,
+            );
+            setPendingCashierInventoryAlert(alert);
+          }
         }
       } finally {
         setIsLoading(false);
@@ -156,6 +245,19 @@ const AuthProvider = ({children}: {children: React.ReactNode}) => {
     };
     await saveSessionUser(authUser);
     setUser(authUser);
+    setPendingSuperAdminWelcome(authUser.role === 'superadmin');
+    if (authUser.role === 'manager') {
+      const alert = await buildManagerInventoryAlert(authUser.branchId);
+      setPendingInventoryLoginAlert(alert);
+      setPendingCashierInventoryAlert(null);
+    } else if (authUser.role === 'cashier') {
+      const alert = await buildCashierInventoryAlert(authUser.branchId);
+      setPendingCashierInventoryAlert(alert);
+      setPendingInventoryLoginAlert(null);
+    } else {
+      setPendingInventoryLoginAlert(null);
+      setPendingCashierInventoryAlert(null);
+    }
     return {
       ok: true as const,
       homeRoute: getHomeRouteForRole(authUser.role),
@@ -201,6 +303,12 @@ const AuthProvider = ({children}: {children: React.ReactNode}) => {
       isKitchen,
       isStaff,
       canViewRevenue,
+      pendingSuperAdminWelcome,
+      consumeSuperAdminWelcome,
+      pendingInventoryLoginAlert,
+      consumeInventoryLoginAlert,
+      pendingCashierInventoryAlert,
+      consumeCashierInventoryAlert,
       login,
       signup,
       updateProfile,
@@ -216,6 +324,12 @@ const AuthProvider = ({children}: {children: React.ReactNode}) => {
       isKitchen,
       isStaff,
       canViewRevenue,
+      pendingSuperAdminWelcome,
+      consumeSuperAdminWelcome,
+      pendingInventoryLoginAlert,
+      consumeInventoryLoginAlert,
+      pendingCashierInventoryAlert,
+      consumeCashierInventoryAlert,
       login,
       signup,
       updateProfile,

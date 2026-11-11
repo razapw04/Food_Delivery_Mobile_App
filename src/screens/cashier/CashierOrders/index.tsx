@@ -12,25 +12,51 @@ import {
   type StoredOrder,
 } from '../../../storage/orderStorage';
 import {
-  canSelectStatus,
   formatOrderPrice,
-  formatOrderWhen,
+  formatOrderTime,
+  formatWaitLabel,
+  getOrderTimePriority,
+  type OrderTimePriority,
 } from '../../../utils/orderStatus';
 import {channelLabel} from '../../../utils/revenueFromOrders';
 import {styles} from './styles';
 import useController from './useController';
 
+const priorityStyles: Record<
+  OrderTimePriority,
+  {badge: object; text: object; card: object}
+> = {
+  low: {
+    badge: styles.priorityBadgeLow,
+    text: styles.priorityTextLow,
+    card: styles.orderCardPriorityLow,
+  },
+  normal: {
+    badge: styles.priorityBadgeNormal,
+    text: styles.priorityTextNormal,
+    card: styles.orderCardPriorityNormal,
+  },
+  high: {
+    badge: styles.priorityBadgeHigh,
+    text: styles.priorityTextHigh,
+    card: styles.orderCardPriorityHigh,
+  },
+  urgent: {
+    badge: styles.priorityBadgeUrgent,
+    text: styles.priorityTextUrgent,
+    card: styles.orderCardPriorityUrgent,
+  },
+};
+
 const modeLabel = (order: StoredOrder) => {
   if (order.orderMode === 'dine_in') {
-    return isOpenDineInTab(order) ? 'Dine-in · Open tab' : 'Dine-in · Closed';
+    return isOpenDineInTab(order) ? 'Open tab' : 'Closed';
   }
   if (order.orderMode === 'pickup') {
     return 'Pickup';
   }
   return 'Delivery';
 };
-
-const CASHIER_ACTION_OPTIONS: OrderStatus[] = ['Confirmed', 'Cancelled'];
 
 const statusStyles: Record<OrderStatus, {badge: object; text: object}> = {
   Pending: {
@@ -59,173 +85,134 @@ const statusStyles: Record<OrderStatus, {badge: object; text: object}> = {
   },
 };
 
-const CashierOrderCard = ({
+const BriefOrderCard = ({
   order,
   busy,
   onUpdateStatus,
-  onPrintSlip,
-  onAddToTab,
+  onEditTab,
   onCloseTab,
+  onOpenHistory,
 }: {
   order: StoredOrder;
   busy: boolean;
   onUpdateStatus: (orderId: string, status: OrderStatus) => void;
-  onPrintSlip: (order: StoredOrder) => void;
-  onAddToTab: (order: StoredOrder) => void;
+  onEditTab: (order: StoredOrder) => void;
   onCloseTab: (order: StoredOrder) => void;
+  onOpenHistory: () => void;
 }) => {
   const status = order.status ?? 'Pending';
   const statusStyle = statusStyles[status] ?? statusStyles.Pending;
-  const itemsSummary = (order.items ?? [])
-    .map(item => `${item.quantity}x ${item.name}`)
-    .join(', ');
   const canConfirm = status === 'Pending';
-  const canPrint = status !== 'Pending' && status !== 'Cancelled';
   const openTab = isOpenDineInTab(order);
-
   const channel = resolveOrderChannel(order);
   const isPos = channel === 'pos';
+  const itemCount = (order.items ?? []).reduce(
+    (sum, item) => sum + item.quantity,
+    0,
+  );
+  const priority = getOrderTimePriority(order.createdAt);
+  const priorityStyle = priorityStyles[priority.level];
 
   return (
-    <View style={styles.orderCard}>
-      <View
-        style={[styles.channelBadge, isPos ? styles.channelBadgePos : null]}>
-        <Text
-          style={[
-            styles.channelBadgeText,
-            isPos ? styles.channelBadgeTextPos : null,
-          ]}>
-          {channelLabel(channel)}
-          {order.orderMode === 'dine_in' ? ' · Dine-in' : ''}
-        </Text>
-      </View>
-      <View style={styles.orderTopRow}>
-        <Text style={styles.orderId}>{order.orderId}</Text>
-        <View style={styles.topRight}>
-          {canPrint ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Print slip for ${order.orderId}`}
-              disabled={busy}
-              onPress={() => onPrintSlip(order)}
-              style={styles.printIconButton}>
-              <Icon name="printer" size={18} color="#FF7622" />
-            </Pressable>
-          ) : null}
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Active order for ${order.customerName || 'customer'}, ${priority.label} priority`}
+      style={[styles.orderCard, priorityStyle.card]}
+      onPress={onOpenHistory}>
+      <View style={styles.briefTopRow}>
+        <View style={styles.briefLeft}>
+          <Text style={styles.customerName} numberOfLines={1}>
+            {order.customerName || 'Customer'}
+          </Text>
+          <Text style={styles.briefMeta} numberOfLines={1}>
+            {order.tableNo ? `Table ${order.tableNo} · ` : ''}
+            {channelLabel(channel)} · {modeLabel(order)}
+          </Text>
+          <Text style={styles.briefMeta} numberOfLines={1}>
+            {itemCount} item{itemCount === 1 ? '' : 's'} ·{' '}
+            {formatOrderPrice(order.totalAmount)}
+          </Text>
+        </View>
+
+        <View style={styles.briefCenter}>
+          <Text style={styles.orderTimeBold}>
+            {formatOrderTime(order.createdAt)}
+          </Text>
+          <Text style={styles.orderTimeCaption}>Ordered</Text>
+          <View style={[styles.priorityBadge, priorityStyle.badge]}>
+            <Text style={[styles.priorityText, priorityStyle.text]}>
+              {priority.label} · {formatWaitLabel(priority.waitMinutes)}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.briefRight}>
+          <View
+            style={[
+              styles.channelDot,
+              isPos ? styles.channelDotPos : styles.channelDotOnline,
+            ]}
+          />
           <View style={[styles.statusBadge, statusStyle.badge]}>
             <Text style={[styles.statusText, statusStyle.text]}>{status}</Text>
           </View>
+          <Text style={styles.activeLabel}>Active</Text>
         </View>
       </View>
 
-      {order.tableNo ? (
-        <Text style={styles.tableLine}>Table {order.tableNo}</Text>
-      ) : null}
-      <Text style={styles.customerName}>{order.customerName || 'Customer'}</Text>
-      {order.waiterName ? (
-        <Text style={styles.customerEmail}>Waiter: {order.waiterName}</Text>
-      ) : null}
-      <Text style={styles.customerEmail}>{order.customerEmail}</Text>
-      <Text style={styles.orderDetails} numberOfLines={3}>
-        {itemsSummary || 'No items'}
-      </Text>
+      {(openTab || canConfirm) && (
+        <View style={styles.briefActions}>
+          {openTab ? (
+            <>
+              <Pressable
+                accessibilityRole="button"
+                disabled={busy}
+                onPress={event => {
+                  event.stopPropagation?.();
+                  onEditTab(order);
+                }}
+                style={[
+                  styles.confirmButton,
+                  styles.tabActionButton,
+                  busy ? styles.confirmButtonDisabled : null,
+                ]}>
+                <Text style={styles.confirmButtonText}>Edit</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                disabled={busy}
+                onPress={event => {
+                  event.stopPropagation?.();
+                  onCloseTab(order);
+                }}
+                style={[
+                  styles.closeTabButton,
+                  busy ? styles.confirmButtonDisabled : null,
+                ]}>
+                <Text style={styles.closeTabButtonText}>Pay & close</Text>
+              </Pressable>
+            </>
+          ) : null}
 
-      <View style={styles.metaRow}>
-        <Text style={styles.metaText}>
-          {formatOrderWhen(order.createdAt)} · {modeLabel(order)}
-        </Text>
-        <Text style={styles.orderPrice}>{formatOrderPrice(order.totalAmount)}</Text>
-      </View>
-
-      {order.deliveryAddress ? (
-        <Text style={styles.addressText} numberOfLines={2}>
-          {order.deliveryAddress}
-        </Text>
-      ) : null}
-
-      <View style={styles.actionsWrap}>
-        {openTab ? (
-          <View style={styles.chipsRow}>
+          {canConfirm ? (
             <Pressable
               accessibilityRole="button"
               disabled={busy}
-              onPress={() => onAddToTab(order)}
+              onPress={event => {
+                event.stopPropagation?.();
+                onUpdateStatus(order.id, 'Confirmed');
+              }}
               style={[
                 styles.confirmButton,
-                styles.tabActionButton,
+                styles.briefConfirmFull,
                 busy ? styles.confirmButtonDisabled : null,
               ]}>
-              <Text style={styles.confirmButtonText}>Add items</Text>
+              <Text style={styles.confirmButtonText}>Confirm</Text>
             </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              disabled={busy}
-              onPress={() => onCloseTab(order)}
-              style={[
-                styles.closeTabButton,
-                busy ? styles.confirmButtonDisabled : null,
-              ]}>
-              <Text style={styles.closeTabButtonText}>Close tab</Text>
-            </Pressable>
-          </View>
-        ) : null}
-
-        {canConfirm ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Confirm order ${order.orderId}`}
-            disabled={busy}
-            onPress={() => onUpdateStatus(order.id, 'Confirmed')}
-            style={[
-              styles.confirmButton,
-              busy ? styles.confirmButtonDisabled : null,
-            ]}>
-            <Text style={styles.confirmButtonText}>Confirm Order</Text>
-          </Pressable>
-        ) : null}
-
-        {!openTab ? (
-          <>
-            <Text style={styles.statusLabel}>Update status</Text>
-            <View style={styles.chipsRow}>
-              {CASHIER_ACTION_OPTIONS.map(option => {
-                const active = option === status;
-                const allowed = canSelectStatus(status, option, 'cashier');
-                const disabled = busy || active || !allowed;
-                return (
-                  <Pressable
-                    key={option}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Set status to ${option}`}
-                    accessibilityState={{disabled, selected: active}}
-                    disabled={disabled}
-                    onPress={() => onUpdateStatus(order.id, option)}
-                    style={[
-                      styles.chip,
-                      active ? styles.chipActive : null,
-                      !active && !allowed ? styles.chipDisabled : null,
-                    ]}>
-                    <Text
-                      style={[
-                        styles.chipText,
-                        active ? styles.chipTextActive : null,
-                        !active && !allowed ? styles.chipTextDisabled : null,
-                      ]}>
-                      {option}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </>
-        ) : (
-          <Text style={styles.addressText}>
-            Tab stays open until guest finishes. Add mid-meal items anytime,
-            then Close tab for the final slip.
-          </Text>
-        )}
-      </View>
-    </View>
+          ) : null}
+        </View>
+      )}
+    </Pressable>
   );
 };
 
@@ -234,6 +221,7 @@ const CashierOrdersScreen = () => {
     navigation,
     channelTab,
     setChannelTab,
+    activeCount,
     onlineCount,
     posCount,
     orders,
@@ -243,12 +231,15 @@ const CashierOrdersScreen = () => {
     errorMessage,
     handleLogout,
     handleUpdateStatus,
-    handleAddToTab,
+    handleEditTab,
     handleCloseTab,
     handleRetry,
-    setSlipOrder,
     closeSlip,
   } = useController();
+
+  const openHistory = () => {
+    navigation.navigate('CashierOrderHistory');
+  };
 
   const listEmpty = () => {
     if (errorMessage) {
@@ -263,15 +254,20 @@ const CashierOrdersScreen = () => {
       );
     }
 
+    const emptyTitle =
+      channelTab === 'all'
+        ? 'No active orders'
+        : channelTab === 'pos'
+          ? 'No active POS orders'
+          : 'No active online orders';
+
     return (
       <StateMessage
         icon="clipboard-list-outline"
-        title={channelTab === 'pos' ? 'No POS orders' : 'No online orders'}
-        subtitle={
-          channelTab === 'pos'
-            ? 'Walk-in POS orders for this branch will show here.'
-            : 'Customer app orders for this branch will show here.'
-        }
+        title={emptyTitle}
+        subtitle="Online + POS active orders show together in All. Closed orders stay in History."
+        actionLabel="Open History"
+        onAction={openHistory}
       />
     );
   };
@@ -282,7 +278,7 @@ const CashierOrdersScreen = () => {
 
       <View style={styles.header}>
         <View style={styles.backButton} />
-        <Text style={styles.headerTitle}>Cashier Orders</Text>
+        <Text style={styles.headerTitle}>Active Orders</Text>
         <Pressable
           accessibilityLabel="Logout"
           accessibilityRole="button"
@@ -292,30 +288,22 @@ const CashierOrdersScreen = () => {
         </Pressable>
       </View>
 
-      <View style={styles.staffNav}>
-        <Pressable
-          accessibilityRole="button"
-          style={[styles.staffNavButton, styles.staffNavButtonActive]}>
-          <Icon name="clipboard-list-outline" size={18} color="#FF7622" />
-          <Text style={styles.staffNavText}>Orders</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          style={styles.staffNavButton}
-          onPress={() => navigation.navigate('CashierPOS')}>
-          <Icon name="point-of-sale" size={18} color="#FF7622" />
-          <Text style={styles.staffNavText}>POS</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          style={styles.staffNavButton}
-          onPress={() => navigation.navigate('CashierSales')}>
-          <Icon name="chart-line" size={18} color="#FF7622" />
-          <Text style={styles.staffNavText}>Branch Sales</Text>
-        </Pressable>
-      </View>
-
       <View style={styles.channelTabs}>
+        <Pressable
+          accessibilityRole="button"
+          style={[
+            styles.channelTab,
+            channelTab === 'all' && styles.channelTabActive,
+          ]}
+          onPress={() => setChannelTab('all')}>
+          <Text
+            style={[
+              styles.channelTabText,
+              channelTab === 'all' && styles.channelTabTextActive,
+            ]}>
+            All ({activeCount})
+          </Text>
+        </Pressable>
         <Pressable
           accessibilityRole="button"
           style={[
@@ -358,13 +346,13 @@ const CashierOrdersScreen = () => {
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={listEmpty}
           renderItem={({item}) => (
-            <CashierOrderCard
+            <BriefOrderCard
               order={item}
               busy={updatingId === item.id}
               onUpdateStatus={handleUpdateStatus}
-              onPrintSlip={setSlipOrder}
-              onAddToTab={handleAddToTab}
+              onEditTab={handleEditTab}
               onCloseTab={handleCloseTab}
+              onOpenHistory={openHistory}
             />
           )}
         />
@@ -374,6 +362,7 @@ const CashierOrdersScreen = () => {
         visible={!!slipOrder}
         order={slipOrder}
         onClose={closeSlip}
+        onEditOpenTab={handleEditTab}
       />
     </SafeAreaView>
   );

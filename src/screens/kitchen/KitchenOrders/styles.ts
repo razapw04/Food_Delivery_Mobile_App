@@ -18,7 +18,11 @@ export const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
   },
-  backButton: {
+  headerSide: {
+    width: 40,
+    height: 40,
+  },
+  logoutButton: {
     width: 40,
     height: 40,
     borderRadius: 20,

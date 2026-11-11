@@ -45,6 +45,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
+    minHeight: 48,
   },
 
   logo: {

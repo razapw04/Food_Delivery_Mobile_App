@@ -134,28 +134,45 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
         ...(isSuperAdmin
           ? [
               {
-                key: 'admin-orders',
-                label: 'Manage Orders',
-                icon: 'clipboard-list-outline',
-                onPress: () => navigation.navigate('AdminOrders'),
-              },
-              {
-                key: 'admin-products',
-                label: 'Manage Products',
-                icon: 'food',
-                onPress: () => navigation.navigate('AdminProducts'),
-              },
-              {
                 key: 'admin-revenue',
                 label: 'Revenue & Sales',
                 icon: 'chart-line',
-                onPress: () => navigation.navigate('AdminRevenue'),
+                onPress: () =>
+                  navigation.navigate('AdminTabs', {screen: 'AdminRevenue'}),
+              },
+              {
+                key: 'admin-live-sales',
+                label: 'Live Sales',
+                icon: 'cash-multiple',
+                onPress: () =>
+                  navigation.navigate('AdminTabs', {screen: 'AdminLiveSales'}),
+              },
+              {
+                key: 'admin-branches',
+                label: 'Manage Branches',
+                icon: 'store-outline',
+                onPress: () =>
+                  navigation.navigate('AdminTabs', {screen: 'AdminBranches'}),
               },
               {
                 key: 'admin-admins',
                 label: 'Manage Staff',
                 icon: 'account-key',
-                onPress: () => navigation.navigate('AdminAdmins'),
+                onPress: () =>
+                  navigation.navigate('AdminTabs', {screen: 'AdminAdmins'}),
+              },
+              {
+                key: 'admin-products',
+                label: 'Manage Menu',
+                icon: 'food',
+                onPress: () =>
+                  navigation.navigate('AdminTabs', {screen: 'AdminProducts'}),
+              },
+              {
+                key: 'admin-orders',
+                label: 'Manage Orders',
+                icon: 'clipboard-list-outline',
+                onPress: () => navigation.navigate('AdminOrders'),
               },
               {
                 key: 'admin-approvals',
@@ -163,30 +180,63 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
                 icon: 'clipboard-check-outline',
                 onPress: () => navigation.navigate('AdminPriceApprovals'),
               },
+              {
+                key: 'admin-inventory-requests',
+                label: 'Inventory Requests',
+                icon: 'package-variant-closed',
+                onPress: () => navigation.navigate('AdminInventoryRequests'),
+              },
             ]
           : [
-              {
-                key: 'admin-orders',
-                label: 'Manage Orders',
-                icon: 'clipboard-list-outline',
-                onPress: () => navigation.navigate('AdminOrders'),
-              },
-              {
-                key: 'admin-products',
-                label: 'Request Price Change',
-                icon: 'tag-outline',
-                onPress: () => navigation.navigate('AdminProducts'),
-              },
               ...(canViewRevenue
                 ? [
                     {
                       key: 'admin-revenue',
-                      label: 'My Branch Revenue',
+                      label: 'Branch Sales',
                       icon: 'chart-line',
-                      onPress: () => navigation.navigate('AdminRevenue'),
+                      onPress: () =>
+                        navigation.navigate('AdminTabs', {
+                          screen: 'AdminRevenue',
+                        }),
+                    },
+                    {
+                      key: 'admin-live-sales',
+                      label: 'Live Sales',
+                      icon: 'cash-multiple',
+                      onPress: () =>
+                        navigation.navigate('AdminTabs', {
+                          screen: 'AdminLiveSales',
+                        }),
                     },
                   ]
                 : []),
+              {
+                key: 'admin-orders',
+                label: 'Manage Orders',
+                icon: 'clipboard-list-outline',
+                onPress: () =>
+                  navigation.navigate('AdminTabs', {screen: 'AdminOrders'}),
+              },
+              {
+                key: 'admin-employees',
+                label: 'Branch Employees',
+                icon: 'account-group-outline',
+                onPress: () =>
+                  navigation.navigate('AdminTabs', {screen: 'AdminAdmins'}),
+              },
+              {
+                key: 'admin-products',
+                label: 'Menu / Prices',
+                icon: 'food',
+                onPress: () =>
+                  navigation.navigate('AdminTabs', {screen: 'AdminProducts'}),
+              },
+              {
+                key: 'admin-inventory-requests',
+                label: 'Inventory Requests',
+                icon: 'package-variant-closed',
+                onPress: () => navigation.navigate('AdminInventoryRequests'),
+              },
             ]),
         logoutItem,
       ]
@@ -196,19 +246,38 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
             key: 'cashier-orders',
             label: 'Orders',
             icon: 'clipboard-list-outline',
-            onPress: () => navigation.navigate('CashierOrders'),
+            onPress: () =>
+              navigation.navigate('CashierTabs', {screen: 'CashierOrders'}),
           },
           {
             key: 'cashier-pos',
             label: 'POS',
             icon: 'point-of-sale',
-            onPress: () => navigation.navigate('CashierPOS'),
+            onPress: () =>
+              navigation.navigate('CashierTabs', {screen: 'CashierPOS'}),
+          },
+          {
+            key: 'cashier-history',
+            label: 'Order History',
+            icon: 'history',
+            onPress: () =>
+              navigation.navigate('CashierTabs', {
+                screen: 'CashierOrderHistory',
+              }),
           },
           {
             key: 'cashier-sales',
             label: 'Branch Sales',
             icon: 'chart-line',
-            onPress: () => navigation.navigate('CashierSales'),
+            onPress: () =>
+              navigation.navigate('CashierTabs', {screen: 'CashierSales'}),
+          },
+          {
+            key: 'cashier-inventory',
+            label: 'Inventory Cash',
+            icon: 'cash-multiple',
+            onPress: () =>
+              navigation.navigate('CashierTabs', {screen: 'CashierInventory'}),
           },
           logoutItem,
         ]
@@ -218,7 +287,8 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
               key: 'kitchen-orders',
               label: 'Kitchen Orders',
               icon: 'chef-hat',
-              onPress: () => navigation.navigate('KitchenOrders'),
+              onPress: () =>
+                navigation.navigate('KitchenTabs', {screen: 'KitchenOrders'}),
             },
             logoutItem,
           ]
@@ -316,9 +386,7 @@ const SideDrawer = ({visible, onClose}: SideDrawerProps) => {
                     </View>
                   ) : null}
                 </Pressable>
-              ) : (
-                <View style={styles.notificationButton} />
-              )}
+              ) : null}
             </View>
 
             <ScrollView

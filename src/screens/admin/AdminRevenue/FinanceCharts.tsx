@@ -1,31 +1,48 @@
-import React, {useMemo} from 'react';
-import {Text, View} from 'react-native';
+import React, {useMemo, useState} from 'react';
+import {Pressable, ScrollView, Text, View} from 'react-native';
 import {BarChart, LineChart, PieChart} from 'react-native-gifted-charts';
+import type {RevenuePeriod} from '../../../components/ChannelRevenueCards';
 import {useResponsive} from '../../../hooks/useResponsive';
-import type {BranchRevenueSnapshot, WeeklyFinancePoint} from './mockData';
+import {colors} from '../../../theme';
+import type {HourlyFinancePoint} from '../../../utils/revenueFromOrders';
 import {styles} from './styles';
 
 const INCOME_COLOR = '#16A34A';
 const EXPENSE_COLOR = '#DC2626';
 
-const useChartWidth = () => {
+type ChartMode = 'trend' | 'compare' | 'split';
+type ChartPoint = HourlyFinancePoint;
+
+const useChartWidth = (
+  pointCount: number,
+  options?: {
+    perPoint?: number;
+    fitScreenMaxPoints?: number;
+    /** Always use screen width (no horizontal overflow / scroll). */
+    forceFitScreen?: boolean;
+  },
+) => {
   const {cardWidth} = useResponsive();
-  return Math.max(cardWidth - 24, 260);
+  // Weekly (≤7–8 pts): slightly wider than card so x-axis breathes a bit.
+  const screenWidth = Math.max(cardWidth + 24, 320);
+  const fitMax = options?.fitScreenMaxPoints ?? 8;
+  if (options?.forceFitScreen || pointCount <= fitMax) {
+    return screenWidth;
+  }
+  const perPoint = options?.perPoint ?? 48;
+  return Math.max(screenWidth, pointCount * perPoint);
 };
 
-const AXIS_SECTIONS = 4;
-
-/** Even round steps so Y ticks land on clean ranges like 0–20k, 20k–40k. */
 const EVEN_AXIS_STEPS = [
-  1000, 2000, 4000, 5000, 10000, 20000, 25000, 40000, 50000, 100000, 200000,
-  250000, 400000, 500000, 1000000,
+  500, 1000, 2000, 4000, 5000, 10000, 20000, 25000, 40000, 50000, 100000,
+  200000, 250000, 400000, 500000, 1000000,
 ];
 
 const formatShort = (value: number) => {
   if (value >= 1000) {
     return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`;
   }
-  return String(value);
+  return String(Math.round(value));
 };
 
 const formatAxisLabel = (raw: string) => {
@@ -33,19 +50,10 @@ const formatAxisLabel = (raw: string) => {
   if (!Number.isFinite(value)) {
     return raw;
   }
-  if (value >= 1000) {
-    const thousands = value / 1000;
-    const label =
-      Number.isInteger(thousands) || value >= 10000
-        ? `${Math.round(thousands)}k`
-        : `${thousands.toFixed(1)}k`;
-    return label;
-  }
-  return String(Math.round(value));
+  return formatShort(value);
 };
 
-/** Pick even step + max so sections are equal (e.g. 0, 20k, 40k, 60k, 80k). */
-const getEvenAxisScale = (values: number[], sections = AXIS_SECTIONS) => {
+const getEvenAxisScale = (values: number[], sections = 4) => {
   const peak = Math.max(0, ...values.filter(Number.isFinite), 0);
   const needed = Math.max(peak, 1);
 
@@ -64,31 +72,236 @@ const getEvenAxisScale = (values: number[], sections = AXIS_SECTIONS) => {
   };
 };
 
-const Legend = () => (
+const shortenLabel = (label: string, isHourly?: boolean) => {
+  if (isHourly) {
+    return label;
+  }
+  // "11 Nov" / "Mon" / "Mar 26"
+  if (label.length <= 6) {
+    return label;
+  }
+  const parts = label.split(' ');
+  if (parts.length >= 2) {
+    return `${parts[0]}\n${parts[1]}`;
+  }
+  return label.slice(0, 5);
+};
+
+const Legend = ({showExpense}: {showExpense: boolean}) => (
   <View style={styles.legendRow}>
     <View style={styles.legendItem}>
       <View style={[styles.legendDot, {backgroundColor: INCOME_COLOR}]} />
       <Text style={styles.legendText}>Income</Text>
     </View>
-    <View style={styles.legendItem}>
-      <View style={[styles.legendDot, {backgroundColor: EXPENSE_COLOR}]} />
-      <Text style={styles.legendText}>Expense</Text>
-    </View>
+    {showExpense ? (
+      <View style={styles.legendItem}>
+        <View style={[styles.legendDot, {backgroundColor: EXPENSE_COLOR}]} />
+        <Text style={styles.legendText}>Expense</Text>
+      </View>
+    ) : null}
   </View>
 );
 
-const WeeklyBarChart = ({data}: {data: WeeklyFinancePoint[]}) => {
-  const chartWidth = useChartWidth();
-  const points = data.length > 0 ? data : [{label: '-', income: 0, expense: 0}];
+const ChartEmpty = ({subtitle}: {subtitle: string}) => (
+  <View style={styles.chartEmpty}>
+    <Text style={styles.chartSubtitle}>{subtitle}</Text>
+    <Text style={styles.chartEmptyText}>No sales in this range yet.</Text>
+  </View>
+);
 
-  const barData = useMemo(
+const TrendLineChart = ({
+  data,
+  subtitle,
+  isHourly,
+}: {
+  data: ChartPoint[];
+  subtitle: string;
+  isHourly?: boolean;
+}) => {
+  const points = data.length > 0 ? data : [];
+  // Today (hourly): lock to screen width so x-axis is not scrollable.
+  const chartWidth = useChartWidth(Math.max(points.length, 1), {
+    perPoint: isHourly ? 56 : 48,
+    fitScreenMaxPoints: isHourly ? 24 : 8,
+    forceFitScreen: Boolean(isHourly),
+  });
+  const hasIncome = points.some(item => item.income > 0);
+
+  const incomeData = useMemo(
     () =>
-      points.flatMap(item => [
+      points.map((item, index) => {
+        const labelEvery = isHourly
+          ? points.length <= 8
+            ? 1
+            : points.length <= 14
+              ? 2
+              : 3
+          : points.length <= 10
+            ? 1
+            : Math.ceil(points.length / 8);
+        const showLabel =
+          index === 0 ||
+          index === points.length - 1 ||
+          index % labelEvery === 0;
+        return {
+          value: Math.max(item.income, 0),
+          label: showLabel ? shortenLabel(item.label, isHourly) : '',
+          labelTextStyle: {
+            color: '#9CA3AF',
+            fontSize: isHourly ? 9 : 10,
+            width: isHourly ? 36 : undefined,
+          },
+        };
+      }),
+    [isHourly, points],
+  );
+
+  const initialSpacing = isHourly ? 18 : 12;
+  const endSpacing = isHourly ? 22 : 16;
+  // Spread hours across full width (max gap that still fits — no scroll).
+  const spacing = isHourly
+    ? Math.max(
+        1,
+        Math.floor(
+          (chartWidth - initialSpacing - endSpacing) /
+            Math.max(points.length, 1),
+        ),
+      )
+    : Math.max(
+        Math.floor((chartWidth - 20) / Math.max(points.length, 1)) - 4,
+        36,
+      );
+
+  const axis = useMemo(
+    () => getEvenAxisScale(points.map(item => item.income), 4),
+    [points],
+  );
+
+  if (!hasIncome) {
+    return <ChartEmpty subtitle={subtitle} />;
+  }
+
+  const chart = (
+    <LineChart
+      key={`line-${points.length}-${subtitle}-${isHourly ? 'h' : 'd'}`}
+      data={incomeData}
+      height={210}
+      width={chartWidth}
+      spacing={spacing}
+      initialSpacing={initialSpacing}
+      endSpacing={endSpacing}
+      areaChart
+      curved
+      color={colors.primary}
+      startFillColor={colors.primary}
+      endFillColor={colors.primary}
+      startOpacity={0.28}
+      endOpacity={0.02}
+      thickness={3}
+      hideDataPoints={points.length > 16}
+      dataPointsColor={colors.primary}
+      dataPointsRadius={3.5}
+      focusedDataPointColor={colors.primary}
+      focusedDataPointRadius={5}
+      hideRules={false}
+      rulesColor="#F3F4F6"
+      rulesType="solid"
+      xAxisThickness={0}
+      yAxisThickness={0}
+      yAxisTextStyle={{color: '#9CA3AF', fontSize: 10}}
+      noOfSections={axis.sections}
+      maxValue={axis.maxValue}
+      stepValue={axis.step}
+      formatYLabel={formatAxisLabel}
+      disableScroll
+      pointerConfig={{
+        pointerStripHeight: 160,
+        pointerStripColor: '#F3F4F6',
+        pointerStripWidth: 1,
+        pointerColor: colors.primary,
+        radius: 5,
+        pointerLabelWidth: 100,
+        pointerLabelHeight: 44,
+        activatePointersOnLongPress: false,
+        autoAdjustPointerLabelPosition: true,
+        pointerLabelComponent: (items: {value?: number}[]) => {
+          const value = items?.[0]?.value ?? 0;
+          return (
+            <View style={styles.pointerLabel}>
+              <Text style={styles.pointerValue}>
+                {Math.round(value).toLocaleString('en-PK')}
+              </Text>
+              <Text style={styles.pointerHint}>income</Text>
+            </View>
+          );
+        },
+      }}
+    />
+  );
+
+  return (
+    <>
+      <Text style={styles.chartSubtitle}>{subtitle}</Text>
+      {isHourly ? (
+        chart
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {chart}
+        </ScrollView>
+      )}
+    </>
+  );
+};
+
+const CompareBarChart = ({
+  data,
+  subtitle,
+  isHourly,
+}: {
+  data: ChartPoint[];
+  subtitle: string;
+  isHourly?: boolean;
+}) => {
+  const points = data.length > 0 ? data : [];
+  const showExpense = points.some(item => item.expense > 0);
+  const chartWidth = useChartWidth(Math.max(points.length, 1), {
+    perPoint: showExpense ? 56 : isHourly ? 56 : 48,
+    fitScreenMaxPoints: isHourly ? 24 : 8,
+    forceFitScreen: Boolean(isHourly),
+  });
+  const hasIncome = points.some(item => item.income > 0);
+
+  const barData = useMemo(() => {
+    if (!showExpense) {
+      return points.map((item, index) => {
+        const showLabel =
+          points.length <= 10 ||
+          index === 0 ||
+          index === points.length - 1 ||
+          index % Math.ceil(points.length / 8) === 0;
+        return {
+          value: Math.max(item.income, 0),
+          label: showLabel ? shortenLabel(item.label) : '',
+          spacing: 6,
+          labelWidth: 36,
+          labelTextStyle: {color: '#6B7280', fontSize: 10},
+          frontColor: INCOME_COLOR,
+        };
+      });
+    }
+
+    return points.flatMap((item, index) => {
+      const showLabel =
+        points.length <= 8 ||
+        index === 0 ||
+        index === points.length - 1 ||
+        index % Math.ceil(points.length / 6) === 0;
+      return [
         {
           value: Math.max(item.income, 0),
-          label: item.label,
+          label: showLabel ? shortenLabel(item.label) : '',
           spacing: 2,
-          labelWidth: 28,
+          labelWidth: 36,
           labelTextStyle: {color: '#6B7280', fontSize: 10},
           frontColor: INCOME_COLOR,
         },
@@ -96,123 +309,105 @@ const WeeklyBarChart = ({data}: {data: WeeklyFinancePoint[]}) => {
           value: Math.max(item.expense, 0),
           frontColor: EXPENSE_COLOR,
         },
-      ]),
-    [points],
-  );
+      ];
+    });
+  }, [points, showExpense]);
 
   const axis = useMemo(
     () =>
       getEvenAxisScale(
-        points.map(item => Math.max(item.income, item.expense)),
+        points.flatMap(item =>
+          showExpense ? [item.income, item.expense] : [item.income],
+        ),
       ),
-    [points],
+    [points, showExpense],
+  );
+
+  if (!hasIncome && !showExpense) {
+    return <ChartEmpty subtitle={subtitle} />;
+  }
+
+  const barSpacing = isHourly
+    ? Math.max(
+        Math.floor(
+          (chartWidth - 24) /
+            Math.max(points.length * (showExpense ? 2 : 1), 1),
+        ) - (showExpense ? 10 : 14),
+        10,
+      )
+    : showExpense
+      ? 12
+      : 16;
+
+  const barChart = (
+    <BarChart
+      key={`bar-${points.length}-${showExpense}-${subtitle}-${isHourly ? 'h' : 'd'}`}
+      data={barData}
+      barWidth={showExpense ? 10 : isHourly ? 12 : 14}
+      spacing={barSpacing}
+      initialSpacing={isHourly ? 14 : 8}
+      roundedTop
+      roundedBottom
+      hideRules={false}
+      rulesColor="#F3F4F6"
+      rulesType="solid"
+      xAxisThickness={0}
+      yAxisThickness={0}
+      yAxisTextStyle={{color: '#9CA3AF', fontSize: 10}}
+      noOfSections={axis.sections}
+      maxValue={axis.maxValue}
+      stepValue={axis.step}
+      formatYLabel={formatAxisLabel}
+      width={chartWidth}
+      height={190}
+      disableScroll
+    />
   );
 
   return (
-    <View style={styles.chartCard}>
-      <Text style={styles.chartTitle}>Weekly income vs expense</Text>
-      <Legend />
-      <BarChart
-        data={barData}
-        barWidth={10}
-        spacing={14}
-        hideRules={false}
-        rulesColor="#F3F4F6"
-        rulesType="solid"
-        xAxisThickness={0}
-        yAxisThickness={0}
-        yAxisTextStyle={{color: '#9CA3AF', fontSize: 10}}
-        noOfSections={axis.sections}
-        maxValue={axis.maxValue}
-        stepValue={axis.step}
-        formatYLabel={formatAxisLabel}
-        width={chartWidth}
-        height={180}
-        disableScroll
-      />
-    </View>
+    <>
+      <Legend showExpense={showExpense} />
+      <Text style={styles.chartSubtitle}>{subtitle}</Text>
+      {isHourly ? (
+        barChart
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {barChart}
+        </ScrollView>
+      )}
+    </>
   );
 };
 
-const WeeklyLineChart = ({data}: {data: WeeklyFinancePoint[]}) => {
-  const chartWidth = useChartWidth();
-  const points = data.length > 0 ? data : [{label: '-', income: 0, expense: 0}];
-
-  const incomeData = useMemo(
-    () =>
-      points.map(item => ({
-        value: Math.max(item.income, 0),
-        label: item.label,
-        labelTextStyle: {color: '#6B7280', fontSize: 10},
-      })),
-    [points],
-  );
-  const expenseData = useMemo(
-    () => points.map(item => ({value: Math.max(item.expense, 0)})),
-    [points],
-  );
-
-  const spacing = Math.max(
-    Math.floor(chartWidth / Math.max(points.length, 1)) - 12,
-    24,
-  );
-
-  const axis = useMemo(
-    () =>
-      getEvenAxisScale(
-        points.map(item => Math.max(item.income, item.expense)),
-      ),
-    [points],
-  );
-
-  return (
-    <View style={styles.chartCard}>
-      <Text style={styles.chartTitle}>Weekly trend</Text>
-      <Legend />
-      <LineChart
-        data={incomeData}
-        data2={expenseData}
-        height={180}
-        width={chartWidth}
-        spacing={spacing}
-        color1={INCOME_COLOR}
-        color2={EXPENSE_COLOR}
-        dataPointsColor1={INCOME_COLOR}
-        dataPointsColor2={EXPENSE_COLOR}
-        thickness={2}
-        thickness2={2}
-        hideRules={false}
-        rulesColor="#F3F4F6"
-        xAxisThickness={0}
-        yAxisThickness={0}
-        yAxisTextStyle={{color: '#9CA3AF', fontSize: 10}}
-        noOfSections={axis.sections}
-        maxValue={axis.maxValue}
-        stepValue={axis.step}
-        formatYLabel={formatAxisLabel}
-        curved
-        disableScroll
-      />
-    </View>
-  );
-};
-
-const MonthPieChart = ({
+const SplitPieChart = ({
   income,
   expense,
+  subtitle,
+  hideExpense,
 }: {
   income: number;
   expense: number;
+  subtitle: string;
+  hideExpense: boolean;
 }) => {
   const safeIncome = Math.max(income, 0);
-  const safeExpense = Math.max(expense, 0);
+  const safeExpense = hideExpense ? 0 : Math.max(expense, 0);
   const total = Math.max(safeIncome + safeExpense, 1);
   const incomePct = Math.round((safeIncome / total) * 100);
   const expensePct = 100 - incomePct;
   const profit = safeIncome - safeExpense;
 
-  const pieData = useMemo(
-    () => [
+  const pieData = useMemo(() => {
+    if (hideExpense || safeExpense <= 0) {
+      return [
+        {
+          value: Math.max(safeIncome, 1),
+          color: INCOME_COLOR,
+          text: '100%',
+        },
+      ];
+    }
+    return [
       {
         value: Math.max(safeIncome, 1),
         color: INCOME_COLOR,
@@ -223,14 +418,17 @@ const MonthPieChart = ({
         color: EXPENSE_COLOR,
         text: `${expensePct}%`,
       },
-    ],
-    [expensePct, incomePct, safeExpense, safeIncome],
-  );
+    ];
+  }, [expensePct, hideExpense, incomePct, safeExpense, safeIncome]);
+
+  if (safeIncome <= 0 && safeExpense <= 0) {
+    return <ChartEmpty subtitle={subtitle} />;
+  }
 
   return (
-    <View style={styles.chartCard}>
-      <Text style={styles.chartTitle}>This month split</Text>
-      <Legend />
+    <>
+      <Legend showExpense={!hideExpense && safeExpense > 0} />
+      <Text style={styles.chartSubtitle}>{subtitle}</Text>
       <View style={styles.pieWrap}>
         <PieChart
           data={pieData}
@@ -243,13 +441,18 @@ const MonthPieChart = ({
           focusOnPress
           centerLabelComponent={() => (
             <View style={styles.pieCenter}>
-              <Text style={styles.pieCenterLabel}>Net</Text>
+              <Text style={styles.pieCenterLabel}>
+                {hideExpense ? 'Income' : 'Net'}
+              </Text>
               <Text
                 style={[
                   styles.pieCenterValue,
-                  {color: profit >= 0 ? INCOME_COLOR : EXPENSE_COLOR},
+                  {
+                    color:
+                      hideExpense || profit >= 0 ? INCOME_COLOR : EXPENSE_COLOR,
+                  },
                 ]}>
-                {formatShort(Math.abs(profit))}
+                {formatShort(Math.abs(hideExpense ? safeIncome : profit))}
               </Text>
             </View>
           )}
@@ -262,32 +465,112 @@ const MonthPieChart = ({
             Rs. {safeIncome.toLocaleString('en-PK')}
           </Text>
         </View>
-        <View style={styles.pieExpenseBlock}>
-          <Text style={styles.hBarLabel}>Expense</Text>
-          <Text style={[styles.hBarValue, {color: EXPENSE_COLOR}]}>
-            Rs. {safeExpense.toLocaleString('en-PK')}
-          </Text>
-        </View>
+        {!hideExpense ? (
+          <View style={styles.pieExpenseBlock}>
+            <Text style={styles.hBarLabel}>Expense</Text>
+            <Text style={[styles.hBarValue, {color: EXPENSE_COLOR}]}>
+              Rs. {safeExpense.toLocaleString('en-PK')}
+            </Text>
+          </View>
+        ) : null}
       </View>
-    </View>
+    </>
   );
 };
 
+const MODE_OPTIONS: {key: ChartMode; label: string}[] = [
+  {key: 'trend', label: 'Trend'},
+  {key: 'compare', label: 'Compare'},
+  {key: 'split', label: 'Split'},
+];
+
 type Props = {
-  snapshot: BranchRevenueSnapshot;
+  period: RevenuePeriod;
+  chartTrend: {
+    points: HourlyFinancePoint[];
+    isHourly: boolean;
+    subtitle: string;
+  };
+  income: number;
+  expense: number;
+  hideExpense?: boolean;
 };
 
-const FinanceCharts = ({snapshot}: Props) => {
-  const trend = snapshot?.weeklyTrend ?? [];
+const FinanceCharts = ({
+  period,
+  chartTrend,
+  income,
+  expense,
+  hideExpense = false,
+}: Props) => {
+  const [mode, setMode] = useState<ChartMode>('trend');
+  const trend = chartTrend.points ?? [];
+  const chartSubtitle = chartTrend.subtitle || 'Selected range';
+  const title =
+    period === 'today'
+      ? 'Today by hour'
+      : period === 'week'
+        ? 'This week'
+        : period === 'month'
+          ? 'This month'
+          : period === 'year'
+            ? 'This year'
+            : 'Filtered range';
 
   return (
     <View style={styles.chartsWrap}>
-      <WeeklyBarChart data={trend} />
-      <WeeklyLineChart data={trend} />
-      <MonthPieChart
-        income={snapshot?.month ?? 0}
-        expense={snapshot?.expenseMonth ?? 0}
-      />
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <View style={styles.segmentRow}>
+          {MODE_OPTIONS.map(option => {
+            const active = mode === option.key;
+            return (
+              <Pressable
+                key={option.key}
+                accessibilityRole="button"
+                style={[styles.segmentChip, active && styles.segmentChipActive]}
+                onPress={() => setMode(option.key)}>
+                <Text
+                  style={[
+                    styles.segmentChipText,
+                    active && styles.segmentChipTextActive,
+                  ]}>
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.chartCard}>
+        {mode === 'trend' ? (
+          <TrendLineChart
+            data={trend}
+            subtitle={chartSubtitle}
+            isHourly={chartTrend.isHourly}
+          />
+        ) : null}
+        {mode === 'compare' ? (
+          <CompareBarChart
+            data={trend}
+            subtitle={chartSubtitle}
+            isHourly={chartTrend.isHourly}
+          />
+        ) : null}
+        {mode === 'split' ? (
+          <SplitPieChart
+            income={income}
+            expense={expense}
+            hideExpense={hideExpense}
+            subtitle={
+              hideExpense
+                ? `${chartSubtitle} · income`
+                : `${chartSubtitle} · income vs expense`
+            }
+          />
+        ) : null}
+      </View>
     </View>
   );
 };

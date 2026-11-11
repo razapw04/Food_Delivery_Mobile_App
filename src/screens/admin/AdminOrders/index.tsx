@@ -1,13 +1,9 @@
 import React from 'react';
-import {
-  FlatList,
-  Pressable,
-  StatusBar,
-  Text,
-  View,
-} from 'react-native';
+import {FlatList, Pressable, StatusBar, Text, View} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import AdminMenuButton from '../../../components/AdminMenuButton';
+import BranchProductSalesLists from '../../../components/BranchProductSalesLists';
 import OrderSlipModal from '../../../components/OrderSlipModal';
 import {OrderListSkeleton} from '../../../components/Skeleton';
 import {StateMessage} from '../../../components/StateMessage';
@@ -53,12 +49,14 @@ const AdminOrderCard = ({
   order,
   busy,
   role,
+  hideStatusControls,
   onUpdateStatus,
   onPrintSlip,
 }: {
   order: StoredOrder;
   busy: boolean;
   role: UserRole;
+  hideStatusControls: boolean;
   onUpdateStatus: (orderId: string, status: OrderStatus) => void;
   onPrintSlip: (order: StoredOrder) => void;
 }) => {
@@ -67,7 +65,7 @@ const AdminOrderCard = ({
   const itemsSummary = (order.items ?? [])
     .map(item => `${item.quantity}x ${item.name}`)
     .join(', ');
-  const canConfirm = status === 'Pending';
+  const canConfirm = !hideStatusControls && status === 'Pending';
   const canPrint = status !== 'Pending' && status !== 'Cancelled';
 
   return (
@@ -85,9 +83,13 @@ const AdminOrderCard = ({
               <Icon name="printer" size={18} color="#FF7622" />
             </Pressable>
           ) : null}
-          <View style={[styles.statusBadge, statusStyle.badge]}>
-            <Text style={[styles.statusText, statusStyle.text]}>{status}</Text>
-          </View>
+          {!hideStatusControls ? (
+            <View style={[styles.statusBadge, statusStyle.badge]}>
+              <Text style={[styles.statusText, statusStyle.text]}>
+                {status}
+              </Text>
+            </View>
+          ) : null}
         </View>
       </View>
 
@@ -117,53 +119,55 @@ const AdminOrderCard = ({
         </Text>
       ) : null}
 
-      <View style={styles.actionsWrap}>
-        {canConfirm ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Confirm order ${order.orderId}`}
-            disabled={busy}
-            onPress={() => onUpdateStatus(order.id, 'Confirmed')}
-            style={[
-              styles.confirmButton,
-              busy ? styles.confirmButtonDisabled : null,
-            ]}>
-            <Text style={styles.confirmButtonText}>Confirm Order</Text>
-          </Pressable>
-        ) : null}
+      {!hideStatusControls ? (
+        <View style={styles.actionsWrap}>
+          {canConfirm ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Confirm order ${order.orderId}`}
+              disabled={busy}
+              onPress={() => onUpdateStatus(order.id, 'Confirmed')}
+              style={[
+                styles.confirmButton,
+                busy ? styles.confirmButtonDisabled : null,
+              ]}>
+              <Text style={styles.confirmButtonText}>Confirm Order</Text>
+            </Pressable>
+          ) : null}
 
-        <Text style={styles.statusLabel}>Update status</Text>
-        <View style={styles.chipsRow}>
-          {STATUS_OPTIONS.map(option => {
-            const active = option === status;
-            const allowed = canSelectStatus(status, option, role);
-            const disabled = busy || active || !allowed;
-            return (
-              <Pressable
-                key={option}
-                accessibilityRole="button"
-                accessibilityLabel={`Set status to ${option}`}
-                accessibilityState={{disabled, selected: active}}
-                disabled={disabled}
-                onPress={() => onUpdateStatus(order.id, option)}
-                style={[
-                  styles.chip,
-                  active ? styles.chipActive : null,
-                  !active && !allowed ? styles.chipDisabled : null,
-                ]}>
-                <Text
+          <Text style={styles.statusLabel}>Update status</Text>
+          <View style={styles.chipsRow}>
+            {STATUS_OPTIONS.map(option => {
+              const active = option === status;
+              const allowed = canSelectStatus(status, option, role);
+              const disabled = busy || active || !allowed;
+              return (
+                <Pressable
+                  key={option}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Set status to ${option}`}
+                  accessibilityState={{disabled, selected: active}}
+                  disabled={disabled}
+                  onPress={() => onUpdateStatus(order.id, option)}
                   style={[
-                    styles.chipText,
-                    active ? styles.chipTextActive : null,
-                    !active && !allowed ? styles.chipTextDisabled : null,
+                    styles.chip,
+                    active ? styles.chipActive : null,
+                    !active && !allowed ? styles.chipDisabled : null,
                   ]}>
-                  {option}
-                </Text>
-              </Pressable>
-            );
-          })}
+                  <Text
+                    style={[
+                      styles.chipText,
+                      active ? styles.chipTextActive : null,
+                      !active && !allowed ? styles.chipTextDisabled : null,
+                    ]}>
+                    {option}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
-      </View>
+      ) : null}
     </View>
   );
 };
@@ -176,6 +180,7 @@ const AdminOrdersScreen = () => {
     canViewRevenue,
     user,
     orders,
+    productSales,
     isPending,
     updatingId,
     slipOrder,
@@ -204,7 +209,11 @@ const AdminOrdersScreen = () => {
       <StateMessage
         icon="clipboard-list-outline"
         title="No orders yet"
-        subtitle="Customer orders will appear here so you can confirm and update status."
+        subtitle={
+          isSuperAdmin
+            ? 'Branch orders appear here for overview. Status is managed by branch staff.'
+            : 'Customer orders will appear here so you can confirm and update status.'
+        }
       />
     );
   };
@@ -214,7 +223,7 @@ const AdminOrdersScreen = () => {
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.header}>
-        <View style={styles.backButton} />
+        <AdminMenuButton />
         <Text style={styles.headerTitle}>
           {isSuperAdmin ? 'Orders' : 'Manager Orders'}
         </Text>
@@ -232,23 +241,38 @@ const AdminOrdersScreen = () => {
           <Pressable
             accessibilityRole="button"
             style={styles.adminNavButton}
-            onPress={() => navigation.navigate('AdminProducts')}>
+            onPress={() =>
+              navigation.navigate('AdminTabs', {screen: 'AdminProducts'})
+            }>
             <Icon name="food" size={18} color="#FF7622" />
-            <Text style={styles.adminNavText}>Products</Text>
+            <Text style={styles.adminNavText}>Menu</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
             style={styles.adminNavButton}
-            onPress={() => navigation.navigate('AdminRevenue')}>
+            onPress={() =>
+              navigation.navigate('AdminTabs', {screen: 'AdminRevenue'})
+            }>
             <Icon name="chart-line" size={18} color="#FF7622" />
             <Text style={styles.adminNavText}>Revenue</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
             style={styles.adminNavButton}
-            onPress={() => navigation.navigate('AdminAdmins')}>
+            onPress={() =>
+              navigation.navigate('AdminTabs', {screen: 'AdminAdmins'})
+            }>
             <Icon name="account-key" size={18} color="#FF7622" />
             <Text style={styles.adminNavText}>Staff</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            style={styles.adminNavButton}
+            onPress={() =>
+              navigation.navigate('AdminTabs', {screen: 'AdminBranches'})
+            }>
+            <Icon name="store-outline" size={18} color="#FF7622" />
+            <Text style={styles.adminNavText}>Branches</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -257,25 +281,52 @@ const AdminOrdersScreen = () => {
             <Icon name="clipboard-check-outline" size={18} color="#FF7622" />
             <Text style={styles.adminNavText}>Approvals</Text>
           </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            style={styles.adminNavButton}
+            onPress={() => navigation.navigate('AdminInventoryRequests')}>
+            <Icon name="package-variant-closed" size={18} color="#FF7622" />
+            <Text style={styles.adminNavText}>Inventory</Text>
+          </Pressable>
         </View>
       ) : isAdmin ? (
         <View style={styles.adminNav}>
           <Pressable
             accessibilityRole="button"
             style={styles.adminNavButton}
-            onPress={() => navigation.navigate('AdminProducts')}>
+            onPress={() =>
+              navigation.navigate('AdminTabs', {screen: 'AdminProducts'})
+            }>
             <Icon name="tag-outline" size={18} color="#FF7622" />
             <Text style={styles.adminNavText}>Request price</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            style={styles.adminNavButton}
+            onPress={() =>
+              navigation.navigate('AdminTabs', {screen: 'AdminAdmins'})
+            }>
+            <Icon name="account-group-outline" size={18} color="#FF7622" />
+            <Text style={styles.adminNavText}>Employees</Text>
           </Pressable>
           {canViewRevenue ? (
             <Pressable
               accessibilityRole="button"
               style={styles.adminNavButton}
-              onPress={() => navigation.navigate('AdminRevenue')}>
+              onPress={() =>
+                navigation.navigate('AdminTabs', {screen: 'AdminRevenue'})
+              }>
               <Icon name="chart-line" size={18} color="#FF7622" />
-              <Text style={styles.adminNavText}>My branch revenue</Text>
+              <Text style={styles.adminNavText}>Branch sales</Text>
             </Pressable>
           ) : null}
+          <Pressable
+            accessibilityRole="button"
+            style={styles.adminNavButton}
+            onPress={() => navigation.navigate('AdminInventoryRequests')}>
+            <Icon name="package-variant-closed" size={18} color="#FF7622" />
+            <Text style={styles.adminNavText}>Inventory</Text>
+          </Pressable>
         </View>
       ) : null}
 
@@ -288,11 +339,23 @@ const AdminOrdersScreen = () => {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={listEmpty}
+          ListHeaderComponent={
+            productSales ? (
+              <BranchProductSalesLists
+                most={productSales.most}
+                hot={productSales.hot}
+                least={productSales.least}
+                meta="Your branch"
+                emptyText="No countable sales yet for this branch."
+              />
+            ) : null
+          }
           renderItem={({item}) => (
             <AdminOrderCard
               order={item}
               busy={updatingId === item.id}
               role={user?.role ?? 'manager'}
+              hideStatusControls={isSuperAdmin}
               onUpdateStatus={handleUpdateStatus}
               onPrintSlip={setSlipOrder}
             />

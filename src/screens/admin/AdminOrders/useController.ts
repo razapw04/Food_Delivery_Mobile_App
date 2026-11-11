@@ -1,4 +1,4 @@
-import {useCallback, useState} from 'react';
+import {useCallback, useMemo, useState} from 'react';
 import {Alert, BackHandler} from 'react-native';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -12,10 +12,12 @@ import type {OrderStatus, StoredOrder} from '../../../storage/orderStorage';
 import type {UserRole} from '../../../storage/authStorage';
 import type {RootStackParamList} from '../../../types/navigation';
 import {canSelectStatus} from '../../../utils/orderStatus';
+import {getBranchProductSalesLists} from '../../../utils/revenueFromOrders';
+import {BRANCH_REVENUE} from '../AdminRevenue/mockData';
 
 export {STATUS_OPTIONS} from '../../../utils/orderStatus';
 
-type Nav = NativeStackNavigationProp<RootStackParamList, 'AdminOrders'>;
+type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const useController = () => {
   const navigation = useNavigation<Nav>();
@@ -79,6 +81,9 @@ const useController = () => {
 
   const handleUpdateStatus = useCallback(
     async (orderId: string, nextStatus: OrderStatus) => {
+      if (isSuperAdmin) {
+        return;
+      }
       const current = orders.find(
         order => order.id === orderId || order.orderId === orderId,
       );
@@ -118,7 +123,7 @@ const useController = () => {
         setUpdatingId(null);
       }
     },
-    [orders, staffRole, updateOrderStatus],
+    [isSuperAdmin, orders, staffRole, updateOrderStatus],
   );
 
   const errorMessage = ordersError
@@ -135,6 +140,18 @@ const useController = () => {
     setSlipOrder(null);
   }, []);
 
+  const branchId = user?.branchId ?? null;
+  const productSales = useMemo(() => {
+    if (isSuperAdmin) {
+      return null;
+    }
+    return getBranchProductSalesLists(orders, {
+      branchId,
+      limit: null,
+      snapshot: branchId != null ? BRANCH_REVENUE[branchId] ?? null : null,
+    });
+  }, [branchId, isSuperAdmin, orders]);
+
   return {
     navigation,
     isAdmin,
@@ -142,6 +159,7 @@ const useController = () => {
     canViewRevenue,
     user,
     orders,
+    productSales,
     isPending,
     updatingId,
     slipOrder,

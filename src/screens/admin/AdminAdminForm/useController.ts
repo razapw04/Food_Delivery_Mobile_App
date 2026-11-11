@@ -41,13 +41,12 @@ const useController = (navigation: Nav, route: Route) => {
   const [role, setRole] = useState<StaffAccountRole>(
     route.params?.role ?? 'manager',
   );
-  const [canViewRevenue, setCanViewRevenue] = useState(false);
   const [branchId, setBranchId] = useState(branches[0]?.id ?? '');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!isSuperAdmin) {
-      navigation.replace('AdminOrders');
+      navigation.replace('AdminTabs', {screen: 'AdminAdmins'});
     }
   }, [isSuperAdmin, navigation]);
 
@@ -68,7 +67,6 @@ const useController = (navigation: Nav, route: Route) => {
       setPassword(existing.password);
       setConfirmPassword(existing.password);
       setRole(existing.role);
-      setCanViewRevenue(Boolean(existing.canViewRevenue));
       setBranchId(existing.branchId ?? branches[0]?.id ?? '');
     };
 
@@ -121,7 +119,6 @@ const useController = (navigation: Nav, route: Route) => {
 
     setSaving(true);
     try {
-      const revenueAccess = role === 'manager' ? canViewRevenue : false;
       const result = isEditing
         ? await updateAdminAccount({
             email: editingEmail!,
@@ -130,7 +127,7 @@ const useController = (navigation: Nav, route: Route) => {
             password: password.trim(),
             branchId,
             role,
-            canViewRevenue: revenueAccess,
+            canViewRevenue: role === 'manager',
           })
         : await createAdminAccount({
             name,
@@ -139,7 +136,7 @@ const useController = (navigation: Nav, route: Route) => {
             password: password.trim(),
             branchId,
             role,
-            canViewRevenue: revenueAccess,
+            canViewRevenue: role === 'manager',
           });
 
       if (!result.ok) {
@@ -180,8 +177,6 @@ const useController = (navigation: Nav, route: Route) => {
     setShowConfirmPassword,
     role,
     setRole,
-    canViewRevenue,
-    setCanViewRevenue,
     roleTitle,
     branchId,
     setBranchId,

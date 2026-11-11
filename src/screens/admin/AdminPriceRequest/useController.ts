@@ -27,7 +27,9 @@ const useController = (navigation: Nav, route: Route) => {
 
   useEffect(() => {
     if (!isAdmin || isSuperAdmin) {
-      navigation.replace(isSuperAdmin ? 'AdminProducts' : 'AdminOrders');
+      navigation.replace('AdminTabs', {
+        screen: 'AdminProducts',
+      });
     }
   }, [isAdmin, isSuperAdmin, navigation]);
 

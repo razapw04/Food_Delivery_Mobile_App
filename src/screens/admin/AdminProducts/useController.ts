@@ -1,6 +1,11 @@
 import {useCallback, useState} from 'react';
 import {Alert} from 'react-native';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  type CompositeNavigationProp,
+} from '@react-navigation/native';
+import type {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useAuth} from '../../../context/AuthContext';
 import {useCatalog} from '../../../context/CatalogContext';
@@ -10,14 +15,20 @@ import {
   type AdminProduct,
 } from '../../../storage/adminProductsStorage';
 import {countPendingPriceChangeRequests} from '../../../storage/priceChangeRequestsStorage';
-import type {RootStackParamList} from '../../../types/navigation';
+import type {
+  AdminTabParamList,
+  RootStackParamList,
+} from '../../../types/navigation';
 
-type Nav = NativeStackNavigationProp<RootStackParamList, 'AdminProducts'>;
+type Nav = CompositeNavigationProp<
+  BottomTabNavigationProp<AdminTabParamList, 'AdminProducts'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 const useController = () => {
   const navigation = useNavigation<Nav>();
   const {isAdmin, isSuperAdmin} = useAuth();
-  const {menuItems, menuCategories} = useCatalog();
+  const {menuItems, menuCategories, refreshCatalog} = useCatalog();
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
@@ -65,18 +76,19 @@ const useController = () => {
               void (async () => {
                 const next = await removeAdminProduct(product.id, menuItems);
                 setProducts(next);
+                await refreshCatalog();
               })();
             },
           },
         ],
       );
     },
-    [menuItems],
+    [menuItems, refreshCatalog],
   );
 
   const handleBack = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
+    navigation.navigate(isSuperAdmin ? 'AdminBranches' : 'AdminOrders');
+  }, [isSuperAdmin, navigation]);
 
   const bannerText = isSuperAdmin
     ? pendingCount > 0

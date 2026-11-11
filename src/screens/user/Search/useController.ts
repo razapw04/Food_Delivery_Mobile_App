@@ -1,6 +1,9 @@
-import {useMemo, useState} from 'react';
-import {useNavigation} from '@react-navigation/native';
-import type {CompositeNavigationProp} from '@react-navigation/native';
+import {useCallback, useMemo, useState} from 'react';
+import {
+  useFocusEffect,
+  useNavigation,
+  type CompositeNavigationProp,
+} from '@react-navigation/native';
 import type {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useCatalog} from '../../../context/CatalogContext';
@@ -26,6 +29,12 @@ const useController = () => {
     refreshCatalog,
   } = useCatalog();
   const [query, setQuery] = useState('');
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshCatalog();
+    }, [refreshCatalog]),
+  );
 
   const isPickup = orderMode === 'pickup';
   const headerLabel = isPickup ? 'Pickup from' : 'Deliver to';

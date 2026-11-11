@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import AdminMenuButton from '../../../components/AdminMenuButton';
 import {styles} from './styles';
 import useController from './useController';
 
@@ -22,7 +23,6 @@ const AdminProductsScreen = () => {
     categoryName,
     loadProducts,
     handleDelete,
-    handleBack,
   } = useController();
 
   return (
@@ -30,15 +30,9 @@ const AdminProductsScreen = () => {
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.header}>
-        <Pressable
-          accessibilityLabel="Go back"
-          accessibilityRole="button"
-          style={styles.backButton}
-          onPress={handleBack}>
-          <Icon name="arrow-left" size={22} color="#1A1A1A" />
-        </Pressable>
+        <AdminMenuButton />
         <Text style={styles.headerTitle}>
-          {isSuperAdmin ? 'Manage Products' : 'Products'}
+          {isSuperAdmin ? 'Menu' : 'Products'}
         </Text>
         {isSuperAdmin ? (
           <Pressable

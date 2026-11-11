@@ -287,7 +287,8 @@ export const saveStoredOrder = async (
     }),
     tabOpen:
       orderMode === 'dine_in'
-        ? order.tabOpen ?? status !== 'Delivered' && status !== 'Cancelled'
+        ? (order.tabOpen ??
+          (status !== 'Delivered' && status !== 'Cancelled'))
         : false,
     tableNo: order.tableNo,
     waiterName: order.waiterName,
@@ -352,6 +353,86 @@ export const appendItemsToStoredOrder = async (
     productTotal,
     taxAmount,
     totalAmount,
+    status: nextStatus,
+    tabOpen: true,
+    updatedAt: new Date().toISOString(),
+  });
+  orders[index] = updated;
+  await writeOrders(orders);
+  return updated;
+};
+
+export type OpenDineInTabUpdate = {
+  items: CartItem[];
+  customerName?: string;
+  tableNo?: string;
+  waiterName?: string;
+  paymentMethod?: StoredPaymentMethod;
+};
+
+/**
+ * Full edit of an open dine-in tab (items + guest details) until bill is paid / tab closed.
+ */
+export const updateOpenDineInTab = async (
+  orderId: string,
+  patch: OpenDineInTabUpdate,
+): Promise<StoredOrder> => {
+  if (!patch.items.length) {
+    throw new Error('Keep at least one item on the open tab.');
+  }
+
+  const orders = await readOrders();
+  const index = orders.findIndex(
+    order => order.id === orderId || order.orderId === orderId,
+  );
+  if (index < 0) {
+    throw new Error('Order not found.');
+  }
+
+  const existing = orders[index];
+  if (!isOpenDineInTab(existing)) {
+    throw new Error('Only open dine-in tabs can be edited. Close tab only after guest pays.');
+  }
+
+  const items = patch.items.map(item => ({
+    ...item,
+    id:
+      item.id ||
+      `pos-${item.productId}-${item.variation}-${Date.now()}`,
+  }));
+  const {productTotal, taxAmount, totalAmount} = recalcTotals(
+    items,
+    existing.taxPercent,
+    existing.discount,
+    existing.deliveryFee,
+  );
+
+  const nextStatus: OrderStatus =
+    existing.status === 'Cancelled' || existing.status === 'Delivered'
+      ? existing.status
+      : 'Confirmed';
+
+  const tableNo =
+    typeof patch.tableNo === 'string' ? patch.tableNo.trim() : existing.tableNo;
+  const waiterName =
+    typeof patch.waiterName === 'string'
+      ? patch.waiterName.trim()
+      : existing.waiterName;
+  const customerName =
+    typeof patch.customerName === 'string'
+      ? patch.customerName.trim() || existing.customerName
+      : existing.customerName;
+
+  const updated: StoredOrder = normalizeStoredOrder({
+    ...existing,
+    items,
+    productTotal,
+    taxAmount,
+    totalAmount,
+    customerName,
+    tableNo: tableNo || null,
+    waiterName: waiterName || null,
+    paymentMethod: patch.paymentMethod ?? existing.paymentMethod,
     status: nextStatus,
     tabOpen: true,
     updatedAt: new Date().toISOString(),

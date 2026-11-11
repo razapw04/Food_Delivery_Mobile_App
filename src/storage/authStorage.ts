@@ -115,20 +115,14 @@ export const hasManagerAccess = (role?: UserRole | null): boolean =>
 /** @deprecated use hasManagerAccess */
 export const hasAdminAccess = hasManagerAccess;
 
-/** Superadmin always; managers only when superadmin granted canViewRevenue. */
+/** Superadmin (all) and managers (their branch sales) can view revenue. */
 export const canAccessRevenue = (
   user?: Pick<SessionUser, 'role' | 'canViewRevenue'> | null,
 ): boolean => {
   if (!user) {
     return false;
   }
-  if (user.role === 'superadmin') {
-    return true;
-  }
-  if (user.role === 'manager') {
-    return Boolean(user.canViewRevenue);
-  }
-  return false;
+  return user.role === 'superadmin' || user.role === 'manager';
 };
 
 export const hasBranchStaffRole = (role?: UserRole | null): boolean =>
@@ -141,20 +135,20 @@ export const isStaffRole = (role?: UserRole | null): boolean =>
   role === 'kitchen';
 
 export type StaffHomeRoute =
-  | 'AdminOrders'
-  | 'CashierOrders'
-  | 'KitchenOrders'
+  | 'AdminTabs'
+  | 'CashierTabs'
+  | 'KitchenTabs'
   | 'MainTabs';
 
 export const getHomeRouteForRole = (role?: UserRole | null): StaffHomeRoute => {
   switch (role) {
     case 'superadmin':
     case 'manager':
-      return 'AdminOrders';
+      return 'AdminTabs';
     case 'cashier':
-      return 'CashierOrders';
+      return 'CashierTabs';
     case 'kitchen':
-      return 'KitchenOrders';
+      return 'KitchenTabs';
     default:
       return 'MainTabs';
   }

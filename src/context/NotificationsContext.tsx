@@ -7,8 +7,9 @@ import React, {
   useState,
 } from 'react';
 import {DeviceEventEmitter} from 'react-native';
+import {useAuth} from './AuthContext';
 import {
-  getStoredNotifications,
+  listNotificationsForAudience,
   markAllNotificationsRead,
   type AppNotification,
 } from '../storage/notificationsStorage';
@@ -37,12 +38,16 @@ export const NotificationsProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
+  const {user} = useAuth();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   const refreshNotifications = useCallback(async () => {
-    const items = await getStoredNotifications();
+    const items = await listNotificationsForAudience({
+      role: user?.role ?? null,
+      branchId: user?.branchId ?? null,
+    });
     setNotifications(items);
-  }, []);
+  }, [user?.role, user?.branchId]);
 
   useEffect(() => {
     refreshNotifications();
@@ -65,9 +70,9 @@ export const NotificationsProvider = ({
   );
 
   const markAllRead = useCallback(async () => {
-    const next = await markAllNotificationsRead();
-    setNotifications(next);
-  }, []);
+    await markAllNotificationsRead();
+    await refreshNotifications();
+  }, [refreshNotifications]);
 
   const unreadCount = useMemo(
     () => notifications.filter(item => !item.read).length,

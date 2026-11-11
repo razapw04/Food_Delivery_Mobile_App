@@ -23,20 +23,20 @@ import NotificationsScreen from './src/screens/user/Notifications';
 import ProfileScreen from './src/screens/user/Profile';
 import FeedbackScreen from './src/screens/user/Feedback';
 import ContactUsScreen from './src/screens/user/ContactUs';
-import AdminOrdersScreen from './src/screens/admin/AdminOrders';
-import AdminProductsScreen from './src/screens/admin/AdminProducts';
 import AdminProductFormScreen from './src/screens/admin/AdminProductForm';
-import AdminRevenueScreen from './src/screens/admin/AdminRevenue';
-import AdminAdminsScreen from './src/screens/admin/AdminAdmins';
 import AdminAdminFormScreen from './src/screens/admin/AdminAdminForm';
-import AdminPriceRequestScreen from './src/screens/admin/AdminPriceRequest';
+import AdminOrdersScreen from './src/screens/admin/AdminOrders';
+import AdminBranchFormScreen from './src/screens/admin/AdminBranchForm';
+import AdminBranchMapPickScreen from './src/screens/admin/AdminBranchMapPick';
 import AdminPriceApprovalsScreen from './src/screens/admin/AdminPriceApprovals';
-import CashierOrdersScreen from './src/screens/cashier/CashierOrders';
-import CashierSalesScreen from './src/screens/cashier/CashierSales';
-import CashierPOSScreen from './src/screens/cashier/CashierPOS';
-import KitchenOrdersScreen from './src/screens/kitchen/KitchenOrders';
+import AdminPriceRequestScreen from './src/screens/admin/AdminPriceRequest';
+import AdminTopSellingScreen from './src/screens/admin/AdminTopSelling';
+import AdminInventoryRequestsScreen from './src/screens/admin/AdminInventoryRequests';
 import MenuScreen from './src/screens/user/Menu';
 import MainTabs from './src/navigation/MainTabs';
+import AdminTabs from './src/navigation/AdminTabs';
+import CashierTabs from './src/navigation/CashierTabs';
+import KitchenTabs from './src/navigation/KitchenTabs';
 import {navigationRef} from './src/navigation/navigationRef';
 import {AuthProvider} from './src/context/AuthContext';
 import {CartProvider} from './src/context/CartContext';
@@ -120,53 +120,50 @@ const App = () => {
                           name="ContactUs"
                           component={ContactUsScreen}
                         />
-                        <Stack.Screen
-                          name="AdminOrders"
-                          component={AdminOrdersScreen}
-                        />
-                        <Stack.Screen
-                          name="AdminProducts"
-                          component={AdminProductsScreen}
-                        />
+                        <Stack.Screen name="AdminTabs" component={AdminTabs} />
                         <Stack.Screen
                           name="AdminProductForm"
                           component={AdminProductFormScreen}
-                        />
-                        <Stack.Screen
-                          name="AdminRevenue"
-                          component={AdminRevenueScreen}
-                        />
-                        <Stack.Screen
-                          name="AdminAdmins"
-                          component={AdminAdminsScreen}
                         />
                         <Stack.Screen
                           name="AdminAdminForm"
                           component={AdminAdminFormScreen}
                         />
                         <Stack.Screen
-                          name="AdminPriceRequest"
-                          component={AdminPriceRequestScreen}
+                          name="AdminOrders"
+                          component={AdminOrdersScreen}
+                        />
+                        <Stack.Screen
+                          name="AdminBranchForm"
+                          component={AdminBranchFormScreen}
+                        />
+                        <Stack.Screen
+                          name="AdminBranchMapPick"
+                          component={AdminBranchMapPickScreen}
                         />
                         <Stack.Screen
                           name="AdminPriceApprovals"
                           component={AdminPriceApprovalsScreen}
                         />
                         <Stack.Screen
-                          name="CashierOrders"
-                          component={CashierOrdersScreen}
+                          name="AdminPriceRequest"
+                          component={AdminPriceRequestScreen}
                         />
                         <Stack.Screen
-                          name="CashierSales"
-                          component={CashierSalesScreen}
+                          name="AdminTopSelling"
+                          component={AdminTopSellingScreen}
                         />
                         <Stack.Screen
-                          name="CashierPOS"
-                          component={CashierPOSScreen}
+                          name="AdminInventoryRequests"
+                          component={AdminInventoryRequestsScreen}
                         />
                         <Stack.Screen
-                          name="KitchenOrders"
-                          component={KitchenOrdersScreen}
+                          name="CashierTabs"
+                          component={CashierTabs}
+                        />
+                        <Stack.Screen
+                          name="KitchenTabs"
+                          component={KitchenTabs}
                         />
                         <Stack.Screen
                           name="OnboardingOne"

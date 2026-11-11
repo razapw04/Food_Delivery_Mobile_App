@@ -136,6 +136,74 @@ export const styles = StyleSheet.create({
   chipTextActive: {
     color: '#FFFFFF',
   },
+  roleRows: {
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  roleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: spacing.sm,
+  },
+  roleRowManager: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#BFDBFE',
+  },
+  roleRowManagerActive: {
+    borderColor: '#1D4ED8',
+    backgroundColor: '#DBEAFE',
+  },
+  roleRowCashier: {
+    backgroundColor: '#FFF7ED',
+    borderColor: '#FED7AA',
+  },
+  roleRowCashierActive: {
+    borderColor: '#C2410C',
+    backgroundColor: '#FFEDD5',
+  },
+  roleRowKitchen: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#BBF7D0',
+  },
+  roleRowKitchenActive: {
+    borderColor: '#15803D',
+    backgroundColor: '#DCFCE7',
+  },
+  roleRowDisabled: {
+    opacity: 0.45,
+  },
+  roleIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roleIconManager: {
+    backgroundColor: '#DBEAFE',
+  },
+  roleIconCashier: {
+    backgroundColor: '#FFEDD5',
+  },
+  roleIconKitchen: {
+    backgroundColor: '#DCFCE7',
+  },
+  roleRowText: {
+    flex: 1,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  roleRowTextActive: {
+    fontWeight: typography.fontWeight.bold,
+  },
+  roleRowSpacer: {
+    width: 18,
+    height: 18,
+  },
   saveButton: {
     marginTop: spacing.sm,
     backgroundColor: colors.primary,

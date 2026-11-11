@@ -81,11 +81,12 @@ export const buildOrderSlipText = (order: StoredOrder): string => {
     'FOOD DELIVERY',
     'ORDER SLIP',
     '------------------------------',
+    `CUSTOMER: ${order.customerName || 'Customer'}`,
+    '------------------------------',
     `Order: ${order.orderId}`,
     `Date: ${formatWhen(order.createdAt)}`,
     ...(order.tableNo ? [`Table: ${order.tableNo}`] : []),
     ...(order.waiterName ? [`Waiter: ${order.waiterName}`] : []),
-    `Customer: ${order.customerName || 'Customer'}`,
     `Email: ${order.customerEmail}`,
     `Mode: ${modeLabel(order)}`,
     `Payment: ${paymentLabel(order.paymentMethod)}`,
@@ -148,7 +149,15 @@ export const buildOrderSlipHtml = (order: StoredOrder): string => {
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#111; margin:0; padding:24px;">
   <div style="max-width:420px;margin:0 auto;">
     <h1 style="margin:0;font-size:22px;text-align:center;">Food Delivery</h1>
-    <p style="margin:4px 0 16px;text-align:center;color:#666;font-size:13px;">Order Slip</p>
+    <p style="margin:4px 0 8px;text-align:center;color:#666;font-size:13px;">Order Slip</p>
+    <div style="text-align:center;margin:0 0 14px;">
+      <div style="font-size:22px;font-weight:800;color:#111;line-height:1.2;">
+        ${order.customerName || 'Customer'}
+      </div>
+      <div style="margin-top:2px;font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:#666;">
+        Customer
+      </div>
+    </div>
     <div style="border-top:2px solid #111;border-bottom:2px solid #111;padding:12px 0;margin-bottom:12px;font-size:13px;line-height:1.6;">
       <div><strong>Order:</strong> ${order.orderId}</div>
       <div><strong>Date:</strong> ${formatWhen(order.createdAt)}</div>
@@ -162,7 +171,6 @@ export const buildOrderSlipHtml = (order: StoredOrder): string => {
           ? `<div><strong>Waiter:</strong> ${order.waiterName}</div>`
           : ''
       }
-      <div><strong>Customer:</strong> ${order.customerName || 'Customer'}</div>
       <div><strong>Email:</strong> ${order.customerEmail}</div>
       <div><strong>Mode:</strong> ${modeLabel(order)}</div>
       <div><strong>Payment:</strong> ${paymentLabel(order.paymentMethod)}</div>

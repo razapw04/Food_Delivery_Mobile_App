@@ -20,22 +20,76 @@ type RemoteMessageLike = {
   data?: Record<string, string | object | undefined>;
 };
 
-let messagingModule: typeof import('@react-native-firebase/messaging').default | null =
-  null;
+type MessagingInstance = ReturnType<
+  typeof import('@react-native-firebase/messaging').getMessaging
+>;
 
-const getMessaging = () => {
-  if (messagingModule) {
-    return messagingModule;
+type MessagingApi = {
+  getMessaging: typeof import('@react-native-firebase/messaging').getMessaging;
+  getToken: typeof import('@react-native-firebase/messaging').getToken;
+  onMessage: typeof import('@react-native-firebase/messaging').onMessage;
+  onTokenRefresh: typeof import('@react-native-firebase/messaging').onTokenRefresh;
+  requestPermission: typeof import('@react-native-firebase/messaging').requestPermission;
+  registerDeviceForRemoteMessages: typeof import('@react-native-firebase/messaging').registerDeviceForRemoteMessages;
+  setBackgroundMessageHandler: typeof import('@react-native-firebase/messaging').setBackgroundMessageHandler;
+  AuthorizationStatus: typeof import('@react-native-firebase/messaging').AuthorizationStatus;
+};
+
+let messagingApi: MessagingApi | null = null;
+let messagingInstance: MessagingInstance | null = null;
+let lastFcmToken: string | null = null;
+
+const loadMessagingApi = (): MessagingApi | null => {
+  if (messagingApi) {
+    return messagingApi;
   }
   try {
-    // Lazy require so app can still boot if native Firebase is not configured yet.
+    // RN Firebase v22+ modular API (no default messaging() export).
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    messagingModule = require('@react-native-firebase/messaging').default;
-    return messagingModule;
-  } catch {
+    require('@react-native-firebase/app');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const messaging = require('@react-native-firebase/messaging') as MessagingApi;
+    if (typeof messaging.getMessaging !== 'function') {
+      console.warn(
+        '[push] @react-native-firebase/messaging loaded but modular API missing',
+      );
+      return null;
+    }
+    messagingApi = messaging;
+    return messagingApi;
+  } catch (error) {
+    console.warn(
+      '[push] Failed to load Firebase messaging:',
+      error instanceof Error ? error.message : error,
+    );
+    console.warn(
+      '[push] Rebuild the native app after Firebase install (yarn android). Metro reload is not enough.',
+    );
     return null;
   }
 };
+
+const getMessagingInstance = (): MessagingInstance | null => {
+  if (messagingInstance) {
+    return messagingInstance;
+  }
+  const api = loadMessagingApi();
+  if (!api) {
+    return null;
+  }
+  try {
+    messagingInstance = api.getMessaging();
+    return messagingInstance;
+  } catch (error) {
+    console.warn(
+      '[push] getMessaging() failed — native Firebase may not be linked yet:',
+      error instanceof Error ? error.message : error,
+    );
+    return null;
+  }
+};
+
+export const getLastFcmToken = () => lastFcmToken;
 
 const emitNotificationsUpdated = () => {
   DeviceEventEmitter.emit(NOTIFICATIONS_UPDATED_EVENT);
@@ -63,37 +117,46 @@ export const requestPushPermission = async (): Promise<boolean> => {
     }
   }
 
-  const messaging = getMessaging();
-  if (!messaging) {
+  const api = loadMessagingApi();
+  const messaging = getMessagingInstance();
+  if (!api || !messaging) {
     // Notifee local notifications can still work without FCM.
     return true;
   }
 
-  const authStatus = await messaging().requestPermission();
-  const enabled =
-    authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-    authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-  return enabled;
+  const authStatus = await api.requestPermission(messaging);
+  return (
+    authStatus === api.AuthorizationStatus.AUTHORIZED ||
+    authStatus === api.AuthorizationStatus.PROVISIONAL
+  );
 };
 
 export const getFcmToken = async (): Promise<string | null> => {
-  const messaging = getMessaging();
-  if (!messaging) {
-    console.log(
-      '[push] FCM token: messaging module unavailable (check google-services.json / rebuild)',
+  const api = loadMessagingApi();
+  const messaging = getMessagingInstance();
+  if (!api || !messaging) {
+    console.warn(
+      '[push] FCM unavailable — messaging module / native bridge not ready.',
     );
     return null;
   }
 
   try {
-    await messaging().registerDeviceForRemoteMessages();
-    const token = await messaging().getToken();
+    try {
+      await api.registerDeviceForRemoteMessages(messaging);
+    } catch {
+      // Android often does not require this; iOS needs it when auto-register is off.
+    }
+
+    const token = await api.getToken(messaging);
+    lastFcmToken = token || null;
     if (token) {
-      console.log('[push] FCM token:', token);
+      console.warn('[push] ========== FCM DEVICE TOKEN ==========');
+      console.warn(token);
+      console.warn('[push] =====================================');
       return token;
     }
-    console.log('[push] FCM token: empty');
+    console.warn('[push] FCM token empty (permission / Play Services?)');
     return null;
   } catch (error) {
     console.warn('[push] Failed to get FCM token', error);
@@ -170,27 +233,27 @@ export const handleBackgroundMessage = async (
   remoteMessage: RemoteMessageLike,
 ) => {
   await saveIncomingNotification(remoteMessage);
-  // When payload has a `notification` block, Android may already show a system tray item.
-  // Still display via Notifee for data-only messages.
   if (!remoteMessage.notification) {
     await displayLocalNotification(remoteMessage);
   }
 };
 
 export const setupForegroundListeners = () => {
-  const messaging = getMessaging();
+  const api = loadMessagingApi();
+  const messaging = getMessagingInstance();
   const unsubscribers: Array<() => void> = [];
 
-  if (messaging) {
+  if (api && messaging) {
     unsubscribers.push(
-      messaging().onMessage(async remoteMessage => {
+      api.onMessage(messaging, async remoteMessage => {
         await handleForegroundMessage(remoteMessage);
       }),
     );
 
     unsubscribers.push(
-      messaging().onTokenRefresh(token => {
-        console.log('[push] FCM token refreshed:', token);
+      api.onTokenRefresh(messaging, token => {
+        lastFcmToken = token;
+        console.warn('[push] FCM token refreshed:', token);
       }),
     );
   }
@@ -209,24 +272,80 @@ export const setupForegroundListeners = () => {
 };
 
 export const bootstrapPushNotifications = async () => {
-  console.log('[push] Bootstrapping push notifications...');
+  console.warn('[push] Bootstrapping push notifications...');
   await ensureNotificationChannel();
   const granted = await requestPushPermission();
   if (!granted) {
-    console.warn('[push] Notification permission not granted');
-    return null;
+    console.warn(
+      '[push] Notification permission not granted — still requesting FCM token',
+    );
   }
 
-  // Backend not configured yet — only log token to console.
   const token = await getFcmToken();
+  if (!token) {
+    console.warn(
+      '[push] No FCM token yet. Confirm Firebase is initialized and a device with Play Services is used.',
+    );
+  }
   return token;
 };
 
+type NotifyInAppOptions = {
+  orderId?: string;
+  type?: string;
+  targetRole?: 'manager' | 'superadmin' | 'cashier' | 'kitchen' | 'all';
+  targetBranchId?: string | null;
+  relatedId?: string;
+  /** When false, only saves to inbox (no system banner). Default true. */
+  showBanner?: boolean;
+};
+
 /** Local banner + in-app list (works even before Firebase is configured). */
-export const notifyInApp = async (title: string, body: string, orderId?: string) => {
-  await handleForegroundMessage({
+export const notifyInApp = async (
+  title: string,
+  body: string,
+  orderIdOrOptions?: string | NotifyInAppOptions,
+) => {
+  const options: NotifyInAppOptions =
+    typeof orderIdOrOptions === 'string'
+      ? {orderId: orderIdOrOptions}
+      : orderIdOrOptions ?? {};
+
+  const data: Record<string, string> = {};
+  if (options.orderId) {
+    data.orderId = options.orderId;
+  }
+  if (options.type) {
+    data.type = options.type;
+  }
+  if (options.targetRole) {
+    data.targetRole = options.targetRole;
+  }
+  if (options.targetBranchId) {
+    data.targetBranchId = options.targetBranchId;
+  }
+  if (options.relatedId) {
+    data.relatedId = options.relatedId;
+  }
+
+  await addStoredNotification({
+    title,
+    body,
+    orderId: options.orderId,
+    type: options.type,
+    targetRole: options.targetRole,
+    targetBranchId: options.targetBranchId,
+    relatedId: options.relatedId,
+  });
+  emitNotificationsUpdated();
+
+  if (options.showBanner === false) {
+    return;
+  }
+
+  await displayLocalNotification({
     notification: {title, body},
-    data: orderId ? {orderId} : undefined,
+    data,
   });
 };
 
@@ -239,12 +358,13 @@ export const sendTestLocalNotification = async () => {
 };
 
 export const registerBackgroundMessageHandler = () => {
-  const messaging = getMessaging();
-  if (!messaging) {
+  const api = loadMessagingApi();
+  const messaging = getMessagingInstance();
+  if (!api || !messaging) {
     return;
   }
 
-  messaging().setBackgroundMessageHandler(async remoteMessage => {
+  api.setBackgroundMessageHandler(messaging, async remoteMessage => {
     await handleBackgroundMessage(remoteMessage);
   });
 };

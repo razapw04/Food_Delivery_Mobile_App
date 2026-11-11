@@ -6,6 +6,8 @@ import React, {
 } from 'react';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {queryKeys} from '../lib/queryClient';
+import {getAdminProducts} from '../storage/adminProductsStorage';
+import {listBranches} from '../storage/branchesStorage';
 import {
   branches as localBranches,
   type Branch,
@@ -22,6 +24,7 @@ type CatalogPayload = {
   menuCategories: MenuCategory[];
   menuItems: MenuItem[];
   branches: Branch[];
+  isUsingFallback: boolean;
 };
 
 type CatalogContextValue = {
@@ -38,23 +41,41 @@ type CatalogContextValue = {
 
 const CatalogContext = createContext<CatalogContextValue | null>(null);
 
-const fetchCatalog = async (): Promise<CatalogPayload> => ({
-  menuCategories: localMenuCategories,
-  menuItems: localMenuItems,
-  branches: localBranches,
-});
+/**
+ * User + cashier + kitchen catalog.
+ * Prefers admin-managed products from AsyncStorage when present.
+ */
+const fetchCatalog = async (): Promise<CatalogPayload> => {
+  const [adminProducts, branches] = await Promise.all([
+    getAdminProducts(),
+    listBranches(),
+  ]);
+  // null = never managed by admin → seed menu; array = admin source of truth
+  const usingAdminMenu = adminProducts != null;
+
+  return {
+    menuCategories: localMenuCategories,
+    menuItems: usingAdminMenu ? adminProducts : localMenuItems,
+    branches,
+    isUsingFallback: !usingAdminMenu,
+  };
+};
 
 export const CatalogProvider = ({children}: {children: React.ReactNode}) => {
   const queryClient = useQueryClient();
   const catalogQuery = useQuery({
     queryKey: queryKeys.catalog,
     queryFn: fetchCatalog,
+    // Admin/menu edits must show everywhere immediately.
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
   const payload = catalogQuery.data;
   const menuCategories = payload?.menuCategories ?? localMenuCategories;
   const menuItems = payload?.menuItems ?? localMenuItems;
   const branches = payload?.branches ?? localBranches;
+  const isUsingFallback = payload?.isUsingFallback ?? true;
 
   const refreshCatalog = useCallback(async () => {
     await queryClient.invalidateQueries({queryKey: queryKeys.catalog});
@@ -65,19 +86,21 @@ export const CatalogProvider = ({children}: {children: React.ReactNode}) => {
     [menuItems],
   );
 
-  const popularMenuItems = useMemo(
-    () =>
-      popularMenuItemIds
-        .map(id => menuItems.find(item => item.id === id))
-        .filter((item): item is MenuItem => item != null),
-    [menuItems],
-  );
+  const popularMenuItems = useMemo(() => {
+    const fromSeed = popularMenuItemIds
+      .map(id => menuItems.find(item => item.id === id))
+      .filter((item): item is MenuItem => item != null);
+    if (fromSeed.length > 0) {
+      return fromSeed;
+    }
+    return menuItems.slice(0, 6);
+  }, [menuItems]);
 
   const value = useMemo(
     () => ({
       isLoading: catalogQuery.isPending,
       error: null,
-      isUsingFallback: false,
+      isUsingFallback,
       menuCategories,
       menuItems,
       popularMenuItems,
@@ -87,6 +110,7 @@ export const CatalogProvider = ({children}: {children: React.ReactNode}) => {
     }),
     [
       catalogQuery.isPending,
+      isUsingFallback,
       menuCategories,
       menuItems,
       popularMenuItems,

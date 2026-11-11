@@ -49,7 +49,7 @@ export const styles = StyleSheet.create({
   },
   listContent: {
     padding: spacing.lg,
-    paddingBottom: 110,
+    paddingBottom: 160,
     flexGrow: 1,
   },
   productCard: {
@@ -125,7 +125,7 @@ export const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: spacing.lg,
-    bottom: spacing.lg,
+    bottom: spacing.lg + 70,
     height: 52,
     borderRadius: 26,
     paddingHorizontal: spacing.lg,

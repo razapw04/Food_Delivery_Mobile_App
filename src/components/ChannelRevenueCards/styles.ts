@@ -8,55 +8,63 @@ export const styles = StyleSheet.create({
   wrap: {
     marginBottom: spacing.lg,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
   title: {
     color: ink,
     fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
-    marginBottom: spacing.xs,
   },
-  subtitle: {
+  hint: {
     color: muted,
     fontSize: typography.fontSize.xs,
-    lineHeight: 16,
-    marginBottom: spacing.sm,
+  },
+  grid: {
+    flexDirection: 'row',
+    gap: spacing.sm,
   },
   block: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
-    padding: spacing.md,
-    marginBottom: spacing.sm,
+    borderColor: '#EEF0F3',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    minHeight: 96,
   },
   blockEmphasize: {
-    borderColor: colors.primary,
-    backgroundColor: '#FFF7ED',
+    borderColor: '#EEF0F3',
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 3,
+    borderTopColor: colors.primary,
   },
   blockLabel: {
     color: muted,
-    fontSize: typography.fontSize.xs,
+    fontSize: 10,
     fontWeight: typography.fontWeight.semibold,
-    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: 6,
   },
-  blockToday: {
+  blockLabelEmphasize: {
+    color: colors.primary,
+  },
+  blockValue: {
     color: ink,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
+  },
+  blockValueEmphasize: {
+    color: ink,
   },
   blockMeta: {
     color: muted,
-    fontSize: typography.fontSize.xs,
-    marginTop: 2,
-    marginBottom: spacing.sm,
-  },
-  blockRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  blockSide: {
-    color: ink,
-    fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.medium,
+    fontSize: 10,
+    marginTop: 4,
   },
 });

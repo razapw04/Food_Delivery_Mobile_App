@@ -23,6 +23,7 @@ import CartIconButton from '../../../components/CartIconButton';
 import SideDrawer from '../../../components/SideDrawer';
 import {useAuth} from '../../../context/AuthContext';
 import {useCart} from '../../../context/CartContext';
+import {useCatalog} from '../../../context/CatalogContext';
 import {useLocation} from '../../../context/LocationContext';
 import {useOrder, type OrderMode} from '../../../context/OrderContext';
 import {
@@ -30,12 +31,7 @@ import {
   type StoredOrder,
 } from '../../../storage/orderStorage';
 import type {MainTabParamList, RootStackParamList} from '../../../types/navigation';
-import {
-  bestsellers,
-  BestsellerItem,
-  promos,
-  RecentOrder,
-} from './model';
+import {promos, RecentOrder} from './model';
 import {styles} from './styles';
 
 type HomeScreenProps = CompositeScreenProps<
@@ -425,7 +421,7 @@ const BestsellerCard = ({
   item,
   onPress,
 }: {
-  item: BestsellerItem;
+  item: {id: string; name: string; image: string};
   onPress: () => void;
 }) => (
   <Pressable style={styles.menuCard} onPress={onPress}>
@@ -537,9 +533,11 @@ const RecentOrdersSection = ({
 };
 
 const ExploreMenu = ({
+  items,
   onViewAll,
   onSelectItem,
 }: {
+  items: {id: string; name: string; image: string}[];
   onViewAll: () => void;
   onSelectItem: (itemId: string) => void;
 }) => (
@@ -556,7 +554,7 @@ const ExploreMenu = ({
     </View>
 
     <View style={styles.menuGrid}>
-      {bestsellers.map(item => (
+      {items.map(item => (
         <BestsellerCard
           key={item.id}
           item={item}
@@ -644,6 +642,17 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
   const {deliveryAddress, isLocating} = useLocation();
   const {orderMode, setOrderMode, selectedBranch} = useOrder();
   const {addItem} = useCart();
+  const {popularMenuItems, menuItems, refreshCatalog} = useCatalog();
+
+  const exploreItems = useMemo(() => {
+    const source =
+      popularMenuItems.length > 0 ? popularMenuItems : menuItems.slice(0, 6);
+    return source.map(item => ({
+      id: item.id,
+      name: item.name,
+      image: item.image,
+    }));
+  }, [menuItems, popularMenuItems]);
 
   useEffect(() => {
     if (!hasAutoOpenedAddressModal && orderMode === 'delivery') {
@@ -655,6 +664,7 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
   useFocusEffect(
     useCallback(() => {
       let active = true;
+      void refreshCatalog();
       const loadRecent = async () => {
         try {
           const stored = await getStoredOrders(user?.email);
@@ -672,7 +682,7 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
       return () => {
         active = false;
       };
-    }, [user?.email]),
+    }, [refreshCatalog, user?.email]),
   );
 
   const handleReorder = (order: RecentOrder) => {
@@ -734,6 +744,7 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
 
         <PromoCarousel />
         <ExploreMenu
+          items={exploreItems}
           onViewAll={() => navigation.navigate('Menu')}
           onSelectItem={itemId =>
             navigation.navigate('ProductDetail', {itemId})

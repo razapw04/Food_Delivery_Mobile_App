@@ -117,11 +117,132 @@ export const styles = StyleSheet.create({
   },
   orderCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#F0F0F0',
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  orderCardPriorityLow: {
+    borderColor: '#E5E7EB',
+  },
+  orderCardPriorityNormal: {
+    borderColor: '#FCD34D',
+    backgroundColor: '#FFFBEB',
+  },
+  orderCardPriorityHigh: {
+    borderColor: '#FB923C',
+    backgroundColor: '#FFF7ED',
+  },
+  orderCardPriorityUrgent: {
+    borderColor: '#F87171',
+    backgroundColor: '#FEF2F2',
+  },
+  briefTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  briefLeft: {
+    flex: 1.1,
+    minWidth: 0,
+  },
+  briefCenter: {
+    flex: 1.05,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  orderTimeBold: {
+    color: ink,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+    textAlign: 'center',
+  },
+  orderTimeCaption: {
+    marginTop: 1,
+    color: muted,
+    fontSize: 10,
+    fontWeight: typography.fontWeight.semibold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+  },
+  priorityBadge: {
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+  },
+  priorityBadgeLow: {
+    backgroundColor: '#F3F4F6',
+  },
+  priorityBadgeNormal: {
+    backgroundColor: '#FEF3C7',
+  },
+  priorityBadgeHigh: {
+    backgroundColor: '#FFEDD5',
+  },
+  priorityBadgeUrgent: {
+    backgroundColor: '#FEE2E2',
+  },
+  priorityText: {
+    fontSize: 10,
+    fontWeight: typography.fontWeight.bold,
+    textAlign: 'center',
+  },
+  priorityTextLow: {
+    color: '#6B7280',
+  },
+  priorityTextNormal: {
+    color: '#B45309',
+  },
+  priorityTextHigh: {
+    color: '#C2410C',
+  },
+  priorityTextUrgent: {
+    color: '#B91C1C',
+  },
+  briefRight: {
+    flex: 0.85,
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  briefMeta: {
+    marginTop: 2,
+    color: muted,
+    fontSize: typography.fontSize.xs,
+  },
+  activeLabel: {
+    color: '#15803D',
+    fontSize: 10,
+    fontWeight: typography.fontWeight.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  channelDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  channelDotPos: {
+    backgroundColor: '#F97316',
+  },
+  channelDotOnline: {
+    backgroundColor: '#6366F1',
+  },
+  briefActions: {
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  briefConfirmFull: {
+    flex: 1,
+    marginBottom: 0,
   },
   orderTopRow: {
     flexDirection: 'row',
@@ -192,55 +313,15 @@ export const styles = StyleSheet.create({
   statusTextCancelled: {
     color: colors.error,
   },
-  tableLine: {
-    color: colors.primary,
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.bold,
-    marginBottom: 2,
-  },
   customerName: {
     color: ink,
     fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
   },
-  customerEmail: {
-    color: muted,
-    fontSize: typography.fontSize.sm,
-    marginTop: 2,
-  },
-  orderDetails: {
-    color: muted,
-    fontSize: typography.fontSize.sm,
-    marginTop: spacing.sm,
-    lineHeight: 18,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.sm,
-  },
-  metaText: {
-    flex: 1,
-    color: muted,
-    fontSize: typography.fontSize.xs,
-    marginRight: spacing.sm,
-  },
   orderPrice: {
     color: colors.primary,
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-  },
-  addressText: {
-    color: muted,
-    fontSize: typography.fontSize.xs,
-    marginTop: spacing.xs,
-  },
-  actionsWrap: {
-    marginTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    paddingTop: spacing.sm,
   },
   confirmButton: {
     backgroundColor: colors.primary,

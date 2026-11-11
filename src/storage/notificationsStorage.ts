@@ -7,6 +7,11 @@ export type AppNotification = {
   createdAt: string;
   read: boolean;
   orderId?: string;
+  /** e.g. inventory_request */
+  type?: string;
+  targetRole?: 'manager' | 'superadmin' | 'cashier' | 'kitchen' | 'all';
+  targetBranchId?: string | null;
+  relatedId?: string;
 };
 
 const NOTIFICATIONS_KEY = '@food_app/notifications';
@@ -49,9 +54,36 @@ export const addStoredNotification = async (
     createdAt: notification.createdAt ?? new Date().toISOString(),
     read: notification.read ?? false,
     orderId: notification.orderId,
+    type: notification.type,
+    targetRole: notification.targetRole,
+    targetBranchId: notification.targetBranchId,
+    relatedId: notification.relatedId,
   };
   await saveStoredNotifications([next, ...existing]);
   return next;
+};
+
+export const listNotificationsForAudience = async (options: {
+  role?: string | null;
+  branchId?: string | null;
+}): Promise<AppNotification[]> => {
+  const items = await getStoredNotifications();
+  return items.filter(item => {
+    if (!item.targetRole || item.targetRole === 'all') {
+      return true;
+    }
+    if (item.targetRole !== options.role) {
+      return false;
+    }
+    if (
+      item.targetBranchId &&
+      options.branchId &&
+      item.targetBranchId !== options.branchId
+    ) {
+      return false;
+    }
+    return true;
+  });
 };
 
 export const markAllNotificationsRead = async () => {

@@ -35,7 +35,7 @@ export const styles = StyleSheet.create({
   },
   content: {
     padding: spacing.lg,
-    paddingBottom: spacing.xxl,
+    paddingBottom: 120,
   },
   banner: {
     padding: spacing.md,
@@ -83,6 +83,59 @@ export const styles = StyleSheet.create({
     fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
     marginBottom: spacing.sm,
+  },
+  periodRow: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: '#EEF0F3',
+    marginBottom: spacing.md,
+  },
+  periodChip: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  periodChipActive: {
+    backgroundColor: colors.primary,
+  },
+  periodChipText: {
+    color: muted,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  periodChipTextActive: {
+    color: '#FFFFFF',
+  },
+  monthChipsRow: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+    paddingRight: spacing.md,
+  },
+  monthChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  monthChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  monthChipText: {
+    color: ink,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.medium,
+  },
+  monthChipTextActive: {
+    color: '#FFFFFF',
   },
   card: {
     backgroundColor: '#FFFFFF',

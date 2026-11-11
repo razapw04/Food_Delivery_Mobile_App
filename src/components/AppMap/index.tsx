@@ -253,6 +253,7 @@ const AppMap = ({
         mixedContentMode="always"
         setSupportMultipleWindows={false}
         androidLayerType="hardware"
+        nestedScrollEnabled
       />
     </View>
   );

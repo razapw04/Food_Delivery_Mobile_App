@@ -1,6 +1,11 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {Alert, BackHandler} from 'react-native';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  type CompositeNavigationProp,
+} from '@react-navigation/native';
+import type {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useAuth} from '../../../context/AuthContext';
 import {
@@ -8,14 +13,19 @@ import {
   useUpdateOrderStatusMutation,
 } from '../../../hooks/useOrdersQuery';
 import {notifyInApp} from '../../../services/pushNotifications';
-import type {OrderStatus, StoredOrder} from '../../../storage/orderStorage';
-import type {RootStackParamList} from '../../../types/navigation';
+import type {OrderStatus} from '../../../storage/orderStorage';
+import type {
+  KitchenTabParamList,
+  RootStackParamList,
+} from '../../../types/navigation';
 import {canSelectStatus} from '../../../utils/orderStatus';
 
-type Nav = NativeStackNavigationProp<RootStackParamList, 'KitchenOrders'>;
+type Nav = CompositeNavigationProp<
+  BottomTabNavigationProp<KitchenTabParamList, 'KitchenOrders'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 const KITCHEN_ACTIVE: OrderStatus[] = ['Confirmed', 'Preparing'];
-const KITCHEN_RECENT: OrderStatus[] = ['On the way'];
 
 const useController = () => {
   const navigation = useNavigation<Nav>();
@@ -36,30 +46,18 @@ const useController = () => {
     }
   }, [isKitchen, navigation]);
 
-  const branchFiltered = useMemo(() => {
-    return allOrders.filter(order => {
-      if (order.branchId == null) {
-        return true;
-      }
-      if (branchId == null) {
-        return false;
-      }
-      return order.branchId === branchId;
-    });
-  }, [allOrders, branchId]);
+  const branchFiltered = useMemo(
+    () =>
+      allOrders.filter(order =>
+        branchId ? order.branchId === branchId : true,
+      ),
+    [allOrders, branchId],
+  );
 
   const activeOrders = useMemo(
     () =>
       branchFiltered.filter(order =>
         KITCHEN_ACTIVE.includes(order.status ?? 'Pending'),
-      ),
-    [branchFiltered],
-  );
-
-  const recentDispatch = useMemo(
-    () =>
-      branchFiltered.filter(order =>
-        KITCHEN_RECENT.includes(order.status ?? 'Pending'),
       ),
     [branchFiltered],
   );
@@ -112,8 +110,7 @@ const useController = () => {
 
   const handleUpdateStatus = useCallback(
     async (orderId: string, nextStatus: OrderStatus) => {
-      const pool = [...activeOrders, ...recentDispatch];
-      const current = pool.find(
+      const current = activeOrders.find(
         order => order.id === orderId || order.orderId === orderId,
       );
       if (
@@ -149,7 +146,7 @@ const useController = () => {
         setUpdatingId(null);
       }
     },
-    [activeOrders, recentDispatch, updateOrderStatus],
+    [activeOrders, updateOrderStatus],
   );
 
   const errorMessage = ordersError
@@ -164,7 +161,6 @@ const useController = () => {
 
   return {
     activeOrders,
-    recentDispatch,
     isPending,
     updatingId,
     errorMessage,

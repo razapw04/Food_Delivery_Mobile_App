@@ -12,7 +12,11 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import type {StoredOrder} from '../../storage/orderStorage';
+import {
+  isOpenDineInTab,
+  type StoredOrder,
+} from '../../storage/orderStorage';
+import {saveOrderSlipToDevice} from '../../storage/slipStorage';
 import {
   buildOrderSlipHtml,
   buildOrderSlipText,
@@ -23,6 +27,8 @@ type Props = {
   visible: boolean;
   order: StoredOrder | null;
   onClose: () => void;
+  /** When set, open-tab dine-in slips show Edit for that guest until bill is paid. */
+  onEditOpenTab?: (order: StoredOrder) => void;
 };
 
 const formatPrice = (value: number) => `Rs. ${value.toLocaleString('en-PK')}`;
@@ -35,10 +41,12 @@ const formatWhen = (iso: string) =>
     minute: '2-digit',
   });
 
-const OrderSlipModal = ({visible, order, onClose}: Props) => {
+const OrderSlipModal = ({visible, order, onClose, onEditOpenTab}: Props) => {
   const insets = useSafeAreaInsets();
   const [mounted, setMounted] = useState(visible);
   const [busy, setBusy] = useState(false);
+  const canEditOpenTab =
+    Boolean(onEditOpenTab) && order != null && isOpenDineInTab(order);
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const sheetY = useRef(new Animated.Value(480)).current;
   const paperScale = useRef(new Animated.Value(0.94)).current;
@@ -115,6 +123,38 @@ const OrderSlipModal = ({visible, order, onClose}: Props) => {
     }
   };
 
+  const handleSave = async () => {
+    if (!order) {
+      return;
+    }
+    setBusy(true);
+    try {
+      await saveOrderSlipToDevice(order);
+      Alert.alert(
+        'Slip saved',
+        `Order ${order.orderId} slip is saved on this device. You can also share/export it.`,
+        [
+          {text: 'Done', style: 'cancel'},
+          {
+            text: 'Share / Files',
+            onPress: () => {
+              void handleShare();
+            },
+          },
+        ],
+      );
+    } catch (error) {
+      Alert.alert(
+        'Save failed',
+        error instanceof Error
+          ? error.message
+          : 'Could not save this slip on the device.',
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const handlePrint = async () => {
     if (!order) {
       return;
@@ -129,13 +169,25 @@ const OrderSlipModal = ({visible, order, onClose}: Props) => {
         html: buildOrderSlipHtml(order),
         jobName: `Order-${order.orderId}`,
       });
+      // Also archive a device copy after a successful print dialog handoff.
+      try {
+        await saveOrderSlipToDevice(order);
+      } catch {
+        // Print succeeded; archive is best-effort.
+      }
     } catch (error) {
       // Fallback: share slip text when system print is unavailable.
       Alert.alert(
         'Print unavailable',
-        'System print module is not ready on this build. You can share the slip instead.',
+        'System print module is not ready on this build. You can save or share the slip instead.',
         [
           {text: 'Cancel', style: 'cancel'},
+          {
+            text: 'Save on device',
+            onPress: () => {
+              void handleSave();
+            },
+          },
           {
             text: 'Share slip',
             onPress: () => {
@@ -181,7 +233,9 @@ const OrderSlipModal = ({visible, order, onClose}: Props) => {
             <View>
               <Text style={styles.title}>Order slip</Text>
               <Text style={styles.subtitle}>
-                Confirmed · ready to print for kitchen
+                {canEditOpenTab
+                  ? 'Open tab · edit until guest pays'
+                  : 'Confirmed · ready to print for kitchen'}
               </Text>
             </View>
             <Pressable
@@ -201,6 +255,11 @@ const OrderSlipModal = ({visible, order, onClose}: Props) => {
               style={[styles.paper, {transform: [{scale: paperScale}]}]}>
               <Text style={styles.brand}>Food Delivery</Text>
               <Text style={styles.brandSub}>Kitchen Order Slip</Text>
+
+              <Text style={styles.customerNameBold}>
+                {order.customerName || 'Customer'}
+              </Text>
+              <Text style={styles.customerNameCaption}>Customer</Text>
 
               <View style={styles.metaRow}>
                 <Text style={styles.metaLabel}>Order</Text>
@@ -224,12 +283,6 @@ const OrderSlipModal = ({visible, order, onClose}: Props) => {
                   <Text style={styles.metaValue}>{order.waiterName}</Text>
                 </View>
               ) : null}
-              <View style={styles.metaRow}>
-                <Text style={styles.metaLabel}>Customer</Text>
-                <Text style={styles.metaValue}>
-                  {order.customerName || 'Customer'}
-                </Text>
-              </View>
               <View style={styles.metaRow}>
                 <Text style={styles.metaLabel}>Mode</Text>
                 <Text style={styles.metaValue}>
@@ -310,7 +363,34 @@ const OrderSlipModal = ({visible, order, onClose}: Props) => {
             </Animated.View>
           </ScrollView>
 
+          {canEditOpenTab ? (
+            <View style={styles.actions}>
+              <Pressable
+                accessibilityRole="button"
+                style={[styles.editButton, busy && styles.buttonDisabled]}
+                disabled={busy}
+                onPress={() => {
+                  if (order && onEditOpenTab) {
+                    onEditOpenTab(order);
+                  }
+                }}>
+                <Icon name="pencil" size={18} color="#FF7622" />
+                <Text style={styles.editText}>Edit this guest</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
           <View style={styles.actions}>
+            <Pressable
+              accessibilityRole="button"
+              style={[styles.secondaryButton, busy && styles.buttonDisabled]}
+              disabled={busy}
+              onPress={() => {
+                void handleSave();
+              }}>
+              <Icon name="content-save-outline" size={18} color="#1A1A1A" />
+              <Text style={styles.secondaryText}>Save</Text>
+            </Pressable>
             <Pressable
               accessibilityRole="button"
               style={[styles.secondaryButton, busy && styles.buttonDisabled]}
@@ -330,7 +410,7 @@ const OrderSlipModal = ({visible, order, onClose}: Props) => {
               }}>
               <Icon name="printer" size={18} color="#FFFFFF" />
               <Text style={styles.primaryText}>
-                {busy ? 'Working...' : 'Print slip'}
+                {busy ? 'Working...' : 'Print'}
               </Text>
             </Pressable>
           </View>

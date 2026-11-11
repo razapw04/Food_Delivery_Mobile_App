@@ -5,7 +5,6 @@ import {
   Pressable,
   ScrollView,
   StatusBar,
-  Switch,
   Text,
   TextInput,
   View,
@@ -41,8 +40,6 @@ const AdminAdminFormScreen = ({navigation, route}: Props) => {
     setShowConfirmPassword,
     role,
     setRole,
-    canViewRevenue,
-    setCanViewRevenue,
     roleTitle,
     branchId,
     setBranchId,
@@ -83,25 +80,62 @@ const AdminAdminFormScreen = ({navigation, route}: Props) => {
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}>
           <Text style={styles.label}>Role</Text>
-          <View style={styles.chipsRow}>
+          <View style={styles.roleRows}>
             {STAFF_ROLE_OPTIONS.map(option => {
               const active = option === role;
+              const meta =
+                option === 'manager'
+                  ? {
+                      icon: 'account-tie',
+                      row: styles.roleRowManager,
+                      rowActive: styles.roleRowManagerActive,
+                      iconWrap: styles.roleIconManager,
+                      color: '#1D4ED8',
+                    }
+                  : option === 'cashier'
+                    ? {
+                        icon: 'cash-register',
+                        row: styles.roleRowCashier,
+                        rowActive: styles.roleRowCashierActive,
+                        iconWrap: styles.roleIconCashier,
+                        color: '#C2410C',
+                      }
+                    : {
+                        icon: 'chef-hat',
+                        row: styles.roleRowKitchen,
+                        rowActive: styles.roleRowKitchenActive,
+                        iconWrap: styles.roleIconKitchen,
+                        color: '#15803D',
+                      };
               return (
                 <Pressable
                   key={option}
                   accessibilityRole="button"
-                  style={[styles.chip, active && styles.chipActive]}
-                  onPress={() => {
-                    setRole(option);
-                    if (option !== 'manager') {
-                      setCanViewRevenue(false);
-                    }
-                  }}
+                  accessibilityState={{selected: active, disabled: isEditing}}
+                  style={[
+                    styles.roleRow,
+                    meta.row,
+                    active && meta.rowActive,
+                    isEditing && !active && styles.roleRowDisabled,
+                  ]}
+                  onPress={() => setRole(option)}
                   disabled={isEditing}>
+                  <View style={[styles.roleIconWrap, meta.iconWrap]}>
+                    <Icon name={meta.icon} size={20} color={meta.color} />
+                  </View>
                   <Text
-                    style={[styles.chipText, active && styles.chipTextActive]}>
+                    style={[
+                      styles.roleRowText,
+                      {color: meta.color},
+                      active && styles.roleRowTextActive,
+                    ]}>
                     {staffRoleLabel(option)}
                   </Text>
+                  {active ? (
+                    <Icon name="check-circle" size={18} color={meta.color} />
+                  ) : (
+                    <View style={styles.roleRowSpacer} />
+                  )}
                 </Pressable>
               );
             })}
@@ -114,23 +148,15 @@ const AdminAdminFormScreen = ({navigation, route}: Props) => {
           ) : null}
 
           {role === 'manager' ? (
-            <>
-              <View style={styles.permissionRow}>
-                <View style={styles.permissionCopy}>
-                  <Text style={styles.label}>Revenue access</Text>
-                  <Text style={styles.permissionHint}>
-                    Allow this manager to view branch revenue. Only super admin
-                    can grant this.
-                  </Text>
-                </View>
-                <Switch
-                  value={canViewRevenue}
-                  onValueChange={setCanViewRevenue}
-                  trackColor={{false: '#D1D5DB', true: '#FDBA74'}}
-                  thumbColor={canViewRevenue ? '#FF7622' : '#F9FAFB'}
-                />
+            <View style={styles.permissionRow}>
+              <View style={styles.permissionCopy}>
+                <Text style={styles.label}>Manager permissions</Text>
+                <Text style={styles.permissionHint}>
+                  Can view branch employees and branch sales. Cannot approve
+                  price-change requests — only super admin can approve.
+                </Text>
               </View>
-            </>
+            </View>
           ) : null}
 
           <Text style={styles.label}>Full name</Text>

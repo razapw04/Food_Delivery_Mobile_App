@@ -49,38 +49,77 @@ export const styles = StyleSheet.create({
   },
   listContent: {
     padding: spacing.lg,
-    paddingBottom: 110,
+    paddingBottom: 160,
     flexGrow: 1,
   },
   card: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
     padding: spacing.md,
     marginBottom: spacing.md,
   },
+  cardManager: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#BFDBFE',
+  },
+  cardCashier: {
+    backgroundColor: '#FFF7ED',
+    borderColor: '#FED7AA',
+  },
+  cardKitchen: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#BBF7D0',
+  },
   cardTop: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.sm,
+  },
+  roleIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardBody: {
     flex: 1,
   },
   roleBadge: {
     alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 999,
-    backgroundColor: '#EEF2FF',
     marginBottom: spacing.xs,
   },
+  roleBadgeIcon: {
+    marginRight: 0,
+  },
+  roleBadgeManager: {
+    backgroundColor: '#DBEAFE',
+  },
+  roleBadgeCashier: {
+    backgroundColor: '#FFEDD5',
+  },
+  roleBadgeKitchen: {
+    backgroundColor: '#DCFCE7',
+  },
   roleBadgeText: {
-    color: '#3730A3',
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.semibold,
+  },
+  roleBadgeTextManager: {
+    color: '#1D4ED8',
+  },
+  roleBadgeTextCashier: {
+    color: '#C2410C',
+  },
+  roleBadgeTextKitchen: {
+    color: '#15803D',
   },
   name: {
     flex: 1,
@@ -166,7 +205,7 @@ export const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: spacing.lg,
-    bottom: spacing.lg,
+    bottom: spacing.lg + 70,
     height: 52,
     borderRadius: 26,
     paddingHorizontal: spacing.lg,

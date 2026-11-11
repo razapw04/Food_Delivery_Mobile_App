@@ -53,9 +53,6 @@ const KitchenOrderCard = ({
         ? styles.statusTextOnTheWay
         : styles.statusTextConfirmed;
 
-  const showStart = !readOnly && status === 'Confirmed';
-  const showDispatch = !readOnly && status === 'Preparing';
-  const channel = resolveOrderChannel(order);
   const isDineIn = order.orderMode === 'dine_in';
 
   return (
@@ -68,15 +65,11 @@ const KitchenOrderCard = ({
       </View>
 
       <Text style={styles.channelMeta}>
-        {channelLabel(channel)}
+        {channelLabel(resolveOrderChannel(order))}
         {isDineIn ? ' · Open for kitchen' : ''}
-        {order.tableNo ? ` · Table ${order.tableNo}` : ''}
       </Text>
-      <Text style={styles.customerName}>{order.customerName || 'Customer'}</Text>
-      {order.waiterName ? (
-        <Text style={styles.addressText}>Waiter: {order.waiterName}</Text>
-      ) : null}
-      <Text style={styles.orderDetails} numberOfLines={4}>
+
+      <Text style={styles.orderDetails} numberOfLines={3}>
         {itemsSummary || 'No items'}
       </Text>
 
@@ -84,50 +77,47 @@ const KitchenOrderCard = ({
         <Text style={styles.metaText}>
           {formatOrderWhen(order.createdAt)} · {kitchenModeLabel(order)}
         </Text>
-        <Text style={styles.orderPrice}>{formatOrderPrice(order.totalAmount)}</Text>
-      </View>
-
-      {order.deliveryAddress ? (
-        <Text style={styles.addressText} numberOfLines={2}>
-          {order.deliveryAddress}
+        <Text style={styles.orderPrice}>
+          {formatOrderPrice(order.totalAmount)}
         </Text>
-      ) : null}
-
-      <View style={styles.actionsWrap}>
-        {showStart ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Start preparing ${order.orderId}`}
-            disabled={busy}
-            onPress={() => onUpdateStatus(order.id, 'Preparing')}
-            style={[
-              styles.primaryButton,
-              busy ? styles.primaryButtonDisabled : null,
-            ]}>
-            <Text style={styles.primaryButtonText}>Start preparing</Text>
-          </Pressable>
-        ) : null}
-        {showDispatch ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Mark ${order.orderId} ready for dispatch`}
-            disabled={busy}
-            onPress={() => onUpdateStatus(order.id, 'On the way')}
-            style={[
-              styles.primaryButton,
-              busy ? styles.primaryButtonDisabled : null,
-            ]}>
-            <Text style={styles.primaryButtonText}>
-              {isDineIn ? 'Ready to serve' : 'Ready for dispatch'}
-            </Text>
-          </Pressable>
-        ) : null}
-        {readOnly ? (
-          <Text style={styles.readOnlyNote}>
-            Dispatched — no further kitchen action
-          </Text>
-        ) : null}
       </View>
+
+      {!readOnly ? (
+        <View style={styles.actionsWrap}>
+          {status === 'Confirmed' ? (
+            <Pressable
+              accessibilityRole="button"
+              disabled={busy}
+              style={[
+                styles.primaryButton,
+                busy ? styles.primaryButtonDisabled : null,
+              ]}
+              onPress={() => onUpdateStatus(order.id, 'Preparing')}>
+              <Text style={styles.primaryButtonText}>
+                {busy ? 'Updating…' : 'Start preparing'}
+              </Text>
+            </Pressable>
+          ) : null}
+          {status === 'Preparing' ? (
+            <Pressable
+              accessibilityRole="button"
+              disabled={busy}
+              style={[
+                styles.primaryButton,
+                busy ? styles.primaryButtonDisabled : null,
+              ]}
+              onPress={() => onUpdateStatus(order.id, 'On the way')}>
+              <Text style={styles.primaryButtonText}>
+                {busy ? 'Updating…' : 'Mark ready / dispatch'}
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : (
+        <Text style={styles.readOnlyNote}>
+          Dispatched — no further kitchen action
+        </Text>
+      )}
     </View>
   );
 };
@@ -135,7 +125,6 @@ const KitchenOrderCard = ({
 const KitchenOrdersScreen = () => {
   const {
     activeOrders,
-    recentDispatch,
     isPending,
     updatingId,
     errorMessage,
@@ -143,11 +132,6 @@ const KitchenOrdersScreen = () => {
     handleUpdateStatus,
     handleRetry,
   } = useController();
-
-  const listData =
-    errorMessage || (activeOrders.length === 0 && recentDispatch.length === 0)
-      ? []
-      : [{key: 'body'}];
 
   const listEmpty = () => {
     if (errorMessage) {
@@ -176,12 +160,12 @@ const KitchenOrdersScreen = () => {
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.header}>
-        <View style={styles.backButton} />
-        <Text style={styles.headerTitle}>Kitchen Orders</Text>
+        <View style={styles.headerSide} />
+        <Text style={styles.headerTitle}>Active queue</Text>
         <Pressable
           accessibilityLabel="Logout"
           accessibilityRole="button"
-          style={styles.backButton}
+          style={styles.logoutButton}
           onPress={handleLogout}>
           <Icon name="logout" size={22} color="#C74440" />
         </Pressable>
@@ -191,37 +175,17 @@ const KitchenOrdersScreen = () => {
         <OrderListSkeleton />
       ) : (
         <FlatList
-          data={listData}
-          keyExtractor={item => item.key}
+          data={activeOrders}
+          keyExtractor={item => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={listEmpty}
-          renderItem={() => (
-            <>
-              {activeOrders.length > 0 ? (
-                <Text style={styles.sectionHeading}>Active queue</Text>
-              ) : null}
-              {activeOrders.map(order => (
-                <KitchenOrderCard
-                  key={order.id}
-                  order={order}
-                  busy={updatingId === order.id}
-                  onUpdateStatus={handleUpdateStatus}
-                />
-              ))}
-              {recentDispatch.length > 0 ? (
-                <Text style={styles.sectionHeading}>Recently dispatched</Text>
-              ) : null}
-              {recentDispatch.map(order => (
-                <KitchenOrderCard
-                  key={order.id}
-                  order={order}
-                  readOnly
-                  busy={false}
-                  onUpdateStatus={handleUpdateStatus}
-                />
-              ))}
-            </>
+          renderItem={({item}) => (
+            <KitchenOrderCard
+              order={item}
+              busy={updatingId === item.id}
+              onUpdateStatus={handleUpdateStatus}
+            />
           )}
         />
       )}

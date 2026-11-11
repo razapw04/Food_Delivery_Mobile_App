@@ -71,3 +71,47 @@ export const formatOrderWhen = (iso: string) =>
     hour: 'numeric',
     minute: '2-digit',
   });
+
+/** Clock time only — used bold in cashier active-order cards. */
+export const formatOrderTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
+export type OrderTimePriority = 'low' | 'normal' | 'high' | 'urgent';
+
+/** Waiting longer = higher priority for active cashier queue. */
+export const getOrderTimePriority = (
+  createdAt: string,
+  nowMs: number = Date.now(),
+): {level: OrderTimePriority; label: string; waitMinutes: number} => {
+  const createdMs = new Date(createdAt).getTime();
+  const waitMinutes = Math.max(
+    0,
+    Math.floor((nowMs - (Number.isFinite(createdMs) ? createdMs : nowMs)) / 60000),
+  );
+
+  if (waitMinutes >= 30) {
+    return {level: 'urgent', label: 'Urgent', waitMinutes};
+  }
+  if (waitMinutes >= 20) {
+    return {level: 'high', label: 'High', waitMinutes};
+  }
+  if (waitMinutes >= 10) {
+    return {level: 'normal', label: 'Normal', waitMinutes};
+  }
+  return {level: 'low', label: 'Low', waitMinutes};
+};
+
+export const formatWaitLabel = (waitMinutes: number) => {
+  if (waitMinutes < 1) {
+    return 'Just now';
+  }
+  if (waitMinutes < 60) {
+    return `${waitMinutes}m wait`;
+  }
+  const hours = Math.floor(waitMinutes / 60);
+  const mins = waitMinutes % 60;
+  return mins > 0 ? `${hours}h ${mins}m wait` : `${hours}h wait`;
+};

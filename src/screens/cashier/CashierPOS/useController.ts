@@ -1,16 +1,25 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {Alert} from 'react-native';
-import type {RouteProp} from '@react-navigation/native';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import type {CompositeNavigationProp, RouteProp} from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
+import type {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import type {CartItem} from '../../../context/CartContext';
 import {useAuth} from '../../../context/AuthContext';
 import {useCatalog} from '../../../context/CatalogContext';
 import {
-  useAppendOrderItemsMutation,
   usePlaceOrderMutation,
+  useUpdateOpenDineInTabMutation,
 } from '../../../hooks/useOrdersQuery';
 import type {MenuItem} from '../../user/Menu/model';
+import {
+  TOPPINGS,
+  formatPrice as formatProductPrice,
+} from '../../user/ProductDetail/useController';
 import {
   getStoredOrderById,
   isOpenDineInTab,
@@ -18,14 +27,21 @@ import {
   type StoredOrder,
   type StoredPaymentMethod,
 } from '../../../storage/orderStorage';
-import type {RootStackParamList} from '../../../types/navigation';
+import type {
+  CashierTabParamList,
+  RootStackParamList,
+} from '../../../types/navigation';
 import {formatOrderPrice} from '../../../utils/orderStatus';
 
-type Nav = NativeStackNavigationProp<RootStackParamList, 'CashierPOS'>;
-type Route = RouteProp<RootStackParamList, 'CashierPOS'>;
+type Nav = CompositeNavigationProp<
+  BottomTabNavigationProp<CashierTabParamList, 'CashierPOS'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
+type Route = RouteProp<CashierTabParamList, 'CashierPOS'>;
 
 type PosLine = CartItem;
 type PosServiceMode = Extract<OrderMode, 'pickup' | 'dine_in'>;
+type VariationKey = 'regular' | 'large';
 
 const TAX_PERCENT = 0;
 
@@ -34,17 +50,48 @@ export const parseMenuPrice = (price: string) =>
 
 export {formatOrderPrice as formatPrice};
 
+const buildPosLineId = (
+  productId: string,
+  variation: string,
+  toppings: string[],
+) =>
+  `pos-${productId}-${variation}-${[...toppings].sort().join('|')}`;
+
+const buildVariations = (basePrice: number) => {
+  const largeValue = Math.round(basePrice * 1.35);
+  return [
+    {
+      key: 'regular' as const,
+      label: 'Regular',
+      price: formatProductPrice(basePrice),
+      value: basePrice,
+    },
+    {
+      key: 'large' as const,
+      label: 'Large',
+      price: formatProductPrice(largeValue),
+      value: largeValue,
+    },
+  ];
+};
+
 const useController = () => {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const openOrderId = route.params?.openOrderId;
   const {isCashier, user} = useAuth();
-  const {menuCategories, menuItems, branches} = useCatalog();
+  const {menuCategories, menuItems, branches, refreshCatalog} = useCatalog();
   const {mutateAsync: placeOrder} = usePlaceOrderMutation();
-  const {mutateAsync: appendItems} = useAppendOrderItemsMutation();
+  const {mutateAsync: updateOpenTab} = useUpdateOpenDineInTabMutation();
 
   const branchId = user?.branchId ?? null;
   const branch = branches.find(item => item.id === branchId);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshCatalog();
+    }, [refreshCatalog]),
+  );
 
   const [categoryId, setCategoryId] = useState<string>('all');
   const [search, setSearch] = useState('');
@@ -59,6 +106,11 @@ const useController = () => {
   const [placing, setPlacing] = useState(false);
   const [slipOrder, setSlipOrder] = useState<StoredOrder | null>(null);
   const [editingOrder, setEditingOrder] = useState<StoredOrder | null>(null);
+  const [pendingProduct, setPendingProduct] = useState<MenuItem | null>(null);
+  const [selectedVariation, setSelectedVariation] =
+    useState<VariationKey | null>(null);
+  const [selectedToppingIds, setSelectedToppingIds] = useState<string[]>([]);
+  const [pickerQuantity, setPickerQuantity] = useState(1);
 
   useEffect(() => {
     if (!openOrderId && user?.name && !waiterName.trim()) {
@@ -97,7 +149,8 @@ const useController = () => {
       setWaiterName(existing.waiterName ?? user?.name ?? '');
       setServiceMode('dine_in');
       setPaymentMethod(existing.paymentMethod);
-      setCart([]);
+      // Load current ticket so cashier can edit this guest until bill is paid.
+      setCart((existing.items ?? []).map(item => ({...item})));
     };
     void hydrate();
     return () => {
@@ -137,33 +190,117 @@ const useController = () => {
     [cart],
   );
 
-  const addProduct = useCallback((product: MenuItem) => {
+  const cartQtyByProductId = useMemo(() => {
+    const map: Record<string, number> = {};
+    cart.forEach(item => {
+      map[item.productId] = (map[item.productId] ?? 0) + item.quantity;
+    });
+    return map;
+  }, [cart]);
+
+  const pendingVariations = useMemo(() => {
+    if (!pendingProduct) {
+      return [];
+    }
+    return buildVariations(parseMenuPrice(pendingProduct.price));
+  }, [pendingProduct]);
+
+  const selectedVariationOption =
+    pendingVariations.find(option => option.key === selectedVariation) ?? null;
+
+  const toppingsTotal = TOPPINGS.filter(topping =>
+    selectedToppingIds.includes(topping.id),
+  ).reduce((sum, topping) => sum + topping.price, 0);
+
+  const pickerUnitPrice =
+    (selectedVariationOption?.value ?? 0) + toppingsTotal;
+  const pickerTotalPrice = pickerUnitPrice * pickerQuantity;
+
+  const openProductPicker = useCallback((product: MenuItem) => {
     const unitPrice = parseMenuPrice(product.price);
     if (unitPrice <= 0) {
       return;
     }
+    setPendingProduct(product);
+    setSelectedVariation(null);
+    setSelectedToppingIds([]);
+    setPickerQuantity(1);
+  }, []);
+
+  const closeProductPicker = useCallback(() => {
+    setPendingProduct(null);
+    setSelectedVariation(null);
+    setSelectedToppingIds([]);
+    setPickerQuantity(1);
+  }, []);
+
+  const selectVariation = useCallback((key: VariationKey) => {
+    setSelectedVariation(key);
+    setSelectedToppingIds([]);
+  }, []);
+
+  const toggleTopping = useCallback((id: string) => {
+    setSelectedToppingIds(prev =>
+      prev.includes(id) ? prev.filter(itemId => itemId !== id) : [...prev, id],
+    );
+  }, []);
+
+  const decreasePickerQuantity = useCallback(() => {
+    setPickerQuantity(prev => Math.max(1, prev - 1));
+  }, []);
+
+  const increasePickerQuantity = useCallback(() => {
+    setPickerQuantity(prev => prev + 1);
+  }, []);
+
+  const confirmProductPicker = useCallback(() => {
+    if (!pendingProduct || !selectedVariationOption) {
+      Alert.alert('Select variation', 'Choose Regular or Large first.');
+      return;
+    }
+
+    const selectedToppings = TOPPINGS.filter(topping =>
+      selectedToppingIds.includes(topping.id),
+    ).map(topping => topping.name);
+    const lineId = buildPosLineId(
+      pendingProduct.id,
+      selectedVariationOption.label,
+      selectedToppings,
+    );
+
     setCart(prev => {
-      const existing = prev.find(item => item.productId === product.id);
+      const existing = prev.find(item => item.id === lineId);
       if (existing) {
         return prev.map(item =>
-          item.productId === product.id
-            ? {...item, quantity: item.quantity + 1}
+          item.id === lineId
+            ? {...item, quantity: item.quantity + pickerQuantity}
             : item,
         );
       }
       const next: PosLine = {
-        id: `pos-${product.id}`,
-        productId: product.id,
-        name: product.name,
-        image: product.image,
-        variation: 'Standard',
-        toppings: [],
-        unitPrice,
-        quantity: 1,
+        id: lineId,
+        productId: pendingProduct.id,
+        name: pendingProduct.name,
+        image: pendingProduct.image,
+        variation: selectedVariationOption.label,
+        toppings: selectedToppings,
+        unitPrice: pickerUnitPrice,
+        quantity: pickerQuantity,
       };
       return [...prev, next];
     });
-  }, []);
+
+    closeProductPicker();
+  }, [
+    closeProductPicker,
+    pendingProduct,
+    pickerQuantity,
+    pickerUnitPrice,
+    selectedToppingIds,
+    selectedVariationOption,
+  ]);
+
+  const addProduct = openProductPicker;
 
   const updateQuantity = useCallback((lineId: string, quantity: number) => {
     setCart(prev => {
@@ -213,11 +350,17 @@ const useController = () => {
     setPlacing(true);
     try {
       if (editingOrder) {
-        const saved = await appendItems({
+        const saved = await updateOpenTab({
           orderId: editingOrder.id,
-          items: cart,
+          patch: {
+            items: cart,
+            customerName: customerName.trim() || editingOrder.customerName,
+            tableNo: trimmedTable,
+            waiterName: trimmedWaiter,
+            paymentMethod,
+          },
         });
-        setCart([]);
+        setCart((saved.items ?? []).map(item => ({...item})));
         setSlipOrder(saved);
         setEditingOrder(saved);
         return;
@@ -264,13 +407,23 @@ const useController = () => {
         },
       });
 
-      setCart([]);
-      setCustomerName('');
-      setCustomerPhone('');
-      setTableNo('');
-      setWaiterName(user?.name ?? '');
-      setPaymentMethod('cod');
       setSlipOrder(saved);
+      if (dineIn) {
+        // Keep editing this guest until they finish & pay.
+        setEditingOrder(saved);
+        setCart((saved.items ?? []).map(item => ({...item})));
+        setCustomerName(saved.customerName);
+        setTableNo(saved.tableNo ?? trimmedTable);
+        setWaiterName(saved.waiterName ?? trimmedWaiter);
+        setPaymentMethod(saved.paymentMethod);
+      } else {
+        setCart([]);
+        setCustomerName('');
+        setCustomerPhone('');
+        setTableNo('');
+        setWaiterName(user?.name ?? '');
+        setPaymentMethod('cod');
+      }
     } catch (error) {
       Alert.alert(
         'Order failed',
@@ -282,7 +435,6 @@ const useController = () => {
       setPlacing(false);
     }
   }, [
-    appendItems,
     branch,
     branchId,
     cart,
@@ -297,21 +449,42 @@ const useController = () => {
     tableNo,
     taxAmount,
     totalAmount,
+    updateOpenTab,
     user?.email,
     user?.name,
     waiterName,
   ]);
 
   const handleBack = useCallback(() => {
-    navigation.goBack();
+    navigation.navigate('CashierOrders');
   }, [navigation]);
 
-  const closeSlip = useCallback(() => {
+  const continueEditingFromSlip = useCallback(() => {
+    if (!slipOrder || !isOpenDineInTab(slipOrder)) {
+      return;
+    }
     setSlipOrder(null);
-    if (editingOrder || openOrderId) {
+    setEditingOrder(slipOrder);
+    setCustomerName(slipOrder.customerName);
+    setTableNo(slipOrder.tableNo ?? '');
+    setWaiterName(slipOrder.waiterName ?? user?.name ?? '');
+    setPaymentMethod(slipOrder.paymentMethod);
+    setServiceMode('dine_in');
+    setCart((slipOrder.items ?? []).map(item => ({...item})));
+  }, [slipOrder, user?.name]);
+
+  const closeSlip = useCallback(() => {
+    const keepEditing =
+      slipOrder != null && isOpenDineInTab(slipOrder) ? slipOrder : editingOrder;
+    setSlipOrder(null);
+    if (keepEditing && isOpenDineInTab(keepEditing)) {
+      setEditingOrder(keepEditing);
+      return;
+    }
+    if (openOrderId) {
       navigation.navigate('CashierOrders');
     }
-  }, [editingOrder, navigation, openOrderId]);
+  }, [editingOrder, navigation, openOrderId, slipOrder]);
 
   return {
     branch,
@@ -324,6 +497,7 @@ const useController = () => {
     filteredItems,
     cart,
     itemCount,
+    cartQtyByProductId,
     productTotal,
     totalAmount,
     customerName,
@@ -340,11 +514,26 @@ const useController = () => {
     setPaymentMethod,
     placing,
     slipOrder,
+    pendingProduct,
+    selectedVariation,
+    selectedToppingIds,
+    pendingVariations,
+    selectedVariationOption,
+    toppings: TOPPINGS,
+    pickerQuantity,
+    pickerTotalPrice,
     addProduct,
+    closeProductPicker,
+    selectVariation,
+    toggleTopping,
+    decreasePickerQuantity,
+    increasePickerQuantity,
+    confirmProductPicker,
     updateQuantity,
     clearCart,
     handlePlaceOrder,
     handleBack,
+    continueEditingFromSlip,
     closeSlip,
   };
 };

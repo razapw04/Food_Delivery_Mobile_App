@@ -12,6 +12,45 @@ const TAB_ICONS: Record<string, {active: string; inactive: string}> = {
   Explore: {active: 'magnify', inactive: 'magnify'},
   Branches: {active: 'store', inactive: 'store-outline'},
   Orders: {active: 'package-variant', inactive: 'package-variant-closed'},
+  CashierOrders: {
+    active: 'clipboard-list',
+    inactive: 'clipboard-list-outline',
+  },
+  CashierPOS: {active: 'point-of-sale', inactive: 'point-of-sale'},
+  CashierOrderHistory: {active: 'history', inactive: 'history'},
+  CashierSales: {active: 'chart-line', inactive: 'chart-line'},
+  CashierInventory: {
+    active: 'cash-multiple',
+    inactive: 'cash-multiple',
+  },
+  KitchenOrders: {
+    active: 'chef-hat',
+    inactive: 'chef-hat',
+  },
+  KitchenHistory: {
+    active: 'history',
+    inactive: 'history',
+  },
+  KitchenSales: {
+    active: 'fire',
+    inactive: 'fire',
+  },
+  KitchenInventory: {
+    active: 'package-variant',
+    inactive: 'package-variant-closed',
+  },
+  AdminOrders: {
+    active: 'clipboard-list',
+    inactive: 'clipboard-list-outline',
+  },
+  AdminBranches: {active: 'store', inactive: 'store-outline'},
+  AdminProducts: {active: 'food', inactive: 'food-outline'},
+  AdminRevenue: {active: 'chart-line', inactive: 'chart-line'},
+  AdminLiveSales: {
+    active: 'cash-multiple',
+    inactive: 'cash-multiple',
+  },
+  AdminAdmins: {active: 'account-key', inactive: 'account-key-outline'},
 };
 
 const LiquidGlassTabBar = ({

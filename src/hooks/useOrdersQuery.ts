@@ -7,7 +7,9 @@ import {
   getAllStoredOrders,
   getStoredOrders,
   saveStoredOrder,
+  updateOpenDineInTab,
   updateStoredOrderStatus,
+  type OpenDineInTabUpdate,
   type OrderStatus,
   type StoredOrder,
 } from '../storage/orderStorage';
@@ -75,6 +77,24 @@ export const useAppendOrderItemsMutation = () => {
       orderId: string;
       items: CartItem[];
     }) => appendItemsToStoredOrder(orderId, items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: queryKeys.allOrders});
+      queryClient.invalidateQueries({queryKey: ['orders']});
+    },
+  });
+};
+
+export const useUpdateOpenDineInTabMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      orderId,
+      patch,
+    }: {
+      orderId: string;
+      patch: OpenDineInTabUpdate;
+    }) => updateOpenDineInTab(orderId, patch),
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: queryKeys.allOrders});
       queryClient.invalidateQueries({queryKey: ['orders']});

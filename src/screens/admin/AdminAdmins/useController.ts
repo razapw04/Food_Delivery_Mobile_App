@@ -1,6 +1,11 @@
 import {useCallback, useState} from 'react';
 import {Alert} from 'react-native';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  type CompositeNavigationProp,
+} from '@react-navigation/native';
+import type {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useAuth} from '../../../context/AuthContext';
 import {useCatalog} from '../../../context/CatalogContext';
@@ -10,16 +15,24 @@ import {
   staffRoleLabel,
   type StoredUser,
 } from '../../../storage/authStorage';
-import type {RootStackParamList} from '../../../types/navigation';
+import type {
+  AdminTabParamList,
+  RootStackParamList,
+} from '../../../types/navigation';
 
-type Nav = NativeStackNavigationProp<RootStackParamList, 'AdminAdmins'>;
+type Nav = CompositeNavigationProp<
+  BottomTabNavigationProp<AdminTabParamList, 'AdminAdmins'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 const useController = () => {
   const navigation = useNavigation<Nav>();
-  const {isSuperAdmin} = useAuth();
+  const {isAdmin, isSuperAdmin, user} = useAuth();
   const {branches} = useCatalog();
   const [staff, setStaff] = useState<StoredUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const canManageStaff = isSuperAdmin;
+  const managerBranchId = user?.branchId ?? null;
 
   const branchName = useCallback(
     (branchId: string | null) =>
@@ -31,24 +44,39 @@ const useController = () => {
     setLoading(true);
     try {
       const next = await listAdminAccounts();
-      setStaff(next);
+      if (isSuperAdmin) {
+        setStaff(next);
+      } else {
+        // Managers only view employees for their assigned branch.
+        setStaff(
+          next.filter(
+            item =>
+              managerBranchId != null &&
+              item.branchId === managerBranchId &&
+              item.role !== 'manager',
+          ),
+        );
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isSuperAdmin, managerBranchId]);
 
   useFocusEffect(
     useCallback(() => {
-      if (!isSuperAdmin) {
-        navigation.replace('AdminOrders');
+      if (!isAdmin) {
+        navigation.replace('Login');
         return;
       }
       void loadStaff();
-    }, [isSuperAdmin, loadStaff, navigation]),
+    }, [isAdmin, loadStaff, navigation]),
   );
 
   const handleDelete = useCallback(
     (account: StoredUser) => {
+      if (!canManageStaff) {
+        return;
+      }
       const label = staffRoleLabel(account.role);
       Alert.alert(
         `Remove ${label.toLowerCase()} access`,
@@ -72,15 +100,17 @@ const useController = () => {
         ],
       );
     },
-    [loadStaff],
+    [canManageStaff, loadStaff],
   );
 
   const handleBack = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
+    navigation.navigate(isSuperAdmin ? 'AdminBranches' : 'AdminOrders');
+  }, [isSuperAdmin, navigation]);
 
   return {
     navigation,
+    isSuperAdmin,
+    canManageStaff,
     staff,
     loading,
     branchName,

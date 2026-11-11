@@ -20,7 +20,7 @@ const DEFAULT_IMAGE =
 
 const useController = (navigation: Nav, route: Route) => {
   const {isSuperAdmin} = useAuth();
-  const {menuItems, menuCategories} = useCatalog();
+  const {menuItems, menuCategories, refreshCatalog} = useCatalog();
   const productId = route.params?.productId;
   const isEditing = Boolean(productId);
 
@@ -33,7 +33,7 @@ const useController = (navigation: Nav, route: Route) => {
 
   useEffect(() => {
     if (!isSuperAdmin) {
-      navigation.replace('AdminOrders');
+      navigation.replace('AdminTabs', {screen: 'AdminProducts'});
     }
   }, [isSuperAdmin, navigation]);
 
@@ -92,9 +92,10 @@ const useController = (navigation: Nav, route: Route) => {
       };
 
       await upsertAdminProduct(product, menuItems);
+      await refreshCatalog();
       Alert.alert(
         isEditing ? 'Product updated' : 'Product added',
-        'Saved on this device. Backend sync will be added later.',
+        'Saved on this device. Customer menu and POS are updated too.',
         [{text: 'OK', onPress: () => navigation.goBack()}],
       );
     } catch {

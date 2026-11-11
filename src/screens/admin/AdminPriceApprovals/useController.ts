@@ -30,7 +30,7 @@ export const formatWhen = (iso: string) =>
 const useController = () => {
   const navigation = useNavigation<Nav>();
   const {isSuperAdmin} = useAuth();
-  const {menuItems} = useCatalog();
+  const {menuItems, refreshCatalog} = useCatalog();
   const [requests, setRequests] = useState<PriceChangeRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>('pending');
@@ -59,7 +59,7 @@ const useController = () => {
   useFocusEffect(
     useCallback(() => {
       if (!isSuperAdmin) {
-        navigation.replace('AdminOrders');
+        navigation.replace('AdminTabs', {screen: 'AdminRevenue'});
         return;
       }
       void load();
@@ -100,6 +100,7 @@ const useController = () => {
                     Alert.alert('Action failed', result.error);
                     return;
                   }
+                  await refreshCatalog();
                   await load();
                 } finally {
                   setBusyId(null);
@@ -110,7 +111,7 @@ const useController = () => {
         ],
       );
     },
-    [load, menuItems],
+    [load, menuItems, refreshCatalog],
   );
 
   const handleApprove = useCallback(
@@ -143,6 +144,7 @@ const useController = () => {
                     Alert.alert('Action failed', result.error);
                     return;
                   }
+                  await refreshCatalog();
                   await load();
                 } finally {
                   setBusyId(null);
@@ -153,11 +155,15 @@ const useController = () => {
         ],
       );
     },
-    [finalPrices, load, menuItems],
+    [finalPrices, load, menuItems, refreshCatalog],
   );
 
   const handleBack = useCallback(() => {
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    navigation.navigate('AdminTabs', {screen: 'AdminRevenue'});
   }, [navigation]);
 
   return {

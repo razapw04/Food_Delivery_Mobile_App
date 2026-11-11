@@ -1,6 +1,8 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {Alert, BackHandler} from 'react-native';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import type {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
+import type {CompositeNavigationProp} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useAuth} from '../../../context/AuthContext';
 import {
@@ -16,18 +18,24 @@ import {
   type OrderStatus,
   type StoredOrder,
 } from '../../../storage/orderStorage';
-import type {RootStackParamList} from '../../../types/navigation';
+import type {
+  CashierTabParamList,
+  RootStackParamList,
+} from '../../../types/navigation';
 import {canSelectStatus} from '../../../utils/orderStatus';
 
-type Nav = NativeStackNavigationProp<RootStackParamList, 'CashierOrders'>;
+type Nav = CompositeNavigationProp<
+  BottomTabNavigationProp<CashierTabParamList, 'CashierOrders'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
-export type CashierOrderTab = 'online' | 'pos';
+export type CashierOrderTab = 'all' | 'online' | 'pos';
 
 const useController = () => {
   const navigation = useNavigation<Nav>();
   const {isCashier, user, logout} = useAuth();
   const branchId = user?.branchId ?? null;
-  const [channelTab, setChannelTab] = useState<CashierOrderTab>('online');
+  const [channelTab, setChannelTab] = useState<CashierOrderTab>('all');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [slipOrder, setSlipOrder] = useState<StoredOrder | null>(null);
   const {
@@ -57,45 +65,55 @@ const useController = () => {
     });
   }, [allOrders, branchId]);
 
+  const isActiveOrder = useCallback((order: StoredOrder) => {
+    const status = order.status ?? 'Pending';
+    if (status === 'Delivered' || status === 'Cancelled') {
+      return false;
+    }
+    return true;
+  }, []);
+
   const onlineCount = useMemo(
     () =>
-      branchOrders.filter(order => resolveOrderChannel(order) === 'online')
-        .length,
-    [branchOrders],
+      branchOrders.filter(
+        order =>
+          resolveOrderChannel(order) === 'online' && isActiveOrder(order),
+      ).length,
+    [branchOrders, isActiveOrder],
   );
 
   const posCount = useMemo(
     () =>
-      branchOrders.filter(order => resolveOrderChannel(order) === 'pos').length,
-    [branchOrders],
+      branchOrders.filter(
+        order => resolveOrderChannel(order) === 'pos' && isActiveOrder(order),
+      ).length,
+    [branchOrders, isActiveOrder],
   );
 
+  const activeCount = onlineCount + posCount;
+
   const orders = useMemo(() => {
-    const filtered = branchOrders.filter(
-      order => resolveOrderChannel(order) === channelTab,
-    );
-    if (channelTab !== 'pos') {
-      return filtered;
-    }
-    // Manage POS/dine-in by table number first.
+    const filtered = branchOrders.filter(order => {
+      if (!isActiveOrder(order)) {
+        return false;
+      }
+      if (channelTab === 'all') {
+        return true;
+      }
+      return resolveOrderChannel(order) === channelTab;
+    });
+    // Mixed queue: open dine-in first, then oldest wait (priority by time).
     return [...filtered].sort((a, b) => {
       const aOpen = isOpenDineInTab(a) ? 0 : 1;
       const bOpen = isOpenDineInTab(b) ? 0 : 1;
       if (aOpen !== bOpen) {
         return aOpen - bOpen;
       }
-      const tableCompare = (a.tableNo ?? '').localeCompare(b.tableNo ?? '', undefined, {
-        numeric: true,
-        sensitivity: 'base',
-      });
-      if (tableCompare !== 0) {
-        return tableCompare;
-      }
       return (
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
     });
-  }, [branchOrders, channelTab]);
+  }, [branchOrders, channelTab, isActiveOrder]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -201,12 +219,16 @@ const useController = () => {
     setSlipOrder(null);
   }, []);
 
-  const handleAddToTab = useCallback(
+  const handleEditTab = useCallback(
     (order: StoredOrder) => {
       if (!isOpenDineInTab(order)) {
-        Alert.alert('Tab closed', 'This dine-in tab can no longer accept items.');
+        Alert.alert(
+          'Tab closed',
+          'This guest already paid / tab is closed, so the order can no longer be edited.',
+        );
         return;
       }
+      setSlipOrder(null);
       navigation.navigate('CashierPOS', {openOrderId: order.id});
     },
     [navigation],
@@ -218,12 +240,12 @@ const useController = () => {
         return;
       }
       Alert.alert(
-        'Close dine-in tab',
-        `Close ${order.orderId} for ${order.customerName}? Guest is finished — final slip will be ready.`,
+        'Pay & close tab',
+        `Mark ${order.orderId} for ${order.customerName || 'guest'} as paid? Final slip will be ready and edit will lock.`,
         [
           {text: 'Cancel', style: 'cancel'},
           {
-            text: 'Close tab',
+            text: 'Pay & close',
             style: 'destructive',
             onPress: () => {
               void (async () => {
@@ -255,6 +277,7 @@ const useController = () => {
     isCashier,
     channelTab,
     setChannelTab,
+    activeCount,
     onlineCount,
     posCount,
     orders,
@@ -264,7 +287,7 @@ const useController = () => {
     errorMessage,
     handleLogout,
     handleUpdateStatus,
-    handleAddToTab,
+    handleEditTab,
     handleCloseTab,
     handleRetry,
     setSlipOrder,

@@ -5,7 +5,7 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {spacing} from '../../../theme';
 import {useCart} from '../../../context/CartContext';
@@ -58,6 +58,12 @@ const useController = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState(
     () => menuCategories[0]?.id ?? 'pizza',
   );
+  useFocusEffect(
+    useCallback(() => {
+      void refreshCatalog();
+    }, [refreshCatalog]),
+  );
+
   const isScrollingToCategory = useRef(false);
   const listRef = useRef<FlatList<MenuRow> | null>(null);
   const categoryScrollRef = useRef<React.ElementRef<typeof ScrollView> | null>(
